@@ -15,6 +15,7 @@ export const UserLayout = () => {
   });
 
   const isHomePage = location.pathname === '/' || location.pathname === '/home';
+  const showNavbar = isHomePage || location.pathname === '/my-bids' || location.pathname === '/bids';
 
   // Fetch updated user balance/profile if available
   useEffect(() => {
@@ -39,8 +40,8 @@ export const UserLayout = () => {
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col relative text-gray-900 font-sans">
-      {/* 1. TOP NAVBAR ON HOME PAGE ONLY */}
-      {isHomePage && (
+      {/* 1. TOP NAVBAR ON HOME & BIDS PAGES */}
+      {showNavbar && (
         <UserNavbar
           onOpenSidebar={() => setIsSidebarOpen(true)}
           walletBalance={userData?.walletBalance || 9}

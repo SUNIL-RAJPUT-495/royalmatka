@@ -11,7 +11,9 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
   const location = useLocation();
 
   const isProfilePage = location.pathname === '/profile';
-  const isWalletPage = location.pathname === '/wallet' || location.pathname === '/deposit';
+  const isWalletPage = location.pathname === '/wallet';
+  const isBidsPage = location.pathname === '/my-bids' || location.pathname === '/bids';
+  const isHomePage = location.pathname === '/' || location.pathname === '/home';
 
   const [lastUpdatedTime, setLastUpdatedTime] = useState(() => new Date().toLocaleTimeString());
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -31,10 +33,9 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
     >
       {/* 1. TOP NAVBAR HEADER */}
       {isWalletPage ? (
-        /* WALLET TOP HEADER (Matching Screenshot) */
+        /* WALLET TOP HEADER */
         <div className="px-4 pt-3.5 pb-2">
           <div className="flex items-center gap-3">
-            {/* Back Button */}
             <button
               onClick={() => navigate(-1)}
               className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition-all cursor-pointer active:scale-95 border border-white/20 shadow-xs shrink-0"
@@ -43,7 +44,6 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
               <FaArrowLeft size={14} />
             </button>
 
-            {/* Title & Subtitle */}
             <div>
               <div className="flex items-center gap-1.5 text-base font-bold tracking-tight text-white">
                 <span>My Wallet</span>
@@ -54,7 +54,7 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
           </div>
         </div>
       ) : (
-        /* STANDARD TOP NAVBAR (Home / Profile) */
+        /* STANDARD TOP NAVBAR (Home / Bids) */
         <div className="px-4 pt-3.5 pb-2 flex items-center justify-between">
           {/* Left: Hamburger & Logo */}
           <div className="flex items-center gap-3">
@@ -103,7 +103,7 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
 
       {/* 2. CONTENT BELOW TOP ROW */}
       {isWalletPage ? (
-        /* CURRENT BALANCE CARD (Inside curved orange header) */
+        /* CURRENT BALANCE CARD */
         <div className="px-4 pb-4 pt-1">
           <div className="bg-white/15 hover:bg-white/20 backdrop-blur-md rounded-3xl p-4.5 border border-white/25 shadow-xs transition-all">
             <div className="flex items-center justify-between">
@@ -113,14 +113,12 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
               </div>
             </div>
 
-            {/* Main Amount */}
             <div className="my-1">
               <span className="text-3xl font-bold text-white tracking-tight">
                 ₹{walletBalance}
               </span>
             </div>
 
-            {/* Bottom: Last updated & Refresh button */}
             <div className="flex items-center justify-between text-xs pt-1 border-t border-white/15">
               <div className="text-[11px] text-white/80 font-normal leading-tight">
                 Last updated<br />
@@ -139,13 +137,12 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
           </div>
         </div>
       ) : isProfilePage ? (
-        /* Profile Page Header Title */
         <div className="pb-4 pt-1 text-center">
           <h2 className="text-lg font-bold text-white tracking-wide">
             My Profile
           </h2>
         </div>
-      ) : (
+      ) : isHomePage ? (
         /* Home Page: 4 Quick Action White Buttons */
         <div className="px-4 pb-4 pt-2">
           <div className="grid grid-cols-2 gap-2.5">
@@ -164,7 +161,7 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
             {/* 2. DEPOSIT */}
             <button
               type="button"
-              onClick={() => navigate('/wallet')}
+              onClick={() => navigate('/deposit')}
               className="bg-white hover:bg-gray-50 active:scale-95 text-gray-900 py-2 px-3 rounded-2xl font-bold text-xs shadow-sm flex items-center gap-2.5 transition-all cursor-pointer border border-white/80"
             >
               <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
@@ -200,7 +197,7 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
             </a>
           </div>
         </div>
-      )}
+      ) : null}
     </header>
   );
 };

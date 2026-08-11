@@ -12,6 +12,7 @@ import { UserGameRates } from "./pages/user/UserGameRates";
 import { UserWithdraw } from "./pages/user/UserWithdraw";
 import { UserBankDetails } from "./pages/user/UserBankDetails";
 import { UserBids } from "./pages/user/UserBids";
+import { UserBidsHistory } from "./pages/user/UserBidsHistory";
 import { UserCasino } from "./pages/user/UserCasino";
 import { AdminLayout } from "./layout/AdminLayout";
 import { Dashboard } from "./components/admin/Dashboard";
@@ -37,6 +38,7 @@ function App() {
             <Route path="/payment-methods" element={<UserBankDetails />} />
             <Route path="/my-bids" element={<UserBids />} />
             <Route path="/bids" element={<UserBids />} />
+            <Route path="/bids-history" element={<UserBidsHistory />} />
             <Route path="/casino" element={<UserCasino />} />
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/tips" element={<UserWinningTips />} />
