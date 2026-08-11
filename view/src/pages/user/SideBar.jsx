@@ -1,0 +1,217 @@
+import React from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
+import {
+  FaTimes,
+  FaChevronRight,
+  FaSignOutAlt,
+  FaUserAlt,
+  FaCog
+} from 'react-icons/fa';
+import {
+  IoHomeOutline,
+  IoWalletOutline,
+  IoBookOutline,
+  IoStatsChartOutline,
+  IoShareSocialOutline,
+  IoRibbonOutline,
+  IoFlashOutline,
+  IoShieldCheckmarkOutline,
+  IoNotificationsOutline,
+  IoTimeOutline,
+  IoCashOutline,
+  IoInformationCircleOutline
+} from 'react-icons/io5';
+import { HiOutlineSparkles } from 'react-icons/hi';
+import { BiExit } from 'react-icons/bi';
+
+export const SideBar = ({
+  isOpen,
+  closeSidebar,
+  user = { name: 'Shubham', mobile: '8079003424', walletBalance: 9 }
+}) => {
+  const { currentTheme } = useTheme();
+  const navigate = useNavigate();
+
+  const platformMenu = [
+    { label: 'Home', icon: IoHomeOutline, link: '/' },
+    { label: 'My Wallet', icon: IoWalletOutline, link: '/wallet' },
+    { label: 'How To Play', icon: IoBookOutline, link: '/how-to-play' },
+    { label: 'Charts', icon: IoStatsChartOutline, link: '/charts' },
+    { label: 'Share App', icon: IoShareSocialOutline, link: '/share' }
+  ];
+
+  const gameZoneMenu = [
+    { label: 'Game Rates', icon: IoRibbonOutline, link: '/game-rates' },
+    { label: 'Winning Tips', icon: IoFlashOutline, link: '/tips' },
+    { label: 'Mpin Settings', icon: IoShieldCheckmarkOutline, link: '/mpin-settings' },
+    { label: 'Notification Settings', icon: IoNotificationsOutline, link: '/notification-settings' }
+  ];
+
+  const supportMenu = [
+    { label: 'Transaction History', icon: IoTimeOutline, link: '/passbook' },
+    { label: 'All Withdrawals', icon: IoCashOutline, link: '/all-withdrawals' },
+    { label: 'Help Center', icon: IoInformationCircleOutline, link: '/support' }
+  ];
+
+  const renderMenuItem = (item, index) => {
+    const Icon = item.icon;
+    return (
+      <NavLink
+        key={index}
+        to={item.link}
+        onClick={closeSidebar}
+        className="w-full bg-white hover:bg-gray-50 active:scale-[0.99] rounded-2xl p-3.5 border border-gray-100/90 shadow-2xs flex items-center justify-between transition-all cursor-pointer"
+      >
+        <div className="flex items-center gap-3.5">
+          <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-gray-700 border border-gray-100">
+            <Icon size={18} />
+          </div>
+          <span className="text-xs font-bold text-gray-800 tracking-tight">{item.label}</span>
+        </div>
+        <FaChevronRight size={11} className="text-gray-300" />
+      </NavLink>
+    );
+  };
+
+  return (
+    <>
+      {/* 1. Backdrop Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 transition-opacity duration-300"
+          onClick={closeSidebar}
+        />
+      )}
+
+      {/* 2. Slide-in Drawer matching screenshots 2 & 3 */}
+      <aside
+        className={`fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-[#f8f9fa] z-50 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out select-none ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {/* TOP ORANGE/THEME PROFILE HEADER */}
+        <div
+          className="p-5 text-white relative transition-colors duration-300 shrink-0"
+          style={{ backgroundColor: currentTheme.headerBgColor }}
+        >
+          {/* Top Row: Mini Brand Avatar + Close Button */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-8 h-8 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white text-xs font-black">
+              🏃
+            </div>
+            <button
+              onClick={closeSidebar}
+              className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors cursor-pointer"
+            >
+              <FaTimes size={13} />
+            </button>
+          </div>
+
+          {/* User Info Row */}
+          <div className="flex items-center gap-3.5 mb-4">
+            {/* White Rounded Square Avatar with Initial */}
+            <div
+              className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center font-extrabold text-2xl shadow-md shrink-0"
+              style={{ color: currentTheme.headerBgColor }}
+            >
+              {user.name ? user.name.charAt(0).toUpperCase() : 'S'}
+            </div>
+
+            {/* Name, ID and Balance Pill */}
+            <div>
+              <h3 className="font-extrabold text-base leading-tight text-white">{user.name || 'Shubham'}</h3>
+              <p className="text-xs text-white/80 font-medium mt-0.5">ID: {user.mobile || '8079003424'}</p>
+              <div className="inline-flex items-center gap-1 bg-white/20 px-2.5 py-0.5 rounded-full text-[11px] font-bold mt-1 border border-white/25">
+                <HiOutlineSparkles size={11} className="text-yellow-300" />
+                <span>₹ {Number(user.walletBalance || 9).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 2 Quick Header Action Buttons: Profile & Settings */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              onClick={() => {
+                closeSidebar();
+                navigate('/profile');
+              }}
+              className="py-2 px-3 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-xs text-white font-bold text-xs flex items-center justify-center gap-2 border border-white/25 transition-all cursor-pointer"
+            >
+              <FaUserAlt size={11} />
+              <span>Profile</span>
+            </button>
+            <button
+              onClick={() => {
+                closeSidebar();
+                navigate('/settings');
+              }}
+              className="py-2 px-3 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-xs text-white font-bold text-xs flex items-center justify-center gap-2 border border-white/25 transition-all cursor-pointer"
+            >
+              <FaCog size={12} />
+              <span>Settings</span>
+            </button>
+          </div>
+        </div>
+
+        {/* MENU ITEMS SCROLLABLE CONTAINER */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 [&::-webkit-scrollbar]:hidden">
+          {/* SECTION 1: PLATFORM */}
+          <div>
+            <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 px-1 mb-2">
+              PLATFORM
+            </div>
+            <div className="space-y-2">
+              {platformMenu.map(renderMenuItem)}
+            </div>
+          </div>
+
+          {/* SECTION 2: GAME ZONE */}
+          <div>
+            <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 px-1 mb-2">
+              GAME ZONE
+            </div>
+            <div className="space-y-2">
+              {gameZoneMenu.map(renderMenuItem)}
+            </div>
+          </div>
+
+          {/* SECTION 3: SUPPORT */}
+          <div>
+            <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 px-1 mb-2">
+              SUPPORT
+            </div>
+            <div className="space-y-2">
+              {supportMenu.map(renderMenuItem)}
+            </div>
+          </div>
+
+          {/* LOGOUT BUTTON (Exact match of screenshot) */}
+          <div className="pt-2 pb-2">
+            <button
+              onClick={() => {
+                closeSidebar();
+                localStorage.removeItem('token');
+                localStorage.removeItem('user_data');
+                window.location.href = '/';
+              }}
+              className="w-full bg-[#fff1f2] hover:bg-[#ffe4e6] active:scale-[0.99] border border-red-100 rounded-2xl p-3 flex items-center gap-3 transition-all cursor-pointer"
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#ef4444] text-white flex items-center justify-center shadow-xs">
+                <BiExit size={18} />
+              </div>
+              <span className="font-extrabold text-red-600 text-sm">Log Out</span>
+            </button>
+          </div>
+
+          {/* VERSION FOOTER */}
+          <div className="text-center text-[10px] font-black tracking-widest text-gray-400 uppercase pb-3">
+            ✨ VERSION 1.2.0 ✨
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+};
+
+export default SideBar;
