@@ -4,7 +4,6 @@ import { useTheme } from '../../context/ThemeContext';
 import {
   FaTimes,
   FaChevronRight,
-  FaSignOutAlt,
   FaUserAlt,
   FaCog
 } from 'react-icons/fa';
@@ -61,13 +60,13 @@ export const SideBar = ({
         key={index}
         to={item.link}
         onClick={closeSidebar}
-        className="w-full bg-white hover:bg-gray-50 active:scale-[0.99] rounded-2xl p-3.5 border border-gray-100/90 shadow-2xs flex items-center justify-between transition-all cursor-pointer"
+        className="w-full bg-white hover:bg-gray-50 active:scale-[0.99] rounded-2xl p-3 border border-gray-100/90 shadow-2xs flex items-center justify-between transition-all cursor-pointer"
       >
-        <div className="flex items-center gap-3.5">
-          <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-gray-700 border border-gray-100">
-            <Icon size={18} />
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600 border border-gray-100">
+            <Icon size={17} />
           </div>
-          <span className="text-xs font-bold text-gray-800 tracking-tight">{item.label}</span>
+          <span className="text-xs font-semibold text-gray-800 tracking-tight">{item.label}</span>
         </div>
         <FaChevronRight size={11} className="text-gray-300" />
       </NavLink>
@@ -96,8 +95,8 @@ export const SideBar = ({
           style={{ backgroundColor: currentTheme.headerBgColor }}
         >
           {/* Top Row: Mini Brand Avatar + Close Button */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-8 h-8 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white text-xs font-black">
+          <div className="flex items-center justify-between mb-3.5">
+            <div className="w-7 h-7 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white text-xs font-bold">
               🏃
             </div>
             <button
@@ -109,10 +108,10 @@ export const SideBar = ({
           </div>
 
           {/* User Info Row */}
-          <div className="flex items-center gap-3.5 mb-4">
+          <div className="flex items-center gap-3.5 mb-3.5">
             {/* White Rounded Square Avatar with Initial */}
             <div
-              className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center font-extrabold text-2xl shadow-md shrink-0"
+              className="w-13 h-13 rounded-2xl bg-white flex items-center justify-center font-bold text-xl shadow-md shrink-0"
               style={{ color: currentTheme.headerBgColor }}
             >
               {user.name ? user.name.charAt(0).toUpperCase() : 'S'}
@@ -120,9 +119,9 @@ export const SideBar = ({
 
             {/* Name, ID and Balance Pill */}
             <div>
-              <h3 className="font-extrabold text-base leading-tight text-white">{user.name || 'Shubham'}</h3>
-              <p className="text-xs text-white/80 font-medium mt-0.5">ID: {user.mobile || '8079003424'}</p>
-              <div className="inline-flex items-center gap-1 bg-white/20 px-2.5 py-0.5 rounded-full text-[11px] font-bold mt-1 border border-white/25">
+              <h3 className="font-bold text-base leading-tight text-white">{user.name || 'Shubham'}</h3>
+              <p className="text-xs text-white/80 font-normal mt-0.5">ID: {user.mobile || '8079003424'}</p>
+              <div className="inline-flex items-center gap-1 bg-white/20 px-2.5 py-0.5 rounded-full text-[11px] font-semibold mt-1 border border-white/25">
                 <HiOutlineSparkles size={11} className="text-yellow-300" />
                 <span>₹ {Number(user.walletBalance || 9).toFixed(2)}</span>
               </div>
@@ -136,7 +135,7 @@ export const SideBar = ({
                 closeSidebar();
                 navigate('/profile');
               }}
-              className="py-2 px-3 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-xs text-white font-bold text-xs flex items-center justify-center gap-2 border border-white/25 transition-all cursor-pointer"
+              className="py-1.5 px-3 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-xs text-white font-semibold text-xs flex items-center justify-center gap-2 border border-white/25 transition-all cursor-pointer"
             >
               <FaUserAlt size={11} />
               <span>Profile</span>
@@ -146,7 +145,7 @@ export const SideBar = ({
                 closeSidebar();
                 navigate('/settings');
               }}
-              className="py-2 px-3 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-xs text-white font-bold text-xs flex items-center justify-center gap-2 border border-white/25 transition-all cursor-pointer"
+              className="py-1.5 px-3 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-xs text-white font-semibold text-xs flex items-center justify-center gap-2 border border-white/25 transition-all cursor-pointer"
             >
               <FaCog size={12} />
               <span>Settings</span>
@@ -155,39 +154,39 @@ export const SideBar = ({
         </div>
 
         {/* MENU ITEMS SCROLLABLE CONTAINER */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 [&::-webkit-scrollbar]:hidden">
+        <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 [&::-webkit-scrollbar]:hidden">
           {/* SECTION 1: PLATFORM */}
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 px-1 mb-2">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-1 mb-1.5">
               PLATFORM
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {platformMenu.map(renderMenuItem)}
             </div>
           </div>
 
           {/* SECTION 2: GAME ZONE */}
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 px-1 mb-2">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-1 mb-1.5">
               GAME ZONE
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {gameZoneMenu.map(renderMenuItem)}
             </div>
           </div>
 
           {/* SECTION 3: SUPPORT */}
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 px-1 mb-2">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-1 mb-1.5">
               SUPPORT
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {supportMenu.map(renderMenuItem)}
             </div>
           </div>
 
-          {/* LOGOUT BUTTON (Exact match of screenshot) */}
-          <div className="pt-2 pb-2">
+          {/* LOGOUT BUTTON */}
+          <div className="pt-1 pb-1">
             <button
               onClick={() => {
                 closeSidebar();
@@ -197,15 +196,15 @@ export const SideBar = ({
               }}
               className="w-full bg-[#fff1f2] hover:bg-[#ffe4e6] active:scale-[0.99] border border-red-100 rounded-2xl p-3 flex items-center gap-3 transition-all cursor-pointer"
             >
-              <div className="w-9 h-9 rounded-xl bg-[#ef4444] text-white flex items-center justify-center shadow-xs">
-                <BiExit size={18} />
+              <div className="w-8 h-8 rounded-xl bg-[#ef4444] text-white flex items-center justify-center shadow-xs">
+                <BiExit size={16} />
               </div>
-              <span className="font-extrabold text-red-600 text-sm">Log Out</span>
+              <span className="font-semibold text-red-600 text-sm">Log Out</span>
             </button>
           </div>
 
           {/* VERSION FOOTER */}
-          <div className="text-center text-[10px] font-black tracking-widest text-gray-400 uppercase pb-3">
+          <div className="text-center text-[10px] font-semibold tracking-widest text-gray-400 uppercase pb-2">
             ✨ VERSION 1.2.0 ✨
           </div>
         </div>

@@ -37,7 +37,7 @@ export const UserProfile = () => {
 
   // Login & Security Modal state (Bottom Sheet)
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
-  const [securityTab, setSecurityTab] = useState('password'); // 'mpin' or 'password'
+  const [securityTab, setSecurityTab] = useState('password');
   const [currentMpin, setCurrentMpin] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -116,7 +116,7 @@ export const UserProfile = () => {
       <div className="bg-white rounded-3xl p-4.5 border border-gray-100 shadow-2xs flex items-center gap-4">
         {/* Orange Circular Avatar with initial */}
         <div
-          className="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl font-black shadow-sm shrink-0"
+          className="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-sm shrink-0"
           style={{ backgroundColor: currentTheme.headerBgColor }}
         >
           {user.name ? user.name.charAt(0).toUpperCase() : 'S'}
@@ -124,14 +124,14 @@ export const UserProfile = () => {
 
         {/* User Info Details */}
         <div className="overflow-hidden">
-          <h3 className="text-lg font-black text-gray-900 tracking-tight leading-tight">
+          <h3 className="text-base font-bold text-gray-900 tracking-tight leading-tight">
             {user.name || 'Shubham'}
           </h3>
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold mt-1">
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium mt-1">
             <FaCreditCard size={11} className="text-gray-400" />
             <span>ID: {user.mobile || '8079003424'}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold mt-0.5">
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium mt-0.5">
             <FaMedal size={11} className="text-amber-500" />
             <span>Member since {user.createdAt || '17/7/2026'}</span>
           </div>
@@ -143,10 +143,10 @@ export const UserProfile = () => {
         {/* Balance Card */}
         <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center">
           <div className="w-9 h-9 rounded-full bg-orange-50 flex items-center justify-center text-[#f97316] mb-1">
-            <FaWallet size={15} />
+            <FaWallet size={14} />
           </div>
-          <span className="text-[11px] font-bold text-gray-400">Balance</span>
-          <span className="text-sm font-black text-[#f97316] mt-0.5">
+          <span className="text-[11px] font-medium text-gray-400">Balance</span>
+          <span className="text-sm font-bold text-[#f97316] mt-0.5">
             ₹{Number(user.walletBalance || 9).toFixed(2)}
           </span>
         </div>
@@ -154,10 +154,10 @@ export const UserProfile = () => {
         {/* Games Card */}
         <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center">
           <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 mb-1">
-            <FaChartLine size={15} />
+            <FaChartLine size={14} />
           </div>
-          <span className="text-[11px] font-bold text-gray-400">Games</span>
-          <span className="text-sm font-black text-blue-600 mt-0.5">
+          <span className="text-[11px] font-medium text-gray-400">Games</span>
+          <span className="text-sm font-bold text-blue-600 mt-0.5">
             {user.gamesPlayed || 0}
           </span>
         </div>
@@ -165,10 +165,10 @@ export const UserProfile = () => {
         {/* Wins Card */}
         <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center">
           <div className="w-9 h-9 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 mb-1">
-            <FaTrophy size={15} />
+            <FaTrophy size={14} />
           </div>
-          <span className="text-[11px] font-bold text-gray-400">Wins</span>
-          <span className="text-sm font-black text-purple-600 mt-0.5">
+          <span className="text-[11px] font-medium text-gray-400">Wins</span>
+          <span className="text-sm font-bold text-purple-600 mt-0.5">
             {user.winsCount || 0}
           </span>
         </div>
@@ -176,7 +176,7 @@ export const UserProfile = () => {
 
       {/* 3. QUICK ACTIONS SECTION */}
       <div>
-        <div className="flex items-center gap-1 text-sm font-black text-gray-900 mb-2.5 px-1">
+        <div className="flex items-center gap-1 text-sm font-bold text-gray-900 mb-2.5 px-1">
           <span>Quick Actions</span>
           <span className="text-amber-500 text-xs">⭐</span>
         </div>
@@ -184,14 +184,14 @@ export const UserProfile = () => {
         <div className="grid grid-cols-2 gap-3">
           {/* My Wallet */}
           <div
-            onClick={() => navigate('/deposit')}
+            onClick={() => navigate('/wallet')}
             className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
           >
-            <div className="w-11 h-11 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mb-2 shadow-2xs">
-              <FaWallet size={18} />
+            <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mb-1.5 shadow-2xs">
+              <FaWallet size={16} />
             </div>
-            <h4 className="text-xs font-black text-gray-900">My Wallet</h4>
-            <p className="text-[10px] text-gray-400 font-semibold mt-0.5">Manage your funds</p>
+            <h4 className="text-xs font-semibold text-gray-900">My Wallet</h4>
+            <p className="text-[10px] text-gray-400 font-normal mt-0.5">Manage your funds</p>
           </div>
 
           {/* Txn History */}
@@ -199,11 +199,11 @@ export const UserProfile = () => {
             onClick={() => navigate('/passbook')}
             className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
           >
-            <div className="w-11 h-11 rounded-full bg-teal-50 text-teal-500 flex items-center justify-center mb-2 shadow-2xs">
-              <FaHistory size={18} />
+            <div className="w-10 h-10 rounded-full bg-teal-50 text-teal-500 flex items-center justify-center mb-1.5 shadow-2xs">
+              <FaHistory size={16} />
             </div>
-            <h4 className="text-xs font-black text-gray-900">Txn History</h4>
-            <p className="text-[10px] text-gray-400 font-semibold mt-0.5">View past transactions</p>
+            <h4 className="text-xs font-semibold text-gray-900">Txn History</h4>
+            <p className="text-[10px] text-gray-400 font-normal mt-0.5">View past transactions</p>
           </div>
 
           {/* Game History */}
@@ -211,11 +211,11 @@ export const UserProfile = () => {
             onClick={() => navigate('/my-bids')}
             className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
           >
-            <div className="w-11 h-11 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center mb-2 shadow-2xs">
-              <FaFileAlt size={18} />
+            <div className="w-10 h-10 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center mb-1.5 shadow-2xs">
+              <FaFileAlt size={16} />
             </div>
-            <h4 className="text-xs font-black text-gray-900">Game History</h4>
-            <p className="text-[10px] text-gray-400 font-semibold mt-0.5">View your game results</p>
+            <h4 className="text-xs font-semibold text-gray-900">Game History</h4>
+            <p className="text-[10px] text-gray-400 font-normal mt-0.5">View your game results</p>
           </div>
 
           {/* Help & Support */}
@@ -223,11 +223,11 @@ export const UserProfile = () => {
             onClick={() => navigate('/support')}
             className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
           >
-            <div className="w-11 h-11 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center mb-2 shadow-2xs">
-              <FaQuestionCircle size={18} />
+            <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center mb-1.5 shadow-2xs">
+              <FaQuestionCircle size={16} />
             </div>
-            <h4 className="text-xs font-black text-gray-900">Help & Support</h4>
-            <p className="text-[10px] text-gray-400 font-semibold mt-0.5">Get assistance</p>
+            <h4 className="text-xs font-semibold text-gray-900">Help & Support</h4>
+            <p className="text-[10px] text-gray-400 font-normal mt-0.5">Get assistance</p>
           </div>
         </div>
       </div>
@@ -238,36 +238,36 @@ export const UserProfile = () => {
         className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex items-center justify-between cursor-pointer hover:bg-gray-50 active:scale-[0.99] transition-all"
       >
         <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center shadow-2xs">
-            <FaKey size={16} />
+          <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center shadow-2xs">
+            <FaKey size={15} />
           </div>
-          <span className="text-sm font-black text-gray-900">Login & Security</span>
+          <span className="text-sm font-semibold text-gray-900">Login & Security</span>
         </div>
         <FaChevronRight size={12} className="text-gray-400" />
       </div>
 
       {/* 5. LOG OUT & DELETE ACCOUNT BUTTONS */}
-      <div className="space-y-3 pt-2">
+      <div className="space-y-2.5 pt-1">
         {/* Log Out Button */}
         <button
           type="button"
           onClick={handleLogout}
-          className="w-full bg-[#fff1f2] hover:bg-[#ffe4e6] active:scale-[0.99] border border-red-100 rounded-2xl p-3.5 flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-2xs"
+          className="w-full bg-[#fff1f2] hover:bg-[#ffe4e6] active:scale-[0.99] border border-red-100 rounded-2xl p-3 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
         >
-          <div className="w-8 h-8 rounded-xl bg-[#ef4444] text-white flex items-center justify-center shadow-xs">
-            <BiExit size={18} />
+          <div className="w-7 h-7 rounded-xl bg-[#ef4444] text-white flex items-center justify-center shadow-xs">
+            <BiExit size={16} />
           </div>
-          <span className="font-extrabold text-red-600 text-sm">Log Out</span>
+          <span className="font-semibold text-red-600 text-sm">Log Out</span>
         </button>
 
-        {/* Delete Account Button (Red Outline Border) */}
+        {/* Delete Account Button */}
         <button
           type="button"
           onClick={handleDeleteAccount}
-          className="w-full bg-white hover:bg-red-50/50 active:scale-[0.99] border-2 border-red-500 rounded-2xl p-3.5 flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-2xs"
+          className="w-full bg-white hover:bg-red-50/50 active:scale-[0.99] border-2 border-red-500 rounded-2xl p-3 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
         >
-          <FaTrashAlt size={14} className="text-red-500" />
-          <span className="font-extrabold text-red-500 text-sm">Delete Account</span>
+          <FaTrashAlt size={13} className="text-red-500" />
+          <span className="font-semibold text-red-500 text-sm">Delete Account</span>
         </button>
       </div>
 
@@ -288,7 +288,7 @@ export const UserProfile = () => {
             >
               <div className="flex items-center gap-2">
                 <FaShieldAlt size={16} />
-                <h3 className="font-extrabold text-base">Login & Security</h3>
+                <h3 className="font-bold text-base">Login & Security</h3>
               </div>
               <button
                 onClick={() => setIsSecurityModalOpen(false)}
@@ -306,7 +306,7 @@ export const UserProfile = () => {
                   setSecurityTab('mpin');
                   setErrorMessage('');
                 }}
-                className={`flex-1 py-3 text-xs font-black flex items-center justify-center gap-2 cursor-pointer transition-colors border-b-2 ${
+                className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors border-b-2 ${
                   securityTab === 'mpin'
                     ? 'border-[#f97316] text-[#f97316] bg-white'
                     : 'border-transparent text-gray-500 hover:text-gray-800'
@@ -322,7 +322,7 @@ export const UserProfile = () => {
                   setSecurityTab('password');
                   setErrorMessage('');
                 }}
-                className={`flex-1 py-3 text-xs font-black flex items-center justify-center gap-2 cursor-pointer transition-colors border-b-2 ${
+                className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors border-b-2 ${
                   securityTab === 'password'
                     ? 'border-[#f97316] text-[#f97316] bg-white'
                     : 'border-transparent text-gray-500 hover:text-gray-800'
@@ -335,10 +335,10 @@ export const UserProfile = () => {
 
             {/* Form Content */}
             <form onSubmit={handleUpdateSecurity} className="p-5 space-y-3.5">
-              {/* Alert Warning Box (ONLY APPEARS ON SUBMIT ERROR) */}
+              {/* Alert Warning Box */}
               {errorMessage && (
                 <div className="bg-[#fff1f2] border border-red-100 rounded-2xl p-3 text-center animate-in fade-in">
-                  <p className="text-xs font-bold text-red-600 leading-tight">
+                  <p className="text-xs font-semibold text-red-600 leading-tight">
                     {errorMessage}
                   </p>
                 </div>
@@ -346,7 +346,7 @@ export const UserProfile = () => {
 
               {/* Field 1: Current MPIN */}
               <div>
-                <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                <label className="block text-[11px] font-semibold text-gray-700 mb-1">
                   Current MPIN (to confirm)
                 </label>
                 <input
@@ -358,13 +358,13 @@ export const UserProfile = () => {
                     if (errorMessage) setErrorMessage('');
                   }}
                   placeholder="••••"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#f97316] transition-colors"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#f97316] transition-colors"
                 />
               </div>
 
               {/* Field 2: New Value */}
               <div>
-                <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                <label className="block text-[11px] font-semibold text-gray-700 mb-1">
                   {securityTab === 'password' ? 'New Password' : 'New 4-Digit MPIN'}
                 </label>
                 <input
@@ -376,13 +376,13 @@ export const UserProfile = () => {
                     if (errorMessage) setErrorMessage('');
                   }}
                   placeholder={securityTab === 'password' ? 'Min 4 characters' : 'Enter 4 digit MPIN'}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#f97316] transition-colors"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#f97316] transition-colors"
                 />
               </div>
 
               {/* Field 3: Confirm Value */}
               <div>
-                <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                <label className="block text-[11px] font-semibold text-gray-700 mb-1">
                   {securityTab === 'password' ? 'Confirm New Password' : 'Confirm New MPIN'}
                 </label>
                 <input
@@ -394,14 +394,14 @@ export const UserProfile = () => {
                     if (errorMessage) setErrorMessage('');
                   }}
                   placeholder={securityTab === 'password' ? 'Re-enter new password' : 'Re-enter 4 digit MPIN'}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#f97316] transition-colors"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#f97316] transition-colors"
                 />
               </div>
 
               {/* Show Values Checkbox Toggle */}
               <div
                 onClick={() => setShowValues(!showValues)}
-                className="flex items-center gap-2 text-xs font-bold text-gray-500 cursor-pointer pt-0.5"
+                className="flex items-center gap-2 text-xs font-medium text-gray-500 cursor-pointer pt-0.5"
               >
                 {showValues ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
                 <span>Show values</span>
@@ -411,7 +411,7 @@ export const UserProfile = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 rounded-2xl text-white font-extrabold text-xs shadow-md transition-all active:scale-98 cursor-pointer mt-2 disabled:opacity-50"
+                className="w-full py-3 rounded-2xl text-white font-bold text-xs shadow-md transition-all active:scale-98 cursor-pointer mt-2 disabled:opacity-50"
                 style={{ backgroundColor: currentTheme.headerBgColor }}
               >
                 {isSubmitting

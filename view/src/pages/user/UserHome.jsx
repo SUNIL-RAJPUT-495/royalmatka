@@ -100,17 +100,17 @@ export const UserHome = () => {
         }}
       >
         {/* Left Side: Casino text & Play Now button */}
-        <div className="space-y-1.5 z-10">
-          <div className="flex items-center gap-1 text-[11px] font-extrabold text-yellow-300 tracking-wider uppercase">
+        <div className="space-y-1 z-10">
+          <div className="flex items-center gap-1 text-[11px] font-semibold text-yellow-300 tracking-wider uppercase">
             <span>★</span>
             <span>LIVE CASINO</span>
           </div>
-          <h2 className="text-xl font-black tracking-tight text-white leading-tight">
+          <h2 className="text-lg font-bold tracking-tight text-white leading-tight">
             Play & win big
           </h2>
           <button
             type="button"
-            className="mt-1 bg-[#fbbf24] hover:bg-yellow-400 active:scale-95 text-gray-900 font-extrabold text-xs px-4 py-1.5 rounded-full shadow-xs flex items-center gap-1.5 cursor-pointer transition-transform"
+            className="mt-1 bg-[#fbbf24] hover:bg-yellow-400 active:scale-95 text-gray-900 font-semibold text-xs px-3.5 py-1.5 rounded-full shadow-xs flex items-center gap-1.5 cursor-pointer transition-transform"
           >
             <span>Play now</span>
             <FaPlay size={8} />
@@ -129,13 +129,13 @@ export const UserHome = () => {
 
       {/* 2. Main Markets Section Header */}
       <div className="flex items-center justify-between pt-1">
-        <h3 className="font-extrabold text-gray-900 text-base tracking-tight flex items-center gap-1.5">
-          <IoFlashSharp className="text-yellow-500" size={18} />
+        <h3 className="font-bold text-gray-900 text-sm tracking-tight flex items-center gap-1.5">
+          <IoFlashSharp className="text-yellow-500" size={16} />
           <span>Main Markets</span>
         </h3>
       </div>
 
-      {/* 3. Market Cards List (Exact 100% Match with Screenshot 1 & 2) */}
+      {/* 3. Market Cards List */}
       <div className="space-y-3">
         {games.map((game) => {
           const isClosed = game.is_closed ?? (game.status === 'closed');
@@ -160,28 +160,28 @@ export const UserHome = () => {
           return (
             <div
               key={game._id}
-              className={`bg-white rounded-2xl p-4 border border-gray-100/90 shadow-2xs hover:shadow-xs transition-all duration-200 border-l-[5px] ${
+              className={`bg-white rounded-2xl p-4 border border-gray-100/90 shadow-2xs hover:shadow-xs transition-all duration-200 border-l-[4px] ${
                 isClosed ? 'border-l-[#ef4444]' : 'border-l-[#f97316]'
               }`}
             >
               {/* Top Row: Market Name on left, Clock/Play button on right */}
               <div className="flex items-start justify-between">
                 <div>
-                  <h4 className="font-black text-gray-900 text-[13px] uppercase tracking-tight">
+                  <h4 className="font-bold text-gray-900 text-[13px] uppercase tracking-tight">
                     {game.name}
                   </h4>
-                  {/* Left-Aligned Big Bold Orange Result */}
+                  {/* Left-Aligned Clean Orange Result */}
                   <div className="mt-0.5">
-                    <span className="text-base font-extrabold tracking-wider text-[#f97316]">
+                    <span className="text-sm font-semibold tracking-wider text-[#f97316]">
                       {resultDisplay}
                     </span>
                   </div>
                 </div>
 
-                {/* Right Top Action: Clock for Closed, Orange Play Circle for Running */}
+                {/* Right Top Action */}
                 {isClosed ? (
                   <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-red-500 border border-gray-100 shadow-2xs">
-                    <IoTimeOutline size={16} />
+                    <IoTimeOutline size={15} />
                   </div>
                 ) : (
                   <button
@@ -189,7 +189,7 @@ export const UserHome = () => {
                     className="w-8 h-8 rounded-full bg-[#f97316] text-white flex items-center justify-center shadow-xs cursor-pointer active:scale-95 transition-transform"
                     title="Play Game"
                   >
-                    <FaPlay size={10} className="ml-0.5" />
+                    <FaPlay size={9} className="ml-0.5" />
                   </button>
                 )}
               </div>
@@ -198,17 +198,17 @@ export const UserHome = () => {
               <div className="mt-3 flex items-center justify-between text-[11px]">
                 {/* OPEN Time */}
                 <div className="flex flex-col items-start leading-tight">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
+                  <span className="text-[9px] font-medium uppercase tracking-wider text-gray-400">
                     OPEN
                   </span>
-                  <span className="text-gray-900 font-extrabold text-[11px] mt-0.5">
+                  <span className="text-gray-800 font-semibold text-[11px] mt-0.5">
                     {game.open_time}
                   </span>
                 </div>
 
                 {/* Status Pill Badge */}
                 <div
-                  className={`px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${
                     isClosed
                       ? 'bg-red-50 text-red-600 border-red-100'
                       : 'bg-emerald-50 text-emerald-600 border-emerald-100'
@@ -219,10 +219,10 @@ export const UserHome = () => {
 
                 {/* CLOSE Time */}
                 <div className="flex flex-col items-end leading-tight">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
+                  <span className="text-[9px] font-medium uppercase tracking-wider text-gray-400">
                     CLOSE
                   </span>
-                  <span className="text-gray-900 font-extrabold text-[11px] mt-0.5">
+                  <span className="text-gray-800 font-semibold text-[11px] mt-0.5">
                     {game.close_time}
                   </span>
                 </div>

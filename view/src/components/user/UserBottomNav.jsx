@@ -13,36 +13,36 @@ export const UserBottomNav = () => {
         <NavLink
           to="/my-bids"
           className={({ isActive }) => `
-            flex flex-col items-center gap-1 transition-all py-1 px-2.5 cursor-pointer
-            ${isActive ? 'font-black text-gray-900' : 'text-gray-400 hover:text-gray-700 font-semibold'}
+            flex flex-col items-center gap-0.5 transition-all py-1 px-2.5 cursor-pointer
+            ${isActive ? 'font-bold text-gray-900' : 'text-gray-400 hover:text-gray-700 font-medium'}
           `}
         >
-          <IoDocumentTextOutline size={20} />
+          <IoDocumentTextOutline size={19} />
           <span className="text-[10px] tracking-tight">Bids</span>
         </NavLink>
 
         {/* 2. Fund */}
         <NavLink
-          to="/deposit"
+          to="/wallet"
           className={({ isActive }) => `
-            flex flex-col items-center gap-1 transition-all py-1 px-2.5 cursor-pointer
-            ${isActive ? 'font-black text-gray-900' : 'text-gray-400 hover:text-gray-700 font-semibold'}
+            flex flex-col items-center gap-0.5 transition-all py-1 px-2.5 cursor-pointer
+            ${isActive ? 'font-bold text-gray-900' : 'text-gray-400 hover:text-gray-700 font-medium'}
           `}
         >
-          <IoWalletOutline size={20} />
+          <IoWalletOutline size={19} />
           <span className="text-[10px] tracking-tight">Fund</span>
         </NavLink>
 
-        {/* 3. Center Home Button (Large Orange / Theme Rounded Square) */}
+        {/* 3. Center Home Button */}
         <NavLink
           to="/"
           className="flex flex-col items-center -mt-5 cursor-pointer"
         >
           <div
-            className="w-13 h-13 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform active:scale-95"
+            className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform active:scale-95"
             style={{ backgroundColor: currentTheme.headerBgColor }}
           >
-            <IoHome size={22} />
+            <IoHome size={20} />
           </div>
         </NavLink>
 
@@ -50,11 +50,11 @@ export const UserBottomNav = () => {
         <NavLink
           to="/casino"
           className={({ isActive }) => `
-            flex flex-col items-center gap-1 transition-all py-1 px-2.5 cursor-pointer
-            ${isActive ? 'font-black text-gray-900' : 'text-gray-400 hover:text-gray-700 font-semibold'}
+            flex flex-col items-center gap-0.5 transition-all py-1 px-2.5 cursor-pointer
+            ${isActive ? 'font-bold text-gray-900' : 'text-gray-400 hover:text-gray-700 font-medium'}
           `}
         >
-          <IoDiceOutline size={20} />
+          <IoDiceOutline size={19} />
           <span className="text-[10px] tracking-tight">Casino</span>
         </NavLink>
 
@@ -62,11 +62,11 @@ export const UserBottomNav = () => {
         <NavLink
           to="/profile"
           className={({ isActive }) => `
-            flex flex-col items-center gap-1 transition-all py-1 px-2.5 cursor-pointer
-            ${isActive ? 'font-black text-gray-900' : 'text-gray-400 hover:text-gray-700 font-semibold'}
+            flex flex-col items-center gap-0.5 transition-all py-1 px-2.5 cursor-pointer
+            ${isActive ? 'font-bold text-gray-900' : 'text-gray-400 hover:text-gray-700 font-medium'}
           `}
         >
-          <IoPersonOutline size={20} />
+          <IoPersonOutline size={19} />
           <span className="text-[10px] tracking-tight">Profile</span>
         </NavLink>
       </div>
