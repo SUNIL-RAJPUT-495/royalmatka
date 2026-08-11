@@ -21,6 +21,7 @@ import { UserContactUs } from "./pages/user/UserContactUs";
 import { UserNotificationSettings } from "./pages/user/UserNotificationSettings";
 import { UserWithdrawalsFeed } from "./pages/user/UserWithdrawalsFeed";
 import { UserGameModes } from "./pages/user/UserGameModes";
+import Aviator from "./services/aviator/pages/Aviator";
 import { AdminLayout } from "./layout/AdminLayout";
 import { Dashboard } from "./components/admin/Dashboard";
 import { AddGame } from "./pages/admin/AddGame";
@@ -69,7 +70,11 @@ function App() {
             <Route path="/game-rates" element={<UserGameRates />} />
           </Route>
 
-          {/* 2. ADMIN PANEL ROUTES */}
+          {/* 2. STANDALONE FULLSCREEN AVIATOR GAME ROUTE */}
+          <Route path="/aviator" element={<Aviator />} />
+          <Route path="/game/aviator" element={<Aviator />} />
+
+          {/* 3. ADMIN PANEL ROUTES */}
           <Route path="/systum" element={<AdminLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="AddGame" element={<AddGame />} />

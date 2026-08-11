@@ -20,7 +20,8 @@ export const UserCasino = () => {
       tag: 'AVIATOR',
       category: 'Popular',
       bgGradient: 'from-[#1e1b18] via-[#2d1f1d] to-[#121212]',
-      iconType: 'aviator'
+      iconType: 'aviator',
+      link: '/aviator'
     },
     {
       id: 'balloon',
@@ -28,7 +29,8 @@ export const UserCasino = () => {
       tag: 'BALLOON',
       category: 'Popular',
       bgGradient: 'from-[#be185d] via-[#db2777] to-[#9d174d]',
-      iconType: 'balloon'
+      iconType: 'balloon',
+      link: '/aviator'
     },
     {
       id: 'dice',
@@ -36,7 +38,8 @@ export const UserCasino = () => {
       tag: 'DICE',
       category: 'Popular',
       bgGradient: 'from-[#7c3aed] via-[#8b5cf6] to-[#6d28d9]',
-      iconType: 'dice'
+      iconType: 'dice',
+      link: '/aviator'
     },
     {
       id: 'goal',
@@ -44,7 +47,8 @@ export const UserCasino = () => {
       tag: 'GOAL',
       category: 'New',
       bgGradient: 'from-[#15803d] via-[#16a34a] to-[#166534]',
-      iconType: 'goal'
+      iconType: 'goal',
+      link: '/aviator'
     },
     {
       id: 'hilo',
@@ -52,7 +56,8 @@ export const UserCasino = () => {
       tag: 'HILO',
       category: 'New',
       bgGradient: 'from-[#b45309] via-[#d97706] to-[#92400e]',
-      iconType: 'hilo'
+      iconType: 'hilo',
+      link: '/aviator'
     },
     {
       id: 'mines',
@@ -60,7 +65,8 @@ export const UserCasino = () => {
       tag: 'MINES',
       category: 'Popular',
       bgGradient: 'from-[#1d4ed8] via-[#2563eb] to-[#1e40af]',
-      iconType: 'mines'
+      iconType: 'mines',
+      link: '/aviator'
     }
   ];
 
@@ -132,8 +138,11 @@ export const UserCasino = () => {
           })}
         </div>
 
-        {/* 3. FEATURED BIG AVIATOR BANNER (Exact Match with Screenshot) */}
-        <div className="relative h-44 rounded-3xl overflow-hidden shadow-md bg-black border border-gray-150 flex items-center justify-center">
+        {/* 3. FEATURED BIG AVIATOR BANNER (Click opens /aviator) */}
+        <div
+          onClick={() => navigate('/aviator')}
+          className="relative h-44 rounded-3xl overflow-hidden shadow-md bg-black border border-gray-150 flex items-center justify-center cursor-pointer hover:opacity-95 active:scale-[0.99] transition-all"
+        >
           {/* Background image */}
           <img
             src={aviatorImg}
@@ -150,6 +159,10 @@ export const UserCasino = () => {
           {/* Bottom-Right Play Button */}
           <button
             type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate('/aviator');
+            }}
             className="absolute bottom-3.5 right-3.5 bg-[#4ade80] hover:bg-green-400 active:scale-95 text-gray-950 font-black text-xs px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1 cursor-pointer transition-transform"
           >
             <span>Play</span>
@@ -165,10 +178,14 @@ export const UserCasino = () => {
           </h3>
         </div>
 
-        {/* 5. GAMES 3-COLUMN GRID (Exact match with Screenshot) */}
+        {/* 5. GAMES 3-COLUMN GRID */}
         <div className="grid grid-cols-3 gap-3">
           {filteredGames.map((game) => (
-            <div key={game.id} className="space-y-1.5 group cursor-pointer">
+            <div
+              key={game.id}
+              onClick={() => navigate(game.link || '/aviator')}
+              className="space-y-1.5 group cursor-pointer"
+            >
               {/* Game Icon Card Container */}
               <div
                 className={`w-full aspect-square rounded-3xl bg-gradient-to-br ${game.bgGradient} p-2.5 flex flex-col items-center justify-between text-white shadow-2xs relative overflow-hidden group-hover:scale-102 active:scale-95 transition-all border border-white/10`}
