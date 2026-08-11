@@ -14,6 +14,9 @@ import { UserBankDetails } from "./pages/user/UserBankDetails";
 import { UserBids } from "./pages/user/UserBids";
 import { UserBidsHistory } from "./pages/user/UserBidsHistory";
 import { UserCasino } from "./pages/user/UserCasino";
+import { UserCharts } from "./pages/user/UserCharts";
+import { UserHowToPlay } from "./pages/user/UserHowToPlay";
+import { UserMpinSettings } from "./pages/user/UserMpinSettings";
 import { AdminLayout } from "./layout/AdminLayout";
 import { Dashboard } from "./components/admin/Dashboard";
 import { AddGame } from "./pages/admin/AddGame";
@@ -40,6 +43,11 @@ function App() {
             <Route path="/bids" element={<UserBids />} />
             <Route path="/bids-history" element={<UserBidsHistory />} />
             <Route path="/casino" element={<UserCasino />} />
+            <Route path="/charts" element={<UserCharts />} />
+            <Route path="/charts-list" element={<UserCharts />} />
+            <Route path="/how-to-play" element={<UserHowToPlay />} />
+            <Route path="/mpin-settings" element={<UserMpinSettings />} />
+            <Route path="/security-settings" element={<UserMpinSettings />} />
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/tips" element={<UserWinningTips />} />
             <Route path="/winning-tips" element={<UserWinningTips />} />
