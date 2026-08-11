@@ -16,8 +16,10 @@ import {
   FaTimes,
   FaLock,
   FaEye,
-  FaEyeSlash
+  FaEyeSlash,
+  FaTrashAlt
 } from 'react-icons/fa';
+import { BiExit } from 'react-icons/bi';
 import toast from 'react-hot-toast';
 
 export const UserProfile = () => {
@@ -33,37 +35,49 @@ export const UserProfile = () => {
     createdAt: '17/7/2026'
   };
 
-  // Login & Security Modal state
+  // Login & Security Modal state (Bottom Sheet)
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
   const [securityTab, setSecurityTab] = useState('password'); // 'mpin' or 'password'
   const [currentMpin, setCurrentMpin] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showValues, setShowValues] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const openSecurityModal = () => {
+    setErrorMessage('');
+    setCurrentMpin('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setIsSecurityModalOpen(true);
+  };
 
   const handleUpdateSecurity = (e) => {
     e.preventDefault();
-    if (!currentMpin) {
-      toast.error('Please enter your 4-digit MPIN to confirm.');
+    setErrorMessage('');
+
+    if (!currentMpin || currentMpin.trim() === '') {
+      setErrorMessage('Enter your current 4-digit MPIN to confirm.');
       return;
     }
+
     if (securityTab === 'password') {
       if (!newPassword || newPassword.length < 4) {
-        toast.error('New password must be at least 4 characters.');
+        setErrorMessage('New password must be at least 4 characters.');
         return;
       }
       if (newPassword !== confirmPassword) {
-        toast.error('Passwords do not match.');
+        setErrorMessage('New password and confirm password do not match.');
         return;
       }
     } else {
       if (!newPassword || newPassword.length !== 4) {
-        toast.error('New MPIN must be 4 digits.');
+        setErrorMessage('New MPIN must be exactly 4 digits.');
         return;
       }
       if (newPassword !== confirmPassword) {
-        toast.error('MPIN does not match.');
+        setErrorMessage('New MPIN and confirm MPIN do not match.');
         return;
       }
     }
@@ -77,14 +91,27 @@ export const UserProfile = () => {
           ? 'Password updated successfully!'
           : 'MPIN updated successfully!'
       );
-      setCurrentMpin('');
-      setNewPassword('');
-      setConfirmPassword('');
-    }, 600);
+    }, 500);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user_data');
+    toast.success('Logged out successfully');
+    window.location.href = '/';
+  };
+
+  const handleDeleteAccount = () => {
+    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user_data');
+      toast.success('Account deleted');
+      window.location.href = '/';
+    }
   };
 
   return (
-    <div className="w-full space-y-4 select-none pb-6 font-sans">
+    <div className="w-full space-y-4 select-none pb-8 font-sans">
       {/* 1. TOP USER DETAILS CARD */}
       <div className="bg-white rounded-3xl p-4.5 border border-gray-100 shadow-2xs flex items-center gap-4">
         {/* Orange Circular Avatar with initial */}
@@ -207,7 +234,7 @@ export const UserProfile = () => {
 
       {/* 4. LOGIN & SECURITY CARD */}
       <div
-        onClick={() => setIsSecurityModalOpen(true)}
+        onClick={openSecurityModal}
         className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex items-center justify-between cursor-pointer hover:bg-gray-50 active:scale-[0.99] transition-all"
       >
         <div className="flex items-center gap-3.5">
@@ -219,11 +246,42 @@ export const UserProfile = () => {
         <FaChevronRight size={12} className="text-gray-400" />
       </div>
 
-      {/* 5. LOGIN & SECURITY MODAL DRAWER (Exact match with Screenshot 2) */}
+      {/* 5. LOG OUT & DELETE ACCOUNT BUTTONS */}
+      <div className="space-y-3 pt-2">
+        {/* Log Out Button */}
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="w-full bg-[#fff1f2] hover:bg-[#ffe4e6] active:scale-[0.99] border border-red-100 rounded-2xl p-3.5 flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-2xs"
+        >
+          <div className="w-8 h-8 rounded-xl bg-[#ef4444] text-white flex items-center justify-center shadow-xs">
+            <BiExit size={18} />
+          </div>
+          <span className="font-extrabold text-red-600 text-sm">Log Out</span>
+        </button>
+
+        {/* Delete Account Button (Red Outline Border) */}
+        <button
+          type="button"
+          onClick={handleDeleteAccount}
+          className="w-full bg-white hover:bg-red-50/50 active:scale-[0.99] border-2 border-red-500 rounded-2xl p-3.5 flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-2xs"
+        >
+          <FaTrashAlt size={14} className="text-red-500" />
+          <span className="font-extrabold text-red-500 text-sm">Delete Account</span>
+        </button>
+      </div>
+
+      {/* 6. LOGIN & SECURITY BOTTOM DRAWER MODAL */}
       {isSecurityModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
-            {/* Modal Header */}
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs transition-opacity duration-300"
+          onClick={() => setIsSecurityModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg bg-white rounded-t-3xl overflow-hidden shadow-2xl transform transition-transform duration-300 animate-in slide-in-from-bottom pb-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header Banner */}
             <div
               className="p-4 text-white flex items-center justify-between transition-colors duration-300"
               style={{ backgroundColor: currentTheme.headerBgColor }}
@@ -241,10 +299,13 @@ export const UserProfile = () => {
             </div>
 
             {/* 2 Navigation Tabs */}
-            <div className="flex border-b border-gray-100 bg-gray-50/50">
+            <div className="flex border-b border-gray-150 bg-gray-50/60">
               <button
                 type="button"
-                onClick={() => setSecurityTab('mpin')}
+                onClick={() => {
+                  setSecurityTab('mpin');
+                  setErrorMessage('');
+                }}
                 className={`flex-1 py-3 text-xs font-black flex items-center justify-center gap-2 cursor-pointer transition-colors border-b-2 ${
                   securityTab === 'mpin'
                     ? 'border-[#f97316] text-[#f97316] bg-white'
@@ -257,7 +318,10 @@ export const UserProfile = () => {
 
               <button
                 type="button"
-                onClick={() => setSecurityTab('password')}
+                onClick={() => {
+                  setSecurityTab('password');
+                  setErrorMessage('');
+                }}
                 className={`flex-1 py-3 text-xs font-black flex items-center justify-center gap-2 cursor-pointer transition-colors border-b-2 ${
                   securityTab === 'password'
                     ? 'border-[#f97316] text-[#f97316] bg-white'
@@ -271,12 +335,14 @@ export const UserProfile = () => {
 
             {/* Form Content */}
             <form onSubmit={handleUpdateSecurity} className="p-5 space-y-3.5">
-              {/* Alert Warning Box */}
-              <div className="bg-[#fff1f2] border border-red-100 rounded-2xl p-3 text-center">
-                <p className="text-xs font-bold text-red-600 leading-tight">
-                  Enter your current 4-digit MPIN to confirm.
-                </p>
-              </div>
+              {/* Alert Warning Box (ONLY APPEARS ON SUBMIT ERROR) */}
+              {errorMessage && (
+                <div className="bg-[#fff1f2] border border-red-100 rounded-2xl p-3 text-center animate-in fade-in">
+                  <p className="text-xs font-bold text-red-600 leading-tight">
+                    {errorMessage}
+                  </p>
+                </div>
+              )}
 
               {/* Field 1: Current MPIN */}
               <div>
@@ -287,7 +353,10 @@ export const UserProfile = () => {
                   type={showValues ? 'text' : 'password'}
                   maxLength={4}
                   value={currentMpin}
-                  onChange={(e) => setCurrentMpin(e.target.value)}
+                  onChange={(e) => {
+                    setCurrentMpin(e.target.value);
+                    if (errorMessage) setErrorMessage('');
+                  }}
                   placeholder="••••"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#f97316] transition-colors"
                 />
@@ -302,7 +371,10 @@ export const UserProfile = () => {
                   type={showValues ? 'text' : 'password'}
                   maxLength={securityTab === 'mpin' ? 4 : 20}
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    if (errorMessage) setErrorMessage('');
+                  }}
                   placeholder={securityTab === 'password' ? 'Min 4 characters' : 'Enter 4 digit MPIN'}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#f97316] transition-colors"
                 />
@@ -317,13 +389,16 @@ export const UserProfile = () => {
                   type={showValues ? 'text' : 'password'}
                   maxLength={securityTab === 'mpin' ? 4 : 20}
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (errorMessage) setErrorMessage('');
+                  }}
                   placeholder={securityTab === 'password' ? 'Re-enter new password' : 'Re-enter 4 digit MPIN'}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#f97316] transition-colors"
                 />
               </div>
 
-              {/* Show Values Checkbox */}
+              {/* Show Values Checkbox Toggle */}
               <div
                 onClick={() => setShowValues(!showValues)}
                 className="flex items-center gap-2 text-xs font-bold text-gray-500 cursor-pointer pt-0.5"
