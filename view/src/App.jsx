@@ -5,6 +5,10 @@ import { UserLayout } from "./layout/UserLayout";
 import { UserHome } from "./pages/user/UserHome";
 import { UserProfile } from "./pages/user/UserProfile";
 import { UserWallet } from "./pages/user/UserWallet";
+import { UserWinningTips } from "./pages/user/UserWinningTips";
+import { UserPassbook } from "./pages/user/UserPassbook";
+import { UserGameRates } from "./pages/user/UserGameRates";
+import { UserWithdraw } from "./pages/user/UserWithdraw";
 import { AdminLayout } from "./layout/AdminLayout";
 import { Dashboard } from "./components/admin/Dashboard";
 import { AddGame } from "./pages/admin/AddGame";
@@ -23,7 +27,13 @@ function App() {
             <Route path="/home" element={<UserHome />} />
             <Route path="/wallet" element={<UserWallet />} />
             <Route path="/deposit" element={<UserWallet />} />
+            <Route path="/withdraw" element={<UserWithdraw />} />
             <Route path="/profile" element={<UserProfile />} />
+            <Route path="/tips" element={<UserWinningTips />} />
+            <Route path="/winning-tips" element={<UserWinningTips />} />
+            <Route path="/passbook" element={<UserPassbook />} />
+            <Route path="/transaction-history" element={<UserPassbook />} />
+            <Route path="/game-rates" element={<UserGameRates />} />
           </Route>
 
           {/* 2. ADMIN PANEL ROUTES */}
