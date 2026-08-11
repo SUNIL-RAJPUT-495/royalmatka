@@ -13,7 +13,8 @@ export const UserBids = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState('Pending'); // 'All', 'Wins', 'Losses', 'Pending'
+  // DEFAULT ACTIVE TAB IS 'All'
+  const [activeTab, setActiveTab] = useState('All'); // 'All', 'Wins', 'Losses', 'Pending'
   const [searchQuery, setSearchQuery] = useState('');
 
   const tabs = ['All', 'Wins', 'Losses', 'Pending'];
@@ -132,7 +133,7 @@ export const UserBids = () => {
             ))}
           </div>
         ) : (
-          /* Empty State (Exact match with screenshot) */
+          /* Empty State */
           <div className="bg-white rounded-3xl p-12 border border-gray-150 shadow-2xs flex flex-col items-center justify-center text-center">
             <div className="w-14 h-14 rounded-full bg-gray-100/90 flex items-center justify-center text-gray-400 mb-3">
               <IoSearchOutline size={26} />
