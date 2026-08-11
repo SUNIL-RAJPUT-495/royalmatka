@@ -57,11 +57,11 @@ const DUMMY_MARKETS = [
   },
   {
     _id: 'm6',
-    name: 'SITA MORNING',
+    name: 'SRIDEVI NIGHT',
     result: '145-02-480',
-    open_time: '9:40 AM',
-    close_time: '10:40 AM',
-    is_closed: true
+    open_time: '9:40 PM',
+    close_time: '10:40 PM',
+    is_closed: false
   },
   {
     _id: 'm7',
@@ -94,7 +94,7 @@ export const UserHome = () => {
 
   return (
     <div className="w-full space-y-4 select-none pb-6">
-      {/* 1. CASINO / AVIATOR BANNER (Click opens /casino) */}
+      {/* 1. CASINO / AVIATOR BANNER */}
       <div
         onClick={() => navigate('/casino')}
         className="rounded-3xl p-4 text-white shadow-md relative overflow-hidden flex items-center justify-between transition-all duration-300 cursor-pointer hover:opacity-95 active:scale-[0.99]"
@@ -167,8 +167,13 @@ export const UserHome = () => {
           return (
             <div
               key={game._id}
+              onClick={() => {
+                if (!isClosed) {
+                  navigate(`/play-game/${encodeURIComponent(game.name)}`);
+                }
+              }}
               className={`bg-white rounded-2xl p-4 border border-gray-100/90 shadow-2xs hover:shadow-xs transition-all duration-200 border-l-[4px] ${
-                isClosed ? 'border-l-[#ef4444]' : 'border-l-[#f97316]'
+                isClosed ? 'border-l-[#ef4444]' : 'border-l-[#f97316] cursor-pointer hover:bg-orange-50/20'
               }`}
             >
               {/* Top Row: Market Name on left, Clock/Play button on right */}
@@ -193,6 +198,10 @@ export const UserHome = () => {
                 ) : (
                   <button
                     type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/play-game/${encodeURIComponent(game.name)}`);
+                    }}
                     className="w-8 h-8 rounded-full bg-[#f97316] text-white flex items-center justify-center shadow-xs cursor-pointer active:scale-95 transition-transform"
                     title="Play Game"
                   >

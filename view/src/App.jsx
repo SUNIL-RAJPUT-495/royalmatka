@@ -20,6 +20,7 @@ import { UserMpinSettings } from "./pages/user/UserMpinSettings";
 import { UserContactUs } from "./pages/user/UserContactUs";
 import { UserNotificationSettings } from "./pages/user/UserNotificationSettings";
 import { UserWithdrawalsFeed } from "./pages/user/UserWithdrawalsFeed";
+import { UserGameModes } from "./pages/user/UserGameModes";
 import { AdminLayout } from "./layout/AdminLayout";
 import { Dashboard } from "./components/admin/Dashboard";
 import { AddGame } from "./pages/admin/AddGame";
@@ -46,6 +47,9 @@ function App() {
             <Route path="/bids" element={<UserBids />} />
             <Route path="/bids-history" element={<UserBidsHistory />} />
             <Route path="/casino" element={<UserCasino />} />
+            <Route path="/play-game/:marketName" element={<UserGameModes />} />
+            <Route path="/game-modes/:marketName" element={<UserGameModes />} />
+            <Route path="/market-games/:marketName" element={<UserGameModes />} />
             <Route path="/charts" element={<UserCharts />} />
             <Route path="/charts-list" element={<UserCharts />} />
             <Route path="/how-to-play" element={<UserHowToPlay />} />
