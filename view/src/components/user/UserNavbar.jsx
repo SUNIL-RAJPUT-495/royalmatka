@@ -28,7 +28,9 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
 
   return (
     <header
-      className="w-full text-white shadow-md rounded-b-[28px] overflow-hidden transition-colors duration-300 select-none shrink-0"
+      className={`w-full text-white shadow-xs transition-colors duration-300 select-none shrink-0 ${
+        isHomePage ? 'rounded-b-[28px] shadow-md' : ''
+      }`}
       style={{ backgroundColor: currentTheme.headerBgColor }}
     >
       {/* 1. TOP NAVBAR HEADER */}
@@ -55,15 +57,15 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
         </div>
       ) : (
         /* STANDARD TOP NAVBAR (Home / Bids) */
-        <div className="px-4 pt-3.5 pb-2 flex items-center justify-between">
+        <div className="px-4 pt-3 pb-3 flex items-center justify-between">
           {/* Left: Hamburger & Logo */}
           <div className="flex items-center gap-3">
             <button
               onClick={onOpenSidebar}
-              className="w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition-all cursor-pointer active:scale-95 border border-white/20 shadow-xs"
+              className="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition-all cursor-pointer active:scale-95 border border-white/20 shadow-xs"
               title="Open Menu"
             >
-              <FaBars size={16} />
+              <FaBars size={15} />
             </button>
 
             {/* Logo Name: Royal1008 */}
@@ -81,9 +83,9 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
             {/* Notification Button with 9+ badge */}
             <button
               onClick={() => navigate('/notifications')}
-              className="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition-all cursor-pointer relative border border-white/20"
+              className="w-8 h-8 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition-all cursor-pointer relative border border-white/20"
             >
-              <FaBell size={14} />
+              <FaBell size={13} />
               <span className="absolute -top-1 -right-1 bg-red-500 text-white font-bold text-[9px] px-1.5 py-0.2 rounded-full border border-white shadow-xs">
                 9+
               </span>
@@ -92,9 +94,9 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
             {/* Wallet Balance Pill */}
             <div
               onClick={() => navigate('/wallet')}
-              className="bg-white/20 hover:bg-white/30 backdrop-blur-xs px-3.5 py-1.5 rounded-xl border border-white/25 flex items-center gap-2 cursor-pointer shadow-xs active:scale-95 transition-all"
+              className="bg-white/20 hover:bg-white/30 backdrop-blur-xs px-3 py-1 rounded-xl border border-white/25 flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-all"
             >
-              <IoWalletOutline size={15} className="text-white opacity-90" />
+              <IoWalletOutline size={14} className="text-white opacity-90" />
               <span className="text-xs font-semibold text-white">₹ {walletBalance}</span>
             </div>
           </div>
