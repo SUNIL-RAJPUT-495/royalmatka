@@ -8,27 +8,76 @@ import {
   FaCheck,
   FaGift,
   FaArrowRight,
-  FaSyncAlt
+  FaSyncAlt,
+  FaInfoCircle
 } from 'react-icons/fa';
-import { IoFilterSharp, IoDocumentTextOutline } from 'react-icons/io5';
+import { IoFilterSharp, IoDocumentTextOutline, IoTimeOutline, IoCheckmarkCircleOutline } from 'react-icons/io5';
 
 export const UserPassbook = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState('Bonuses');
+  // 1. DEFAULT ACTIVE TAB IS 'All'
+  const [activeTab, setActiveTab] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Transactions data matching screenshots
+  // Transactions list matching exact screenshot
   const allTransactions = [
     {
-      id: 'tx-bonus-1',
-      type: 'Bonus',
+      id: 'tx-1',
+      code: '#be160',
+      title: 'Deposit #be160',
+      date: '5/8/2026, 1:50:58 PM',
+      type: 'Deposit',
+      amount: 500,
+      utr: 'TX-1785918058381-187',
+      status: 'Pending',
+      category: 'Deposits'
+    },
+    {
+      id: 'tx-2',
+      code: '#be07e',
+      title: 'Deposit #be07e',
+      date: '5/8/2026, 1:34:04 PM',
+      type: 'Deposit',
+      amount: 500,
+      utr: 'TX-1785917044872-156',
+      status: 'Pending',
+      category: 'Deposits'
+    },
+    {
+      id: 'tx-3',
+      code: '#b14ce',
+      title: 'Transaction #b14ce',
+      date: '1/8/2026, 2:27:03 PM',
+      type: 'Game',
+      amount: -10,
+      utr: 'TX-1785574623987-561',
+      status: 'Confirmed',
+      category: 'Games',
+      notes: 'Nexx settle round:11499933095758999572 bet:10 win:0 bal:9 serial:f588cacd-ff67-3c8d-819c-b50060164ea4'
+    },
+    {
+      id: 'tx-4',
+      code: '#b091f',
+      title: 'Bonus #b091f',
       date: '28/7/2026, 2:31:25 PM',
+      type: 'Bonus',
       amount: 9,
       utr: 'BET-1785229285955',
       status: 'Confirmed',
       category: 'Bonuses'
+    },
+    {
+      id: 'tx-5',
+      code: '#w992a',
+      title: 'Withdrawal #w992a',
+      date: '20/7/2026, 5:40:22 PM',
+      type: 'Withdrawal',
+      amount: -500,
+      utr: 'TX-1784992819201-332',
+      status: 'Confirmed',
+      category: 'Withdrawals'
     }
   ];
 
@@ -43,6 +92,7 @@ export const UserPassbook = () => {
     const matchesTab = activeTab === 'All' || tx.category === activeTab;
     const matchesSearch =
       tx.utr.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tx.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tx.amount.toString().includes(searchQuery);
     return matchesTab && matchesSearch;
   });
@@ -80,13 +130,14 @@ export const UserPassbook = () => {
             if (tab.id === 'Bonuses') activeBgClass = 'bg-[#8b5cf6] text-white';
             if (tab.id === 'Withdrawals') activeBgClass = 'bg-[#f97316] text-white';
             if (tab.id === 'Deposits') activeBgClass = 'bg-[#10b981] text-white';
+            if (tab.id === 'All') activeBgClass = 'bg-[#f97316] text-white';
 
             return (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer text-center ${
+                className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer text-center ${
                   isActive
                     ? `${activeBgClass} shadow-xs font-bold`
                     : 'text-gray-500 hover:text-gray-800'
@@ -98,7 +149,21 @@ export const UserPassbook = () => {
           })}
         </div>
 
-        {/* 3. ACTIVE CATEGORY INFO BANNER */}
+        {/* 3. ACTIVE CATEGORY INFO BANNER (Matching Screenshot) */}
+        {activeTab === 'All' && (
+          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-full bg-[#f97316] text-white flex items-center justify-center shadow-xs shrink-0">
+              <FaInfoCircle size={18} />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-gray-900 leading-tight">All Transactions</h4>
+              <p className="text-xs text-gray-500 font-medium mt-0.5">
+                Showing all transaction types
+              </p>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'Bonuses' && (
           <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex items-center gap-3.5">
             <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shadow-2xs shrink-0">
@@ -108,6 +173,20 @@ export const UserPassbook = () => {
               <h4 className="text-sm font-bold text-gray-900 leading-tight">Bonuses</h4>
               <p className="text-xs text-purple-600 font-medium mt-0.5">
                 Rewards and referral credits
+              </p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'Deposits' && (
+          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-2xs shrink-0">
+              <FaArrowRight size={14} className="rotate-45" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-gray-900 leading-tight">Deposits</h4>
+              <p className="text-xs text-emerald-600 font-medium mt-0.5">
+                Funds added to wallet
               </p>
             </div>
           </div>
@@ -158,66 +237,121 @@ export const UserPassbook = () => {
         </div>
 
         <div className="text-[11px] font-medium text-gray-400 px-1">
-          {filteredTransactions.length} transaction found
+          {filteredTransactions.length} transactions found
         </div>
 
-        {/* 5. TRANSACTIONS LIST / EMPTY STATE */}
+        {/* 5. TRANSACTIONS LIST (Exact Match with Screenshot) */}
         {filteredTransactions.length > 0 ? (
           <div className="space-y-3">
-            {filteredTransactions.map((tx) => (
-              <div
-                key={tx.id}
-                className="bg-white rounded-3xl p-4.5 border border-emerald-200 shadow-2xs space-y-3"
-              >
-                {/* Header Row */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
-                      <FaCheck size={13} />
+            {filteredTransactions.map((tx) => {
+              const isPending = tx.status === 'Pending';
+              const isGame = tx.type === 'Game';
+              const isBonus = tx.type === 'Bonus';
+
+              return (
+                <div
+                  key={tx.id}
+                  className={`bg-white rounded-3xl p-4.5 shadow-2xs space-y-3 border ${
+                    isPending
+                      ? 'border-orange-200'
+                      : isGame || isBonus
+                      ? 'border-emerald-200'
+                      : 'border-gray-150'
+                  }`}
+                >
+                  {/* Top Row: Icon, Title & Date on Left, Badges on Right */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      {/* Status Circle Icon */}
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shadow-xs shrink-0 ${
+                          isPending
+                            ? 'bg-[#f97316] text-white'
+                            : 'bg-emerald-500 text-white'
+                        }`}
+                      >
+                        {isPending ? <IoTimeOutline size={15} /> : <FaCheck size={12} />}
+                      </div>
+
+                      <div>
+                        <h4 className="text-xs font-bold text-gray-900 leading-tight">
+                          {tx.title}
+                        </h4>
+                        <span className="text-[10px] text-gray-400 font-normal mt-0.5 block">
+                          {tx.date}
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900">{tx.type}</h4>
-                      <span className="text-[11px] text-gray-400 font-normal">{tx.date}</span>
+
+                    {/* Right Badges */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {tx.type === 'Deposit' && (
+                        <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-150">
+                          <span>← Deposit</span>
+                        </span>
+                      )}
+
+                      {tx.type === 'Bonus' && (
+                        <span className="bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-purple-150">
+                          <FaGift size={9} />
+                          <span>Bonus</span>
+                        </span>
+                      )}
+
+                      {isPending ? (
+                        <span className="bg-orange-50 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-orange-150">
+                          <IoTimeOutline size={11} />
+                          <span>Pending</span>
+                        </span>
+                      ) : (
+                        <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-150">
+                          <FaCheck size={9} />
+                          <span>Confirmed</span>
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
-                    <span className="bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-purple-100">
-                      <FaGift size={9} />
-                      <span>Bonus</span>
-                    </span>
-                    <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-100">
-                      <FaCheck size={9} />
+                  {/* 2 Inner Sub-Boxes: Amount & UTR */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="p-3 bg-gray-50/70 rounded-2xl border border-gray-100">
+                      <span className="text-[10px] uppercase font-bold text-gray-400 block">Amount</span>
+                      <span className="text-base font-bold text-gray-900 mt-0.5 block">
+                        ₹{tx.amount}
+                      </span>
+                    </div>
+
+                    <div className="p-3 bg-gray-50/70 rounded-2xl border border-gray-100 overflow-hidden">
+                      <span className="text-[10px] uppercase font-bold text-gray-400 block">UTR</span>
+                      <span className="text-[11px] font-bold text-gray-800 mt-1 block truncate">
+                        {tx.utr}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Optional Notes Box (For Game transactions) */}
+                  {tx.notes && (
+                    <div className="p-3 bg-blue-50/70 rounded-2xl border border-blue-150 space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-blue-500 block">Notes</span>
+                      <p className="text-[11px] text-blue-900 leading-relaxed font-semibold break-all">
+                        {tx.notes}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Confirmed Status pill row if not game */}
+                  {!tx.notes && !isPending && (
+                    <div className="p-2.5 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-center gap-1.5 text-xs font-bold text-emerald-700">
+                      <FaCheck size={11} />
                       <span>Confirmed</span>
-                    </span>
-                  </div>
+                    </div>
+                  )}
                 </div>
-
-                {/* 2 Inner Sub-Boxes (Amount & UTR) */}
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div className="p-3 bg-gray-50/70 rounded-2xl border border-gray-100">
-                    <span className="text-[10px] uppercase font-bold text-gray-400 block">Amount</span>
-                    <span className="text-base font-bold text-gray-900 mt-0.5 block">₹{tx.amount}</span>
-                  </div>
-
-                  <div className="p-3 bg-gray-50/70 rounded-2xl border border-gray-100 overflow-hidden">
-                    <span className="text-[10px] uppercase font-bold text-gray-400 block">UTR</span>
-                    <span className="text-xs font-bold text-gray-800 mt-1 block truncate">
-                      {tx.utr}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Status Row */}
-                <div className="p-2.5 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-center gap-1.5 text-xs font-bold text-emerald-700">
-                  <FaCheck size={11} />
-                  <span>Confirmed</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
-          /* Empty State (Matching Screenshot 3) */
+          /* Empty State */
           <div className="bg-white rounded-3xl p-12 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center">
             <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mb-3">
               <IoDocumentTextOutline size={28} />
@@ -228,18 +362,6 @@ export const UserPassbook = () => {
             </p>
           </div>
         )}
-
-        {/* 6. BACK TO WALLET BUTTON */}
-        <div className="pt-2">
-          <button
-            type="button"
-            onClick={() => navigate('/wallet')}
-            className="w-full bg-[#f97316] hover:bg-orange-600 active:scale-98 text-white font-bold py-3 rounded-2xl shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all text-xs"
-          >
-            <FaArrowLeft size={12} />
-            <span>Back to Wallet</span>
-          </button>
-        </div>
       </div>
     </div>
   );
