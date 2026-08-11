@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { fetchGame } from '../../utils/api';
 import { IoFlashSharp, IoTimeOutline } from 'react-icons/io5';
@@ -74,6 +75,7 @@ const DUMMY_MARKETS = [
 
 export const UserHome = () => {
   const { currentTheme } = useTheme();
+  const navigate = useNavigate();
   const [games, setGames] = useState(DUMMY_MARKETS);
 
   useEffect(() => {
@@ -92,9 +94,10 @@ export const UserHome = () => {
 
   return (
     <div className="w-full space-y-4 select-none pb-6">
-      {/* 1. CASINO / AVIATOR BANNER */}
+      {/* 1. CASINO / AVIATOR BANNER (Click opens /casino) */}
       <div
-        className="rounded-3xl p-4 text-white shadow-md relative overflow-hidden flex items-center justify-between transition-colors duration-300"
+        onClick={() => navigate('/casino')}
+        className="rounded-3xl p-4 text-white shadow-md relative overflow-hidden flex items-center justify-between transition-all duration-300 cursor-pointer hover:opacity-95 active:scale-[0.99]"
         style={{
           background: `linear-gradient(135deg, ${currentTheme.headerBgColor} 0%, #9a3412 100%)`
         }}
@@ -110,6 +113,10 @@ export const UserHome = () => {
           </h2>
           <button
             type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate('/casino');
+            }}
             className="mt-1 bg-[#fbbf24] hover:bg-yellow-400 active:scale-95 text-gray-900 font-semibold text-xs px-3.5 py-1.5 rounded-full shadow-xs flex items-center gap-1.5 cursor-pointer transition-transform"
           >
             <span>Play now</span>
