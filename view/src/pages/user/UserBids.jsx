@@ -71,9 +71,9 @@ export const UserBids = () => {
             <div
               key={item.id}
               onClick={() => navigate(item.link)}
-              className="bg-white rounded-2xl py-6 px-3 border border-gray-200/80 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50/80 active:scale-[0.98] transition-all min-h-[145px]"
+              className="bg-white rounded-2xl py-1 px-3 border border-gray-200/80 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50/80 active:scale-[0.98] transition-all min-h-[145px]"
             >
-              {/* Circular Orange Border Icon */}
+              {/* Circular Orange Border Icon */} 
               <div className="w-14 h-14 rounded-full border-[1.5px] border-[#f97316] text-[#f97316] flex items-center justify-center mb-3 shadow-2xs shrink-0">
                 <Icon size={23} />
               </div>
