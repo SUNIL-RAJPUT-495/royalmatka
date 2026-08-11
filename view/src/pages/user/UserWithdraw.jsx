@@ -20,6 +20,7 @@ export const UserWithdraw = () => {
   const [amount, setAmount] = useState('1000');
   const [method, setMethod] = useState('bank'); // 'bank' or 'upi'
   const [upiId, setUpiId] = useState('');
+  const [showRules, setShowRules] = useState(false);
 
   const numAmount = Number(amount);
   const isValidAmount = numAmount >= 1000 && numAmount <= Number(user.walletBalance || 9);
@@ -76,12 +77,64 @@ export const UserWithdraw = () => {
         {/* 4. WITHDRAWAL RULES BUTTON */}
         <button
           type="button"
-          onClick={() => navigate('/withdrawal-rules')}
+          onClick={() => setShowRules(!showRules)}
           className="w-full bg-[#f97316] hover:bg-orange-600 active:scale-[0.99] text-white font-bold py-3 rounded-2xl shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer text-xs"
         >
           <FaFileAlt size={13} />
           <span>Withdrawal Rules</span>
         </button>
+
+        {/* 4.1 EXPANDABLE WITHDRAWAL RULES CARD (Exact match with screenshot) */}
+        {showRules && (
+          <div className="bg-white rounded-3xl p-5 border border-gray-150 shadow-2xs space-y-3.5 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-center gap-2 text-sm font-bold text-gray-900 mb-1">
+              <FaFileAlt className="text-[#f97316]" size={14} />
+              <span>Withdrawal Rules</span>
+            </div>
+
+            <div className="space-y-3 text-xs text-gray-700">
+              {/* Rule 1 */}
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-[#f97316] text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                  1
+                </span>
+                <p className="leading-tight font-medium text-gray-800">
+                  Withdrawal requests are processed from 06:00 AM to 5:00 PM daily.
+                </p>
+              </div>
+
+              {/* Rule 2 */}
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-[#f97316] text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                  2
+                </span>
+                <p className="leading-tight font-medium text-gray-800">
+                  Minimum withdrawal amount is ₹1000.
+                </p>
+              </div>
+
+              {/* Rule 3 */}
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-[#f97316] text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                  3
+                </span>
+                <p className="leading-tight font-medium text-gray-800">
+                  All withdrawal requests require admin approval before processing.
+                </p>
+              </div>
+
+              {/* Rule 4 */}
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-[#f97316] text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                  4
+                </span>
+                <p className="leading-tight font-medium text-gray-800">
+                  For any issues, please contact customer support.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 5. WITHDRAWAL FORM CONTAINER CARD */}
         <div className="bg-white rounded-3xl p-5 border border-gray-150 shadow-2xs space-y-4">
@@ -141,7 +194,7 @@ export const UserWithdraw = () => {
             </div>
           </div>
 
-          {/* Field 3: Bank Account / UPI (Exact match with Screenshots 1, 2, 3) */}
+          {/* Field 3: Bank Account / UPI */}
           {method === 'bank' ? (
             <div
               onClick={() => navigate('/bank-details')}
