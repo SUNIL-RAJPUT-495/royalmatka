@@ -62,20 +62,20 @@ export const UserBids = () => {
   ];
 
   return (
-    <div className="w-full select-none pb-24 font-sans px-3.5 pt-3">
-      {/* 2 COLUMNS X 4 ROWS GRID OF 8 CARDS (Exact match with Screenshot) */}
-      <div className="grid grid-cols-2 gap-3.5">
+    <div className="w-full select-none pb-24 font-sans px-3.5 pt-2.5">
+      {/* 2 COLUMNS X 4 ROWS GRID OF 8 CARDS */}
+      <div className="grid grid-cols-2 gap-3">
         {bidHubItems.map((item) => {
           const Icon = item.icon;
           return (
             <div
               key={item.id}
               onClick={() => navigate(item.link)}
-              className="bg-white rounded-2xl py-1 px-3 border border-gray-200/80 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50/80 active:scale-[0.98] transition-all min-h-[145px]"
+              className="bg-white rounded-2xl py-3.5 px-2.5 border border-gray-200/80 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50/80 active:scale-[0.98] transition-all min-h-[118px]"
             >
-              {/* Circular Orange Border Icon */} 
-              <div className="w-14 h-14 rounded-full border-[1.5px] border-[#f97316] text-[#f97316] flex items-center justify-center mb-3 shadow-2xs shrink-0">
-                <Icon size={23} />
+              {/* Circular Orange Border Icon */}
+              <div className="w-12 h-12 rounded-full border-[1.5px] border-[#f97316] text-[#f97316] flex items-center justify-center mb-2 shadow-2xs shrink-0">
+                <Icon size={20} />
               </div>
 
               {/* Card Label */}
