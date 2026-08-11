@@ -5,6 +5,7 @@ import { UserLayout } from "./layout/UserLayout";
 import { UserHome } from "./pages/user/UserHome";
 import { UserProfile } from "./pages/user/UserProfile";
 import { UserWallet } from "./pages/user/UserWallet";
+import { UserDeposit } from "./pages/user/UserDeposit";
 import { UserWinningTips } from "./pages/user/UserWinningTips";
 import { UserPassbook } from "./pages/user/UserPassbook";
 import { UserGameRates } from "./pages/user/UserGameRates";
@@ -26,7 +27,8 @@ function App() {
             <Route path="/" element={<UserHome />} />
             <Route path="/home" element={<UserHome />} />
             <Route path="/wallet" element={<UserWallet />} />
-            <Route path="/deposit" element={<UserWallet />} />
+            <Route path="/deposit" element={<UserDeposit />} />
+            <Route path="/add-fund" element={<UserDeposit />} />
             <Route path="/withdraw" element={<UserWithdraw />} />
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/tips" element={<UserWinningTips />} />
