@@ -17,6 +17,9 @@ import { UserCasino } from "./pages/user/UserCasino";
 import { UserCharts } from "./pages/user/UserCharts";
 import { UserHowToPlay } from "./pages/user/UserHowToPlay";
 import { UserMpinSettings } from "./pages/user/UserMpinSettings";
+import { UserContactUs } from "./pages/user/UserContactUs";
+import { UserNotificationSettings } from "./pages/user/UserNotificationSettings";
+import { UserWithdrawalsFeed } from "./pages/user/UserWithdrawalsFeed";
 import { AdminLayout } from "./layout/AdminLayout";
 import { Dashboard } from "./components/admin/Dashboard";
 import { AddGame } from "./pages/admin/AddGame";
@@ -48,6 +51,12 @@ function App() {
             <Route path="/how-to-play" element={<UserHowToPlay />} />
             <Route path="/mpin-settings" element={<UserMpinSettings />} />
             <Route path="/security-settings" element={<UserMpinSettings />} />
+            <Route path="/contact-us" element={<UserContactUs />} />
+            <Route path="/support" element={<UserContactUs />} />
+            <Route path="/notifications" element={<UserNotificationSettings />} />
+            <Route path="/notification-settings" element={<UserNotificationSettings />} />
+            <Route path="/live-withdrawals" element={<UserWithdrawalsFeed />} />
+            <Route path="/withdrawals-feed" element={<UserWithdrawalsFeed />} />
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/tips" element={<UserWinningTips />} />
             <Route path="/winning-tips" element={<UserWinningTips />} />
