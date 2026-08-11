@@ -10,6 +10,7 @@ import { UserWinningTips } from "./pages/user/UserWinningTips";
 import { UserPassbook } from "./pages/user/UserPassbook";
 import { UserGameRates } from "./pages/user/UserGameRates";
 import { UserWithdraw } from "./pages/user/UserWithdraw";
+import { UserBankDetails } from "./pages/user/UserBankDetails";
 import { AdminLayout } from "./layout/AdminLayout";
 import { Dashboard } from "./components/admin/Dashboard";
 import { AddGame } from "./pages/admin/AddGame";
@@ -30,6 +31,8 @@ function App() {
             <Route path="/deposit" element={<UserDeposit />} />
             <Route path="/add-fund" element={<UserDeposit />} />
             <Route path="/withdraw" element={<UserWithdraw />} />
+            <Route path="/bank-details" element={<UserBankDetails />} />
+            <Route path="/payment-methods" element={<UserBankDetails />} />
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/tips" element={<UserWinningTips />} />
             <Route path="/winning-tips" element={<UserWinningTips />} />

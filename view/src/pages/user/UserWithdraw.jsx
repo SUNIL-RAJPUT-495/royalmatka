@@ -17,10 +17,12 @@ export const UserWithdraw = () => {
   const context = useOutletContext() || {};
   const user = context.user || { walletBalance: 9.0 };
 
-  const [amount, setAmount] = useState('');
-  const [method, setMethod] = useState('bank');
+  const [amount, setAmount] = useState('1000');
+  const [method, setMethod] = useState('bank'); // 'bank' or 'upi'
+  const [upiId, setUpiId] = useState('');
 
-  const isValidAmount = Number(amount) >= 1000 && Number(amount) <= Number(user.walletBalance || 9);
+  const numAmount = Number(amount);
+  const isValidAmount = numAmount >= 1000 && numAmount <= Number(user.walletBalance || 9);
 
   return (
     <div className="w-full select-none pb-8 font-sans">
@@ -139,24 +141,42 @@ export const UserWithdraw = () => {
             </div>
           </div>
 
-          {/* Field 3: Bank Account / UPI dashed card */}
-          <div
-            onClick={() => navigate('/payment-methods')}
-            className="border-2 border-dashed border-gray-200 hover:border-gray-300 rounded-2xl p-3.5 flex items-center gap-3.5 bg-gray-50/60 cursor-pointer transition-colors"
-          >
-            <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 shrink-0">
-              {method === 'bank' ? <FaUniversity size={15} /> : <FaMobileAlt size={15} />}
+          {/* Field 3: Bank Account / UPI (Exact match with Screenshots 1, 2, 3) */}
+          {method === 'bank' ? (
+            <div
+              onClick={() => navigate('/bank-details')}
+              className="border-2 border-dashed border-gray-200 hover:border-gray-300 rounded-2xl p-3.5 flex items-center gap-3.5 bg-gray-50/60 cursor-pointer transition-colors"
+            >
+              <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 shrink-0">
+                <FaUniversity size={15} />
+              </div>
+              <div>
+                <h5 className="text-xs font-bold text-gray-900">Bank Account</h5>
+                <span className="text-[11px] text-[#f97316] font-semibold flex items-center gap-1 mt-0.5">
+                  <span>Tap to add bank details</span>
+                  <span>→</span>
+                </span>
+              </div>
             </div>
+          ) : (
             <div>
-              <h5 className="text-xs font-bold text-gray-900">
-                {method === 'bank' ? 'Bank Account' : 'UPI ID'}
-              </h5>
-              <span className="text-[11px] text-[#f97316] font-semibold flex items-center gap-1 mt-0.5">
-                <span>Tap to add {method === 'bank' ? 'bank' : 'UPI'} details</span>
-                <span>→</span>
-              </span>
+              <div className="bg-gray-50/80 rounded-2xl border border-gray-200 p-2 flex items-center gap-2.5 focus-within:border-[#f97316] transition-colors">
+                <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#f97316] border border-orange-100 flex items-center justify-center shrink-0">
+                  <FaMobileAlt size={14} />
+                </div>
+                <input
+                  type="text"
+                  value={upiId}
+                  onChange={(e) => setUpiId(e.target.value)}
+                  placeholder="Enter UPI ID (e.g. name@upi)"
+                  className="w-full text-xs font-semibold text-gray-900 placeholder-gray-400 focus:outline-none bg-transparent"
+                />
+              </div>
+              <p className="text-[10px] text-gray-400 font-normal mt-1 px-1">
+                Example: mobilenumber@paytm, name@oksbi
+              </p>
             </div>
-          </div>
+          )}
 
           {/* Submit Button */}
           <button
