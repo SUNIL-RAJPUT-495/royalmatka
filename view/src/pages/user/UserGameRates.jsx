@@ -16,10 +16,10 @@ export const UserGameRates = () => {
   ];
 
   return (
-    <div className="w-full space-y-4 select-none pb-8 font-sans">
+    <div className="w-full select-none pb-8 font-sans">
       {/* 1. TOP HEADER */}
       <div
-        className="-mx-4 -mt-3 p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300"
+        className="p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300 mb-4"
         style={{ backgroundColor: currentTheme.headerBgColor }}
       >
         <div className="flex items-center justify-between">
@@ -54,32 +54,34 @@ export const UserGameRates = () => {
       </div>
 
       {/* 2. MAIN PANA CARD (Exact match with Screenshot 4) */}
-      <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3.5">
-        {/* Card Header */}
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-gray-900">Main Pana</h3>
-          <FaBookmark className="text-gray-400" size={14} />
-        </div>
+      <div className="px-4">
+        <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3.5">
+          {/* Card Header */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-gray-900">Main Pana</h3>
+            <FaBookmark className="text-gray-400" size={14} />
+          </div>
 
-        {/* 5 Green Rate Boxes */}
-        <div className="space-y-2.5">
-          {rates.map((item, index) => (
-            <div
-              key={index}
-              className="bg-emerald-50/50 hover:bg-emerald-50 border border-emerald-150/70 rounded-2xl p-3.5 flex items-center justify-between transition-colors"
-            >
-              <div>
-                <h4 className="text-xs font-bold text-gray-900 leading-tight">{item.title}</h4>
-                <p className="text-[10px] text-gray-500 font-normal mt-0.5">{item.subtitle}</p>
-              </div>
+          {/* 5 Green Rate Boxes */}
+          <div className="space-y-2.5">
+            {rates.map((item, index) => (
+              <div
+                key={index}
+                className="bg-emerald-50/50 hover:bg-emerald-50 border border-emerald-150/70 rounded-2xl p-3.5 flex items-center justify-between transition-colors"
+              >
+                <div>
+                  <h4 className="text-xs font-bold text-gray-900 leading-tight">{item.title}</h4>
+                  <p className="text-[10px] text-gray-500 font-normal mt-0.5">{item.subtitle}</p>
+                </div>
 
-              <div className="text-right">
-                <span className="text-xs font-bold text-emerald-700 tracking-tight">
-                  {item.rate}
-                </span>
+                <div className="text-right">
+                  <span className="text-xs font-bold text-emerald-700 tracking-tight">
+                    {item.rate}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

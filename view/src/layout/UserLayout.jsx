@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { UserNavbar } from '../components/user/UserNavbar';
 import { SideBar } from '../pages/user/SideBar';
 import { UserBottomNav } from '../components/user/UserBottomNav';
@@ -8,10 +8,13 @@ import SummaryApi from '../common/SummerAPI';
 
 export const UserLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const location = useLocation();
   const [userData, setUserData] = useState(() => {
     const saved = localStorage.getItem('user_data');
-    return saved ? JSON.parse(saved) : { name: 'Sunil Shekhawat', mobile: '9876543210', walletBalance: 12500 };
+    return saved ? JSON.parse(saved) : { name: 'Shubham', mobile: '8079003424', walletBalance: 9.0 };
   });
+
+  const isHomePage = location.pathname === '/' || location.pathname === '/home';
 
   // Fetch updated user balance/profile if available
   useEffect(() => {
@@ -35,12 +38,14 @@ export const UserLayout = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex flex-col relative text-gray-900">
-      {/* 1. TOP NAVBAR WITH 3 QUICK ACTION BUTTONS */}
-      <UserNavbar
-        onOpenSidebar={() => setIsSidebarOpen(true)}
-        walletBalance={userData?.walletBalance || 12500}
-      />
+    <div className="min-h-screen bg-[#f8f9fa] flex flex-col relative text-gray-900 font-sans">
+      {/* 1. TOP NAVBAR ON HOME PAGE ONLY */}
+      {isHomePage && (
+        <UserNavbar
+          onOpenSidebar={() => setIsSidebarOpen(true)}
+          walletBalance={userData?.walletBalance || 9}
+        />
+      )}
 
       {/* 2. SLIDE-IN USER SIDEBAR DRAWER */}
       <SideBar
@@ -50,8 +55,8 @@ export const UserLayout = () => {
       />
 
       {/* 3. MAIN PAGE CONTENT OUTLET */}
-      <main className="flex-1 w-full max-w-lg mx-auto pb-24 px-4 pt-3">
-        <Outlet context={{ user: userData, setUserData }} />
+      <main className={`flex-1 w-full max-w-lg mx-auto pb-24 ${isHomePage ? 'px-4 pt-3' : ''}`}>
+        <Outlet context={{ user: userData, setUserData, onOpenSidebar: () => setIsSidebarOpen(true) }} />
       </main>
 
       {/* 4. FIXED 5-BUTTON BOTTOM NAVIGATION BAR (FOOTER) */}

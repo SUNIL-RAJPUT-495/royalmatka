@@ -29,10 +29,10 @@ export const UserWinningTips = () => {
   ];
 
   return (
-    <div className="w-full space-y-4 select-none pb-8 font-sans">
+    <div className="w-full select-none pb-8 font-sans">
       {/* 1. TOP ORANGE HEADER */}
       <div
-        className="-mx-4 -mt-3 p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300"
+        className="p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300 mb-4"
         style={{ backgroundColor: currentTheme.headerBgColor }}
       >
         <div className="flex items-center justify-between">
@@ -60,59 +60,61 @@ export const UserWinningTips = () => {
         </div>
       </div>
 
-      {/* 2. FILTER CARD */}
-      <div className="bg-white rounded-3xl p-4.5 border border-gray-100 shadow-2xs space-y-3">
-        <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-          <IoFilter className="text-amber-500" size={13} />
-          <span>FILTER BY MARKET (OPTIONAL) & DATE</span>
-        </div>
-
-        {/* Market Selector */}
-        <div className="relative">
-          <div
-            onClick={() => setIsMarketDropdownOpen(!isMarketDropdownOpen)}
-            className="w-full p-3.5 bg-gray-50/80 hover:bg-gray-50 rounded-2xl border border-gray-150 flex items-center justify-between cursor-pointer transition-colors"
-          >
-            <div className="flex items-center gap-3 text-xs font-semibold text-gray-900">
-              <FaGamepad className="text-amber-500" size={15} />
-              <span>{selectedMarket}</span>
-            </div>
-            <FaChevronDown size={12} className="text-gray-400" />
+      <div className="px-4 space-y-4">
+        {/* 2. FILTER CARD */}
+        <div className="bg-white rounded-3xl p-4.5 border border-gray-100 shadow-2xs space-y-3">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+            <IoFilter className="text-amber-500" size={13} />
+            <span>FILTER BY MARKET (OPTIONAL) & DATE</span>
           </div>
 
-          {/* Dropdown Menu */}
-          {isMarketDropdownOpen && (
-            <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-2xl border border-gray-150 shadow-xl z-20 overflow-hidden max-h-48 overflow-y-auto divide-y divide-gray-50">
-              {marketOptions.map((market, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => {
-                    setSelectedMarket(market);
-                    setIsMarketDropdownOpen(false);
-                  }}
-                  className="p-3 text-xs font-semibold text-gray-800 hover:bg-orange-50 hover:text-[#f97316] cursor-pointer transition-colors"
-                >
-                  {market}
-                </div>
-              ))}
+          {/* Market Selector */}
+          <div className="relative">
+            <div
+              onClick={() => setIsMarketDropdownOpen(!isMarketDropdownOpen)}
+              className="w-full p-3.5 bg-gray-50/80 hover:bg-gray-50 rounded-2xl border border-gray-150 flex items-center justify-between cursor-pointer transition-colors"
+            >
+              <div className="flex items-center gap-3 text-xs font-semibold text-gray-900">
+                <FaGamepad className="text-amber-500" size={15} />
+                <span>{selectedMarket}</span>
+              </div>
+              <FaChevronDown size={12} className="text-gray-400" />
             </div>
-          )}
+
+            {/* Dropdown Menu */}
+            {isMarketDropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-2xl border border-gray-150 shadow-xl z-20 overflow-hidden max-h-48 overflow-y-auto divide-y divide-gray-50">
+                {marketOptions.map((market, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => {
+                      setSelectedMarket(market);
+                      setIsMarketDropdownOpen(false);
+                    }}
+                    className="p-3 text-xs font-semibold text-gray-800 hover:bg-orange-50 hover:text-[#f97316] cursor-pointer transition-colors"
+                  >
+                    {market}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Date Selector */}
+          <div className="w-full p-3.5 bg-gray-50/80 rounded-2xl border border-gray-150 flex items-center gap-3">
+            <FaCalendarAlt className="text-amber-500" size={14} />
+            <span className="text-xs font-semibold text-gray-900">{selectedDate}</span>
+          </div>
         </div>
 
-        {/* Date Selector */}
-        <div className="w-full p-3.5 bg-gray-50/80 rounded-2xl border border-gray-150 flex items-center gap-3">
-          <FaCalendarAlt className="text-amber-500" size={14} />
-          <span className="text-xs font-semibold text-gray-900">{selectedDate}</span>
+        {/* 3. NO TIPS FOUND CARD (Exact dashed border state) */}
+        <div className="bg-white rounded-3xl p-10 border-2 border-dashed border-gray-200/90 flex flex-col items-center justify-center text-center shadow-2xs">
+          <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-gray-300 mb-3">
+            <IoInformationCircleOutline size={30} />
+          </div>
+          <h3 className="text-base font-bold text-gray-900">No Tips Found</h3>
+          <p className="text-xs text-gray-400 font-normal mt-1">Try another date.</p>
         </div>
-      </div>
-
-      {/* 3. NO TIPS FOUND CARD (Exact dashed border state) */}
-      <div className="bg-white rounded-3xl p-10 border-2 border-dashed border-gray-200/90 flex flex-col items-center justify-center text-center shadow-2xs">
-        <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-gray-300 mb-3">
-          <IoInformationCircleOutline size={30} />
-        </div>
-        <h3 className="text-base font-bold text-gray-900">No Tips Found</h3>
-        <p className="text-xs text-gray-400 font-normal mt-1">Try another date.</p>
       </div>
     </div>
   );

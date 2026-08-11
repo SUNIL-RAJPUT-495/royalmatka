@@ -17,7 +17,9 @@ import {
   FaLock,
   FaEye,
   FaEyeSlash,
-  FaTrashAlt
+  FaTrashAlt,
+  FaArrowLeft,
+  FaBars
 } from 'react-icons/fa';
 import { BiExit } from 'react-icons/bi';
 import toast from 'react-hot-toast';
@@ -34,6 +36,8 @@ export const UserProfile = () => {
     winsCount: 0,
     createdAt: '17/7/2026'
   };
+
+  const onOpenSidebar = context.onOpenSidebar || (() => {});
 
   // Login & Security Modal state (Bottom Sheet)
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
@@ -111,167 +115,195 @@ export const UserProfile = () => {
   };
 
   return (
-    <div className="w-full space-y-4 select-none pb-8 font-sans">
-      {/* 1. TOP USER DETAILS CARD */}
-      <div className="bg-white rounded-3xl p-4.5 border border-gray-100 shadow-2xs flex items-center gap-4">
-        {/* Orange Circular Avatar with initial */}
-        <div
-          className="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-sm shrink-0"
-          style={{ backgroundColor: currentTheme.headerBgColor }}
-        >
-          {user.name ? user.name.charAt(0).toUpperCase() : 'S'}
-        </div>
-
-        {/* User Info Details */}
-        <div className="overflow-hidden">
-          <h3 className="text-base font-bold text-gray-900 tracking-tight leading-tight">
-            {user.name || 'Shubham'}
-          </h3>
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium mt-1">
-            <FaCreditCard size={11} className="text-gray-400" />
-            <span>ID: {user.mobile || '8079003424'}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium mt-0.5">
-            <FaMedal size={11} className="text-amber-500" />
-            <span>Member since {user.createdAt || '17/7/2026'}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. THREE STATS CARDS: Balance, Games, Wins */}
-      <div className="grid grid-cols-3 gap-2.5">
-        {/* Balance Card */}
-        <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center">
-          <div className="w-9 h-9 rounded-full bg-orange-50 flex items-center justify-center text-[#f97316] mb-1">
-            <FaWallet size={14} />
-          </div>
-          <span className="text-[11px] font-medium text-gray-400">Balance</span>
-          <span className="text-sm font-bold text-[#f97316] mt-0.5">
-            ₹{Number(user.walletBalance || 9).toFixed(2)}
-          </span>
-        </div>
-
-        {/* Games Card */}
-        <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center">
-          <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 mb-1">
-            <FaChartLine size={14} />
-          </div>
-          <span className="text-[11px] font-medium text-gray-400">Games</span>
-          <span className="text-sm font-bold text-blue-600 mt-0.5">
-            {user.gamesPlayed || 0}
-          </span>
-        </div>
-
-        {/* Wins Card */}
-        <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center">
-          <div className="w-9 h-9 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 mb-1">
-            <FaTrophy size={14} />
-          </div>
-          <span className="text-[11px] font-medium text-gray-400">Wins</span>
-          <span className="text-sm font-bold text-purple-600 mt-0.5">
-            {user.winsCount || 0}
-          </span>
-        </div>
-      </div>
-
-      {/* 3. QUICK ACTIONS SECTION */}
-      <div>
-        <div className="flex items-center gap-1 text-sm font-bold text-gray-900 mb-2.5 px-1">
-          <span>Quick Actions</span>
-          <span className="text-amber-500 text-xs">⭐</span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          {/* My Wallet */}
-          <div
-            onClick={() => navigate('/wallet')}
-            className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
-          >
-            <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mb-1.5 shadow-2xs">
-              <FaWallet size={16} />
-            </div>
-            <h4 className="text-xs font-semibold text-gray-900">My Wallet</h4>
-            <p className="text-[10px] text-gray-400 font-normal mt-0.5">Manage your funds</p>
-          </div>
-
-          {/* Txn History */}
-          <div
-            onClick={() => navigate('/passbook')}
-            className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
-          >
-            <div className="w-10 h-10 rounded-full bg-teal-50 text-teal-500 flex items-center justify-center mb-1.5 shadow-2xs">
-              <FaHistory size={16} />
-            </div>
-            <h4 className="text-xs font-semibold text-gray-900">Txn History</h4>
-            <p className="text-[10px] text-gray-400 font-normal mt-0.5">View past transactions</p>
-          </div>
-
-          {/* Game History */}
-          <div
-            onClick={() => navigate('/my-bids')}
-            className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
-          >
-            <div className="w-10 h-10 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center mb-1.5 shadow-2xs">
-              <FaFileAlt size={16} />
-            </div>
-            <h4 className="text-xs font-semibold text-gray-900">Game History</h4>
-            <p className="text-[10px] text-gray-400 font-normal mt-0.5">View your game results</p>
-          </div>
-
-          {/* Help & Support */}
-          <div
-            onClick={() => navigate('/support')}
-            className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
-          >
-            <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center mb-1.5 shadow-2xs">
-              <FaQuestionCircle size={16} />
-            </div>
-            <h4 className="text-xs font-semibold text-gray-900">Help & Support</h4>
-            <p className="text-[10px] text-gray-400 font-normal mt-0.5">Get assistance</p>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. LOGIN & SECURITY CARD */}
+    <div className="w-full select-none pb-8 font-sans">
+      {/* 1. TOP CURVED PROFILE HEADER */}
       <div
-        onClick={openSecurityModal}
-        className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex items-center justify-between cursor-pointer hover:bg-gray-50 active:scale-[0.99] transition-all"
+        className="p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300 mb-4"
+        style={{ backgroundColor: currentTheme.headerBgColor }}
       >
-        <div className="flex items-center gap-3.5">
-          <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center shadow-2xs">
-            <FaKey size={15} />
-          </div>
-          <span className="text-sm font-semibold text-gray-900">Login & Security</span>
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition-all cursor-pointer active:scale-95 border border-white/20 shadow-xs shrink-0"
+            title="Go Back"
+          >
+            <FaArrowLeft size={14} />
+          </button>
+          <h2 className="text-base font-bold text-white tracking-wide">
+            My Profile
+          </h2>
+          <button
+            onClick={onOpenSidebar}
+            className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition-all cursor-pointer active:scale-95 border border-white/20 shadow-xs shrink-0"
+            title="Menu"
+          >
+            <FaBars size={14} />
+          </button>
         </div>
-        <FaChevronRight size={12} className="text-gray-400" />
       </div>
 
-      {/* 5. LOG OUT & DELETE ACCOUNT BUTTONS */}
-      <div className="space-y-2.5 pt-1">
-        {/* Log Out Button */}
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="w-full bg-[#fff1f2] hover:bg-[#ffe4e6] active:scale-[0.99] border border-red-100 rounded-2xl p-3 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
-        >
-          <div className="w-7 h-7 rounded-xl bg-[#ef4444] text-white flex items-center justify-center shadow-xs">
-            <BiExit size={16} />
+      <div className="px-4 space-y-4">
+        {/* 2. TOP USER DETAILS CARD */}
+        <div className="bg-white rounded-3xl p-4.5 border border-gray-100 shadow-2xs flex items-center gap-4">
+          {/* Orange Circular Avatar with initial */}
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-sm shrink-0"
+            style={{ backgroundColor: currentTheme.headerBgColor }}
+          >
+            {user.name ? user.name.charAt(0).toUpperCase() : 'S'}
           </div>
-          <span className="font-semibold text-red-600 text-sm">Log Out</span>
-        </button>
 
-        {/* Delete Account Button */}
-        <button
-          type="button"
-          onClick={handleDeleteAccount}
-          className="w-full bg-white hover:bg-red-50/50 active:scale-[0.99] border-2 border-red-500 rounded-2xl p-3 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
+          {/* User Info Details */}
+          <div className="overflow-hidden">
+            <h3 className="text-base font-bold text-gray-900 tracking-tight leading-tight">
+              {user.name || 'Shubham'}
+            </h3>
+            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium mt-1">
+              <FaCreditCard size={11} className="text-gray-400" />
+              <span>ID: {user.mobile || '8079003424'}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium mt-0.5">
+              <FaMedal size={11} className="text-amber-500" />
+              <span>Member since {user.createdAt || '17/7/2026'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. THREE STATS CARDS: Balance, Games, Wins */}
+        <div className="grid grid-cols-3 gap-2.5">
+          {/* Balance Card */}
+          <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center">
+            <div className="w-9 h-9 rounded-full bg-orange-50 flex items-center justify-center text-[#f97316] mb-1">
+              <FaWallet size={14} />
+            </div>
+            <span className="text-[11px] font-medium text-gray-400">Balance</span>
+            <span className="text-sm font-bold text-[#f97316] mt-0.5">
+              ₹{Number(user.walletBalance || 9).toFixed(2)}
+            </span>
+          </div>
+
+          {/* Games Card */}
+          <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center">
+            <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 mb-1">
+              <FaChartLine size={14} />
+            </div>
+            <span className="text-[11px] font-medium text-gray-400">Games</span>
+            <span className="text-sm font-bold text-blue-600 mt-0.5">
+              {user.gamesPlayed || 0}
+            </span>
+          </div>
+
+          {/* Wins Card */}
+          <div className="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center">
+            <div className="w-9 h-9 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 mb-1">
+              <FaTrophy size={14} />
+            </div>
+            <span className="text-[11px] font-medium text-gray-400">Wins</span>
+            <span className="text-sm font-bold text-purple-600 mt-0.5">
+              {user.winsCount || 0}
+            </span>
+          </div>
+        </div>
+
+        {/* 4. QUICK ACTIONS SECTION */}
+        <div>
+          <div className="flex items-center gap-1 text-sm font-bold text-gray-900 mb-2.5 px-1">
+            <span>Quick Actions</span>
+            <span className="text-amber-500 text-xs">⭐</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {/* My Wallet */}
+            <div
+              onClick={() => navigate('/wallet')}
+              className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
+            >
+              <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mb-1.5 shadow-2xs">
+                <FaWallet size={16} />
+              </div>
+              <h4 className="text-xs font-semibold text-gray-900">My Wallet</h4>
+              <p className="text-[10px] text-gray-400 font-normal mt-0.5">Manage your funds</p>
+            </div>
+
+            {/* Txn History */}
+            <div
+              onClick={() => navigate('/passbook')}
+              className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
+            >
+              <div className="w-10 h-10 rounded-full bg-teal-50 text-teal-500 flex items-center justify-center mb-1.5 shadow-2xs">
+                <FaHistory size={16} />
+              </div>
+              <h4 className="text-xs font-semibold text-gray-900">Txn History</h4>
+              <p className="text-[10px] text-gray-400 font-normal mt-0.5">View past transactions</p>
+            </div>
+
+            {/* Game History */}
+            <div
+              onClick={() => navigate('/my-bids')}
+              className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
+            >
+              <div className="w-10 h-10 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center mb-1.5 shadow-2xs">
+                <FaFileAlt size={16} />
+              </div>
+              <h4 className="text-xs font-semibold text-gray-900">Game History</h4>
+              <p className="text-[10px] text-gray-400 font-normal mt-0.5">View your game results</p>
+            </div>
+
+            {/* Help & Support */}
+            <div
+              onClick={() => navigate('/support')}
+              className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
+            >
+              <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center mb-1.5 shadow-2xs">
+                <FaQuestionCircle size={16} />
+              </div>
+              <h4 className="text-xs font-semibold text-gray-900">Help & Support</h4>
+              <p className="text-[10px] text-gray-400 font-normal mt-0.5">Get assistance</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 5. LOGIN & SECURITY CARD */}
+        <div
+          onClick={openSecurityModal}
+          className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex items-center justify-between cursor-pointer hover:bg-gray-50 active:scale-[0.99] transition-all"
         >
-          <FaTrashAlt size={13} className="text-red-500" />
-          <span className="font-semibold text-red-500 text-sm">Delete Account</span>
-        </button>
+          <div className="flex items-center gap-3.5">
+            <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center shadow-2xs">
+              <FaKey size={15} />
+            </div>
+            <span className="text-sm font-semibold text-gray-900">Login & Security</span>
+          </div>
+          <FaChevronRight size={12} className="text-gray-400" />
+        </div>
+
+        {/* 6. LOG OUT & DELETE ACCOUNT BUTTONS */}
+        <div className="space-y-2.5 pt-1">
+          {/* Log Out Button */}
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full bg-[#fff1f2] hover:bg-[#ffe4e6] active:scale-[0.99] border border-red-100 rounded-2xl p-3 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
+          >
+            <div className="w-7 h-7 rounded-xl bg-[#ef4444] text-white flex items-center justify-center shadow-xs">
+              <BiExit size={16} />
+            </div>
+            <span className="font-semibold text-red-600 text-sm">Log Out</span>
+          </button>
+
+          {/* Delete Account Button */}
+          <button
+            type="button"
+            onClick={handleDeleteAccount}
+            className="w-full bg-white hover:bg-red-50/50 active:scale-[0.99] border-2 border-red-500 rounded-2xl p-3 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
+          >
+            <FaTrashAlt size={13} className="text-red-500" />
+            <span className="font-semibold text-red-500 text-sm">Delete Account</span>
+          </button>
+        </div>
       </div>
 
-      {/* 6. LOGIN & SECURITY BOTTOM DRAWER MODAL */}
+      {/* 7. LOGIN & SECURITY BOTTOM DRAWER MODAL */}
       {isSecurityModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs transition-opacity duration-300"
