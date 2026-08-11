@@ -4,6 +4,7 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { UserLayout } from "./layout/UserLayout";
 import { UserHome } from "./pages/user/UserHome";
 import { UserProfile } from "./pages/user/UserProfile";
+import { UserWallet } from "./pages/user/UserWallet";
 import { AdminLayout } from "./layout/AdminLayout";
 import { Dashboard } from "./components/admin/Dashboard";
 import { AddGame } from "./pages/admin/AddGame";
@@ -20,6 +21,8 @@ function App() {
           <Route element={<UserLayout />}>
             <Route path="/" element={<UserHome />} />
             <Route path="/home" element={<UserHome />} />
+            <Route path="/wallet" element={<UserWallet />} />
+            <Route path="/deposit" element={<UserWallet />} />
             <Route path="/profile" element={<UserProfile />} />
           </Route>
 
