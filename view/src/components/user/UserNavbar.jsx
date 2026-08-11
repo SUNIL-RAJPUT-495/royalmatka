@@ -1,12 +1,15 @@
 import React from 'react';
 import { useTheme } from '../../context/ThemeContext';
-import { FaBars, FaWallet, FaBell, FaTelegramPlane, FaWhatsapp } from 'react-icons/fa';
+import { FaBars, FaWallet, FaBell, FaTelegramPlane } from 'react-icons/fa';
 import { IoFlashSharp, IoWalletOutline, IoChatbubbleEllipsesOutline } from 'react-icons/io5';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isProfilePage = location.pathname === '/profile';
 
   return (
     <header
@@ -59,60 +62,70 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
         </div>
       </div>
 
-      {/* 2. 4 Quick Action White Buttons (2x2 Grid matching screenshot) */}
-      <div className="px-4 pb-4 pt-2">
-        <div className="grid grid-cols-2 gap-2.5">
-          {/* 1. GALI BAZAR */}
-          <button
-            type="button"
-            onClick={() => navigate('/gali-bazar')}
-            className="bg-white hover:bg-gray-50 active:scale-95 text-gray-900 py-2.5 px-3 rounded-2xl font-black text-xs shadow-sm flex items-center gap-2.5 transition-all cursor-pointer border border-white/80"
-          >
-            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0 shadow-2xs">
-              <IoFlashSharp size={16} />
-            </div>
-            <span className="uppercase tracking-wide text-[11px] font-extrabold truncate">Gali Bazar</span>
-          </button>
-
-          {/* 2. DEPOSIT */}
-          <button
-            type="button"
-            onClick={() => navigate('/deposit')}
-            className="bg-white hover:bg-gray-50 active:scale-95 text-gray-900 py-2.5 px-3 rounded-2xl font-black text-xs shadow-sm flex items-center gap-2.5 transition-all cursor-pointer border border-white/80"
-          >
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
-              <IoWalletOutline size={16} />
-            </div>
-            <span className="uppercase tracking-wide text-[11px] font-extrabold truncate">Deposit</span>
-          </button>
-
-          {/* 3. TELEGRAM */}
-          <a
-            href="https://t.me/"
-            target="_blank"
-            rel="noreferrer"
-            className="bg-white hover:bg-gray-50 active:scale-95 text-gray-900 py-2.5 px-3 rounded-2xl font-black text-xs shadow-sm flex items-center gap-2.5 transition-all cursor-pointer border border-white/80"
-          >
-            <div className="w-8 h-8 rounded-xl bg-sky-50 text-[#229ED9] flex items-center justify-center shrink-0 shadow-2xs">
-              <FaTelegramPlane size={16} />
-            </div>
-            <span className="uppercase tracking-wide text-[11px] font-extrabold truncate">Telegram</span>
-          </a>
-
-          {/* 4. CHAT */}
-          <a
-            href="https://wa.me/"
-            target="_blank"
-            rel="noreferrer"
-            className="bg-white hover:bg-gray-50 active:scale-95 text-gray-900 py-2.5 px-3 rounded-2xl font-black text-xs shadow-sm flex items-center gap-2.5 transition-all cursor-pointer border border-white/80"
-          >
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-[#25D366] flex items-center justify-center shrink-0 shadow-2xs">
-              <IoChatbubbleEllipsesOutline size={16} />
-            </div>
-            <span className="uppercase tracking-wide text-[11px] font-extrabold truncate">Chat</span>
-          </a>
+      {/* 2. Content below Navbar */}
+      {isProfilePage ? (
+        /* Profile Page Header Title (Matching Screenshot 1 & 2) */
+        <div className="pb-4 pt-1 text-center">
+          <h2 className="text-xl font-extrabold text-white tracking-wide">
+            My Profile
+          </h2>
         </div>
-      </div>
+      ) : (
+        /* Home Page: 4 Quick Action White Buttons (2x2 Grid) */
+        <div className="px-4 pb-4 pt-2">
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* 1. GALI BAZAR */}
+            <button
+              type="button"
+              onClick={() => navigate('/gali-bazar')}
+              className="bg-white hover:bg-gray-50 active:scale-95 text-gray-900 py-2.5 px-3 rounded-2xl font-black text-xs shadow-sm flex items-center gap-2.5 transition-all cursor-pointer border border-white/80"
+            >
+              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0 shadow-2xs">
+                <IoFlashSharp size={16} />
+              </div>
+              <span className="uppercase tracking-wide text-[11px] font-extrabold truncate">Gali Bazar</span>
+            </button>
+
+            {/* 2. DEPOSIT */}
+            <button
+              type="button"
+              onClick={() => navigate('/deposit')}
+              className="bg-white hover:bg-gray-50 active:scale-95 text-gray-900 py-2.5 px-3 rounded-2xl font-black text-xs shadow-sm flex items-center gap-2.5 transition-all cursor-pointer border border-white/80"
+            >
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
+                <IoWalletOutline size={16} />
+              </div>
+              <span className="uppercase tracking-wide text-[11px] font-extrabold truncate">Deposit</span>
+            </button>
+
+            {/* 3. TELEGRAM */}
+            <a
+              href="https://t.me/"
+              target="_blank"
+              rel="noreferrer"
+              className="bg-white hover:bg-gray-50 active:scale-95 text-gray-900 py-2.5 px-3 rounded-2xl font-black text-xs shadow-sm flex items-center gap-2.5 transition-all cursor-pointer border border-white/80"
+            >
+              <div className="w-8 h-8 rounded-xl bg-sky-50 text-[#229ED9] flex items-center justify-center shrink-0 shadow-2xs">
+                <FaTelegramPlane size={16} />
+              </div>
+              <span className="uppercase tracking-wide text-[11px] font-extrabold truncate">Telegram</span>
+            </a>
+
+            {/* 4. CHAT */}
+            <a
+              href="https://wa.me/"
+              target="_blank"
+              rel="noreferrer"
+              className="bg-white hover:bg-gray-50 active:scale-95 text-gray-900 py-2.5 px-3 rounded-2xl font-black text-xs shadow-sm flex items-center gap-2.5 transition-all cursor-pointer border border-white/80"
+            >
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-[#25D366] flex items-center justify-center shrink-0 shadow-2xs">
+                <IoChatbubbleEllipsesOutline size={16} />
+              </div>
+              <span className="uppercase tracking-wide text-[11px] font-extrabold truncate">Chat</span>
+            </a>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

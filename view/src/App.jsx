@@ -3,6 +3,7 @@ import './App.css';
 import { ThemeProvider } from "./context/ThemeContext";
 import { UserLayout } from "./layout/UserLayout";
 import { UserHome } from "./pages/user/UserHome";
+import { UserProfile } from "./pages/user/UserProfile";
 import { AdminLayout } from "./layout/AdminLayout";
 import { Dashboard } from "./components/admin/Dashboard";
 import { AddGame } from "./pages/admin/AddGame";
@@ -15,10 +16,11 @@ function App() {
     <ThemeProvider>
       <BrowserRouter>
         <Routes>
-          {/* 1. USER APP ROUTES (WRAPPED IN USER LAYOUT WITH NAVBAR & 5-BUTTON FOOTER) */}
+          {/* 1. USER APP ROUTES (WRAPPED IN USER LAYOUT) */}
           <Route element={<UserLayout />}>
             <Route path="/" element={<UserHome />} />
             <Route path="/home" element={<UserHome />} />
+            <Route path="/profile" element={<UserProfile />} />
           </Route>
 
           {/* 2. ADMIN PANEL ROUTES */}
