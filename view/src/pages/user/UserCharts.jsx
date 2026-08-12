@@ -4,45 +4,23 @@ import { useTheme } from '../../context/ThemeContext';
 import {
   FaArrowLeft,
   FaChartLine,
+  FaChevronUp,
+  FaChevronDown,
   FaLayerGroup,
   FaTh
 } from 'react-icons/fa';
-import { IoNotificationsOutline } from 'react-icons/io5';
 
-const MAIN_MARKETS = [
-  'KALYAN',
-  'TIME BAZAR',
-  'MADHUR DAY',
-  'MILAN DAY',
-  'RAJDHANI DAY',
-  'SUPREME DAY',
-  'SRIDEVI NIGHT',
+const SAMPLE_MARKETS = [
+  'MILAN MORNING',
   'MILAN NIGHT',
   'KALYAN NIGHT',
   'RAJDHANI NIGHT',
+  'SUPREME DAY',
+  'SRIDEVI NIGHT',
+  'TIME BAZAR',
+  'MADHUR DAY',
+  'KALYAN',
   'MAIN BAZAR'
-];
-
-const GALI_MARKETS = [
-  'DESAWAR',
-  'FARIDABAD',
-  'GAZIYABAD',
-  'GALI',
-  'DELHI BAZAR',
-  'SHRI GANESH',
-  'TAJ',
-  'CHARMINAR'
-];
-
-const STARLINE_MARKETS = [
-  'STARLINE 10:00 AM',
-  'STARLINE 11:00 AM',
-  'STARLINE 12:00 PM',
-  'STARLINE 01:00 PM',
-  'STARLINE 02:00 PM',
-  'STARLINE 03:00 PM',
-  'STARLINE 04:00 PM',
-  'STARLINE 05:00 PM'
 ];
 
 const JODI_DATA = [
@@ -91,6 +69,28 @@ const PANA_DATA = [
       { top: '278', mid: '**', bot: '***', isRed: true },
       { top: '259', mid: '61', bot: '236' }
     ]
+  },
+  {
+    date: '15/07/2026\nto\n21/07/2026',
+    days: [
+      { top: '246', mid: '27', bot: '368' },
+      { top: '458', mid: '73', bot: '120' },
+      { top: '379', mid: '92', bot: '156' },
+      { top: '257', mid: '49', bot: '360' },
+      { top: '379', mid: '93', bot: '139' },
+      { top: '359', mid: '70', bot: '389' }
+    ]
+  },
+  {
+    date: '06/07/2026\nto\n14/07/2026',
+    days: [
+      { top: '359', mid: '78', bot: '369' },
+      { top: '246', mid: '23', bot: '779' },
+      { top: '—', mid: '—', bot: '—' },
+      { top: '—', mid: '—', bot: '—' },
+      { top: '269', mid: '78', bot: '279' },
+      { top: '589', mid: '20', bot: '235' }
+    ]
   }
 ];
 
@@ -100,45 +100,29 @@ export const UserCharts = () => {
 
   // Mode: 'list' | 'jodi' | 'pana'
   const [viewMode, setViewMode] = useState('list');
-  const [category, setCategory] = useState('main'); // 'main' | 'gali' | 'starline'
-  const [selectedMarket, setSelectedMarket] = useState('KALYAN');
-
-  const isGreenTheme = currentTheme?.id?.includes('green') || currentTheme?.headerBgColor === '#447668';
-  const themeHeaderBg = currentTheme?.headerBgColor || (isGreenTheme ? '#447668' : '#ea580c');
-  const accentBorderColor = isGreenTheme ? '#10b981' : '#f97316';
-  const btnBg = isGreenTheme
-    ? 'bg-[#dcfce7] hover:bg-emerald-100 text-[#16a34a] border-emerald-200/80'
-    : 'bg-orange-50 hover:bg-orange-100 text-[#ea580c] border-orange-200/80';
+  const [selectedMarket, setSelectedMarket] = useState('MILAN MORNING');
+  const [isMainGamesOpen, setIsMainGamesOpen] = useState(true);
 
   const openJodiChart = (marketName) => {
     setSelectedMarket(marketName);
     setViewMode('jodi');
-    window.scrollTo(0, 0);
   };
 
   const openPanaChart = (marketName) => {
     setSelectedMarket(marketName);
     setViewMode('pana');
-    window.scrollTo(0, 0);
-  };
-
-  const getActiveMarkets = () => {
-    if (category === 'gali') return GALI_MARKETS;
-    if (category === 'starline') return STARLINE_MARKETS;
-    return MAIN_MARKETS;
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#f5f6fa] select-none font-sans flex flex-col pb-24">
-      {/* 1. TOP HEADER */}
+    <div className="w-full select-none pb-12 font-sans">
+      {/* 1. TOP HEADER (Exact Match with Screenshots) */}
       <div
-        className="w-full text-white shadow-xs transition-colors duration-300 shrink-0"
-        style={{ backgroundColor: themeHeaderBg }}
+        className="p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300 mb-4"
+        style={{ backgroundColor: currentTheme.headerBgColor }}
       >
-        <div className="px-4 pt-4 pb-4 flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
-              type="button"
               onClick={() => {
                 if (viewMode !== 'list') {
                   setViewMode('list');
@@ -146,203 +130,221 @@ export const UserCharts = () => {
                   navigate(-1);
                 }
               }}
-              className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-all cursor-pointer active:scale-95 border border-white/20 shadow-xs shrink-0"
+              className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition-all cursor-pointer active:scale-95 border border-white/20 shadow-xs shrink-0"
               title="Go Back"
             >
-              <FaArrowLeft size={15} />
+              <FaArrowLeft size={14} />
             </button>
 
-            <div>
-              <div className="flex items-center gap-2 text-base font-bold tracking-tight text-white">
-                <FaChartLine size={16} />
-                <span>{viewMode === 'list' ? 'Charts' : `${selectedMarket} Chart`}</span>
+            <div className="flex items-center gap-2">
+              <FaChartLine size={16} />
+              <div>
+                <h2 className="text-base font-bold tracking-tight text-white leading-tight">
+                  Charts
+                </h2>
+                <p className="text-xs text-white/80 font-normal mt-0.5">
+                  Latest chart history
+                </p>
               </div>
-              <p className="text-[11px] text-white/80 font-normal">
-                {viewMode === 'list' ? '✨ Historical result records' : `${viewMode.toUpperCase()} Panel Records`}
-              </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => navigate('/notifications')}
-            className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-all cursor-pointer active:scale-95 border border-white/20 shadow-xs shrink-0"
-            title="Notifications"
-          >
-            <IoNotificationsOutline size={20} />
-          </button>
+          {/* Right White Pill if in Jodi or Pana Chart View */}
+          {viewMode !== 'list' && (
+            <div
+              className="bg-white font-bold text-xs uppercase px-3.5 py-1.5 rounded-full shadow-xs"
+              style={{ color: currentTheme.headerBgColor || '#f97316' }}
+            >
+              {selectedMarket}
+            </div>
+          )}
         </div>
-
-        {/* Categories Tab Bar (When in list mode) */}
-        {viewMode === 'list' && (
-          <div className="px-4 pb-4">
-            <div className="grid grid-cols-3 gap-2 bg-black/15 p-1 rounded-2xl border border-white/10">
-              <button
-                type="button"
-                onClick={() => setCategory('main')}
-                className={`py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  category === 'main'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                Main Markets
-              </button>
-              <button
-                type="button"
-                onClick={() => setCategory('gali')}
-                className={`py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  category === 'gali'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                Jackpot Gali
-              </button>
-              <button
-                type="button"
-                onClick={() => setCategory('starline')}
-                className={`py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  category === 'starline'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                StarLine
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* 2. BODY CONTENT */}
-      <div className="px-4 pt-4 space-y-3.5">
-        {viewMode === 'list' ? (
-          /* LIST VIEW: MARKET CARDS */
-          <>
-            <div className="flex items-center gap-1.5">
-              <span className="text-base">📈</span>
-              <h1 className="text-[17px] font-bold text-gray-900 tracking-tight">
-                {category === 'main' ? 'Main Market Charts' : category === 'gali' ? 'Jackpot Gali Charts' : 'StarLine Charts'}
-              </h1>
+      <div className="px-3.5 space-y-4">
+        {/* ======================= 1. LIST VIEW ======================= */}
+        {viewMode === 'list' && (
+          <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-2xs">
+            {/* Dynamic Theme Accordion Bar */}
+            <div
+              onClick={() => setIsMainGamesOpen(!isMainGamesOpen)}
+              className="text-white p-3.5 px-4.5 flex items-center justify-between cursor-pointer transition-colors"
+              style={{ backgroundColor: currentTheme.headerBgColor || '#0f766e' }}
+            >
+              <div className="flex items-center gap-2.5">
+                <FaTh size={14} />
+                <span className="font-bold text-sm">Main Games</span>
+                <span className="bg-white/20 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                  27
+                </span>
+              </div>
+              <div>
+                {isMainGamesOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+              </div>
             </div>
 
-            <div className="space-y-2.5">
-              {getActiveMarkets().map((marketName, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white rounded-2xl p-3.5 shadow-xs border-l-[4px] border border-gray-100 flex items-center justify-between transition-all hover:shadow-sm"
-                  style={{ borderLeftColor: accentBorderColor }}
-                >
-                  <div>
-                    <h3 className="text-xs sm:text-[13px] font-bold uppercase text-gray-900 tracking-wide">
-                      {marketName}
-                    </h3>
-                    <p className="text-[11px] text-gray-500 font-medium mt-0.5">Updated Live</p>
-                  </div>
+            {/* List of Markets with 2 Theme Buttons each */}
+            {isMainGamesOpen && (
+              <div className="p-3.5 space-y-3 bg-[#f8f9fa]">
+                {SAMPLE_MARKETS.map((market) => (
+                  <div
+                    key={market}
+                    className="bg-white rounded-2xl p-4 border border-gray-150 shadow-2xs space-y-3"
+                  >
+                    <h4 className="text-xs font-bold text-gray-900 tracking-wide uppercase">
+                      {market}
+                    </h4>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => openJodiChart(marketName)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 ${btnBg}`}
-                    >
-                      <FaTh size={11} />
-                      <span>Jodi</span>
-                    </button>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {/* Jodi Chart Button */}
+                      <button
+                        type="button"
+                        onClick={() => openJodiChart(market)}
+                        style={{ backgroundColor: currentTheme.playBtnBg || currentTheme.headerBgColor || '#059669' }}
+                        className="hover:opacity-90 active:scale-95 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-all"
+                      >
+                        <FaLayerGroup size={12} />
+                        <span>Jodi Chart</span>
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={() => openPanaChart(marketName)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 ${btnBg}`}
-                    >
-                      <FaLayerGroup size={11} />
-                      <span>Pana</span>
-                    </button>
+                      {/* Pana Chart Button */}
+                      <button
+                        type="button"
+                        onClick={() => openPanaChart(market)}
+                        style={{ backgroundColor: currentTheme.playBtnBg || currentTheme.headerBgColor || '#059669' }}
+                        className="hover:opacity-90 active:scale-95 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-all"
+                      >
+                        <FaTh size={12} />
+                        <span>Pana Chart</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : viewMode === 'jodi' ? (
-          /* JODI CHART TABLE */
-          <div className="bg-white rounded-2xl p-4 shadow-xs border border-gray-100 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-              <h3 className="text-sm font-bold text-gray-900">{selectedMarket} - Jodi Chart</h3>
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                className="text-xs font-bold text-gray-600 hover:text-gray-900 cursor-pointer"
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ======================= 2. JODI CHART VIEW ======================= */}
+        {viewMode === 'jodi' && (
+          <div className="space-y-3">
+            {/* Theme Sub-Pill */}
+            <div className="flex items-center gap-2">
+              <span
+                style={{ backgroundColor: currentTheme.playBtnBg || currentTheme.headerBgColor || '#059669' }}
+                className="text-white text-xs font-bold px-3 py-1 rounded-full uppercase shadow-2xs"
               >
-                Back to list ✕
-              </button>
+                Jodi Chart
+              </span>
+              <span className="text-xs font-bold text-gray-700 uppercase">
+                {selectedMarket}
+              </span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-center border-collapse text-xs font-medium">
+            {/* Main Jodi Table */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-2xs overflow-hidden">
+              <table className="w-full text-center border-collapse">
                 <thead>
-                  <tr className="bg-gray-50 text-gray-700 border-b border-gray-200">
-                    <th className="py-2 px-1 font-bold">Mon</th>
-                    <th className="py-2 px-1 font-bold">Tue</th>
-                    <th className="py-2 px-1 font-bold">Wed</th>
-                    <th className="py-2 px-1 font-bold">Thu</th>
-                    <th className="py-2 px-1 font-bold">Fri</th>
-                    <th className="py-2 px-1 font-bold">Sat</th>
-                    <th className="py-2 px-1 font-bold">Sun</th>
+                  <tr
+                    className="text-white text-xs font-bold"
+                    style={{ backgroundColor: currentTheme.headerBgColor || '#065f46' }}
+                  >
+                    <th className="py-2.5 border-r border-white/20">MON</th>
+                    <th className="py-2.5 border-r border-white/20">TUE</th>
+                    <th className="py-2.5 border-r border-white/20">WED</th>
+                    <th className="py-2.5 border-r border-white/20">THU</th>
+                    <th className="py-2.5 border-r border-white/20">FRI</th>
+                    <th className="py-2.5 border-r border-white/20">SAT</th>
+                    <th className="py-2.5">SUN</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-150 text-xs font-bold text-gray-900">
                   {JODI_DATA.map((row, rIdx) => (
                     <tr key={rIdx} className="hover:bg-gray-50/50">
-                      {row.map((cell, cIdx) => (
-                        <td
-                          key={cIdx}
-                          className={`py-2 px-1 font-bold ${
-                            cell === '**' ? 'text-red-500' : 'text-gray-900'
-                          }`}
-                        >
-                          {cell}
-                        </td>
-                      ))}
+                      {row.map((val, cIdx) => {
+                        const isRed = val === '99' || val === '**';
+                        return (
+                          <td
+                            key={cIdx}
+                            className={`py-3 px-1 border-r border-gray-150 last:border-r-0 ${
+                              isRed ? 'text-red-500 font-bold' : 'text-gray-900 font-bold'
+                            }`}
+                          >
+                            {val}
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           </div>
-        ) : (
-          /* PANA / PANEL CHART TABLE */
-          <div className="bg-white rounded-2xl p-4 shadow-xs border border-gray-100 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-              <h3 className="text-sm font-bold text-gray-900">{selectedMarket} - Panel (Pana) Chart</h3>
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                className="text-xs font-bold text-gray-600 hover:text-gray-900 cursor-pointer"
+        )}
+
+        {/* ======================= 3. PANA CHART VIEW ======================= */}
+        {viewMode === 'pana' && (
+          <div className="space-y-3">
+            {/* Theme Sub-Pill */}
+            <div className="flex items-center gap-2">
+              <span
+                style={{ backgroundColor: currentTheme.playBtnBg || currentTheme.headerBgColor || '#059669' }}
+                className="text-white text-xs font-bold px-3 py-1 rounded-full uppercase shadow-2xs"
               >
-                Back to list ✕
-              </button>
+                Pana Chart
+              </span>
+              <span className="text-xs font-bold text-gray-700 uppercase">
+                {selectedMarket}
+              </span>
             </div>
 
-            <div className="space-y-3">
-              {PANA_DATA.map((week, wIdx) => (
-                <div key={wIdx} className="border border-gray-150 rounded-xl p-2.5 bg-gray-50/40">
-                  <div className="text-[11px] font-bold text-gray-500 mb-1.5 whitespace-pre-line leading-tight">
-                    {week.date}
-                  </div>
-                  <div className="grid grid-cols-6 gap-1.5 text-center text-[10px]">
-                    {week.days.map((day, dIdx) => (
-                      <div key={dIdx} className="bg-white p-1.5 rounded-lg border border-gray-100">
-                        <div className="text-gray-400 font-medium">{day.top}</div>
-                        <div className={`font-bold text-xs my-0.5 ${day.isRed ? 'text-red-600' : 'text-gray-900'}`}>
-                          {day.mid}
-                        </div>
-                        <div className="text-gray-400 font-medium">{day.bot}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+            {/* Main Pana Table */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-2xs overflow-hidden overflow-x-auto">
+              <table className="w-full text-center border-collapse">
+                <thead>
+                  <tr
+                    className="text-white text-[11px] font-bold"
+                    style={{ backgroundColor: currentTheme.headerBgColor || '#065f46' }}
+                  >
+                    <th className="py-2.5 px-2 border-r border-white/20">Date</th>
+                    <th className="py-2.5 px-1.5 border-r border-white/20">MON</th>
+                    <th className="py-2.5 px-1.5 border-r border-white/20">TUE</th>
+                    <th className="py-2.5 px-1.5 border-r border-white/20">WED</th>
+                    <th className="py-2.5 px-1.5 border-r border-white/20">THU</th>
+                    <th className="py-2.5 px-1.5 border-r border-white/20">FRI</th>
+                    <th className="py-2.5 px-1.5">SAT</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 text-[11px]">
+                  {PANA_DATA.map((row, rIdx) => (
+                    <tr key={rIdx} className="hover:bg-gray-50/50">
+                      {/* Date Column */}
+                      <td className="py-2 px-1 bg-emerald-50/40 font-semibold text-[10px] text-gray-600 border-r border-gray-200 whitespace-pre-line leading-tight">
+                        {row.date}
+                      </td>
+
+                      {/* 6 Day Columns */}
+                      {row.days.map((d, dIdx) => (
+                        <td
+                          key={dIdx}
+                          className="py-1.5 px-1 border-r border-gray-200 last:border-r-0"
+                        >
+                          <div className="flex flex-col items-center leading-tight">
+                            <span className="text-[11px] font-semibold text-gray-900">{d.top}</span>
+                            <span
+                              className={`text-[12px] font-bold my-0.5 ${d.isRed ? 'text-red-500' : 'text-emerald-700'
+                                }`}
+                            >
+                              {d.mid}
+                            </span>
+                            <span className="text-[11px] font-semibold text-gray-900">{d.bot}</span>
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
