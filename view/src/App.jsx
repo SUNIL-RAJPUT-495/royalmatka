@@ -12,6 +12,7 @@ import { UserGameRates } from "./pages/user/UserGameRates";
 import { UserWithdraw } from "./pages/user/UserWithdraw";
 import { UserBankDetails } from "./pages/user/UserBankDetails";
 import { UserBids } from "./pages/user/UserBids";
+import { UserBidsHub } from "./pages/user/UserBidsHub";
 import { UserBidsHistory } from "./pages/user/UserBidsHistory";
 import { UserCasino } from "./pages/user/UserCasino";
 import { UserCharts } from "./pages/user/UserCharts";
@@ -46,9 +47,13 @@ function App() {
             <Route path="/add-fund" element={<UserDeposit />} />
             <Route path="/withdraw" element={<UserWithdraw />} />
             <Route path="/bank-details" element={<UserBankDetails />} />
-            <Route path="/payment-methods" element={<UserBankDetails />} />
             <Route path="/my-bids" element={<UserBids />} />
+            <Route path="/mybids" element={<UserBids />} />
             <Route path="/bids" element={<UserBids />} />
+            <Route path="/game-history" element={<UserBidsHub />} />
+            <Route path="/gamehistory" element={<UserBidsHub />} />
+            <Route path="/bids-hub" element={<UserBidsHub />} />
+            <Route path="/bids-menu" element={<UserBidsHub />} />
             <Route path="/bids-history" element={<UserBidsHistory />} />
             <Route path="/casino" element={<UserCasino />} />
             <Route path="/play-game/:marketName" element={<UserGameModes />} />

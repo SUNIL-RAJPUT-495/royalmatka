@@ -15,7 +15,7 @@ export const UserLayout = () => {
   });
 
   const isHomePage = location.pathname === '/' || location.pathname === '/home';
-  const showNavbar = isHomePage || location.pathname === '/my-bids' || location.pathname === '/bids';
+  const showNavbar = isHomePage;
 
   // Fetch updated user balance/profile if available
   useEffect(() => {

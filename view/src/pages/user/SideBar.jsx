@@ -42,6 +42,7 @@ export const SideBar = ({
 
   const gameZoneMenu = [
     { label: 'Game Rates', icon: IoRibbonOutline, link: '/game-rates' },
+    { label: 'Game History', icon: IoTimeOutline, link: '/game-history' },
     { label: 'Winning Tips', icon: IoFlashOutline, link: '/tips' },
     { label: 'Mpin Settings', icon: IoShieldCheckmarkOutline, link: '/mpin-settings' },
     { label: 'Notification Settings', icon: IoNotificationsOutline, link: '/notification-settings' }

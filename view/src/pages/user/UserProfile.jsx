@@ -239,7 +239,7 @@ export const UserProfile = () => {
 
             {/* Game History */}
             <div
-              onClick={() => navigate('/my-bids')}
+              onClick={() => navigate('/game-history')}
               className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"
             >
               <div className="w-10 h-10 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center mb-1.5 shadow-2xs">
