@@ -73,7 +73,7 @@ export const UserBidsHub = () => {
     <div className="w-full min-h-screen bg-[#f5f6fa] select-none font-sans flex flex-col pb-28">
       {/* 1. TOP HEADER */}
       <div
-        className="w-full text-white shadow-md rounded-b-[24px] transition-colors duration-300 shrink-0 mb-2"
+        className="w-full text-white shadow-md rounded-b-[24px] transition-colors duration-300 shrink-0 mb-2 sticky top-0 z-30"
         style={{ backgroundColor: themeColor }}
       >
         <div className="px-4 pt-3.5 pb-4 flex items-center justify-between">

@@ -118,7 +118,7 @@ export const UserProfile = () => {
     <div className="w-full select-none pb-8 font-sans">
       {/* 1. TOP CURVED PROFILE HEADER */}
       <div
-        className="p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300 mb-4"
+        className="p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300 mb-4 sticky top-0 z-30"
         style={{ backgroundColor: currentTheme.headerBgColor }}
       >
         <div className="flex items-center justify-between">

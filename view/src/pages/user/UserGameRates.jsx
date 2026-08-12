@@ -60,7 +60,7 @@ export const UserGameRates = () => {
     <div className="w-full min-h-screen bg-[#f5f6fa] select-none font-sans flex flex-col pb-28">
       {/* 1. TOP HEADER */}
       <div
-        className="w-full text-white shadow-xs transition-colors duration-300 shrink-0"
+        className="w-full text-white shadow-md rounded-b-[28px] transition-colors duration-300 shrink-0 mb-1 sticky top-0 z-30"
         style={{ backgroundColor: themeColor }}
       >
         <div className="px-4 pt-4 pb-4 flex items-center justify-between">

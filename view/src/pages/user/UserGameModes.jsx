@@ -188,7 +188,7 @@ export const UserGameModes = () => {
     <div className="w-full select-none pb-24 font-sans">
       {/* 1. TOP ORANGE HEADER (Exact Match with Screenshot) */}
       <div
-        className="p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300 mb-3.5"
+        className="p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300 mb-3.5 sticky top-0 z-30"
         style={{ backgroundColor: currentTheme.headerBgColor }}
       >
         <div className="flex items-center gap-3">

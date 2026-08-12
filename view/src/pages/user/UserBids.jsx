@@ -115,7 +115,7 @@ export const UserBids = () => {
     <div className="w-full min-h-screen bg-[#f5f6fa] select-none font-sans flex flex-col pb-28">
       {/* 1. TOP HEADER */}
       <div
-        className="w-full text-white shadow-md rounded-b-[28px] transition-colors duration-300 shrink-0 mb-1"
+        className="w-full text-white shadow-md rounded-b-[28px] transition-colors duration-300 shrink-0 mb-1 sticky top-0 z-30"
         style={{ backgroundColor: themeColor }}
       >
         <div className="px-4 pt-4 pb-5 flex items-center justify-between">
@@ -145,7 +145,7 @@ export const UserBids = () => {
       <div className="px-4 pt-3">
         <div className="grid grid-cols-2 gap-3">
           {/* Card 1: Total Winnings */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-150 shadow-xs space-y-1">
+          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs space-y-1">
             <div className="flex items-center gap-1.5 text-gray-600">
               <FaWallet className="text-[#ea580c]" size={13} />
               <span className="text-xs font-semibold">Total Winnings</span>
@@ -156,7 +156,7 @@ export const UserBids = () => {
           </div>
 
           {/* Card 2: Total Bets */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-150 shadow-xs space-y-1">
+          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs space-y-1">
             <div className="flex items-center gap-1.5 text-gray-600">
               <IoGameControllerOutline className="text-[#ea580c]" size={15} />
               <span className="text-xs font-semibold">Total Bets</span>
@@ -169,8 +169,8 @@ export const UserBids = () => {
       </div>
 
       {/* 3. STATUS FILTER TABS */}
-      <div className="px-4 pt-3.5">
-        <div className="bg-white rounded-2xl p-1.5 shadow-xs border border-gray-150 grid grid-cols-4 gap-1">
+      <div className="px-4 pt-3">
+        <div className="bg-white rounded-2xl p-1.5 shadow-2xs border border-gray-100 grid grid-cols-4 gap-1">
           <button
             type="button"
             onClick={() => setFilterTab('all')}
@@ -227,7 +227,7 @@ export const UserBids = () => {
 
       {/* 4. SEARCH & FILTER SLIDER BAR */}
       <div className="px-4 pt-3 flex items-center gap-2">
-        <div className="bg-white rounded-2xl px-3.5 py-2.5 border border-gray-200 shadow-2xs flex items-center gap-2 flex-1">
+        <div className="bg-white rounded-2xl px-3.5 py-2.5 border border-gray-100 shadow-2xs flex items-center gap-2 flex-1">
           <IoSearchOutline size={16} className="text-gray-400 shrink-0" />
           <input
             type="text"
@@ -243,7 +243,7 @@ export const UserBids = () => {
           type="button"
           onClick={() => setIsFilterOpen(!isFilterOpen)}
           style={isFilterOpen ? { backgroundColor: themeColor, color: '#ffffff' } : undefined}
-          className={`w-10 h-10 rounded-2xl border border-gray-200 shadow-2xs flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0 ${
+          className={`w-10 h-10 rounded-2xl border border-gray-100 shadow-2xs flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0 ${
             isFilterOpen
               ? 'text-white shadow-xs'
               : 'bg-white text-[#ea580c] hover:bg-orange-50'
@@ -421,8 +421,7 @@ export const UserBids = () => {
             return (
               <div
                 key={bid.id || index}
-                className="bg-white rounded-2xl border border-gray-150/90 border-t-[3.5px] shadow-xs overflow-hidden transition-all hover:shadow-sm"
-                style={{ borderTopColor: isGreenTheme ? '#10b981' : (currentTheme?.headerBgColor || '#f97316') }}
+                className="bg-white rounded-2xl border border-gray-100 shadow-2xs overflow-hidden transition-all hover:shadow-xs"
               >
                 {/* Top Header of Card (Theme-Matched Clean Light Tint) */}
                 <div className={`${cardHeaderBg} px-3.5 py-2.5 flex items-center justify-between`}>
@@ -465,7 +464,7 @@ export const UserBids = () => {
                   {/* Two Mini Boxes: BID and POTENTIAL */}
                   <div className="grid grid-cols-2 gap-2.5">
                     {/* Box 1: BID */}
-                    <div className="bg-[#f8fafc] rounded-2xl p-3 border border-gray-100">
+                    <div className="bg-[#f8fafc] rounded-2xl p-3 border border-gray-100/60 shadow-2xs">
                       <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wide block">
                         BID
                       </span>
@@ -475,7 +474,7 @@ export const UserBids = () => {
                     </div>
 
                     {/* Box 2: POTENTIAL */}
-                    <div className={`${potentialBoxClass} rounded-2xl p-3`}>
+                    <div className={`${potentialBoxClass} rounded-2xl p-3 shadow-2xs`}>
                       <span className={`text-[9px] font-bold uppercase tracking-wide block ${potentialTextClass}`}>
                         POTENTIAL
                       </span>
@@ -486,21 +485,21 @@ export const UserBids = () => {
                   </div>
 
                   {/* Game Details Row */}
-                  <div className="bg-white rounded-2xl p-3 border border-gray-100 flex items-center justify-between shadow-2xs">
+                  <div className="bg-[#f8fafc]/70 rounded-2xl p-3 border border-gray-100/60 flex items-center justify-between shadow-2xs">
                     <div>
                       <div className="flex items-center gap-1.5 text-xs font-bold text-gray-900">
                         <IoGameControllerOutline size={14} className="text-[#ea580c]" />
                         <span>{bid.gameType}</span>
                       </div>
                       <div className="mt-1.5">
-                        <span className="bg-gray-50 text-gray-800 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-gray-200 shadow-2xs inline-block">
+                        <span className="bg-white text-gray-800 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-gray-150 shadow-2xs inline-block">
                           {bid.digitLabel}
                         </span>
                       </div>
                     </div>
 
                     <div>
-                      <span className="text-[10px] font-bold text-gray-600 bg-white px-2.5 py-1 rounded-full border border-gray-200 shadow-2xs">
+                      <span className="text-[10px] font-bold text-gray-600 bg-white px-2.5 py-1 rounded-full border border-gray-150 shadow-2xs">
                         ○ {bid.session}
                       </span>
                     </div>

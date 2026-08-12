@@ -21,7 +21,7 @@ export const UserWithdrawalsFeed = () => {
     <div className="w-full select-none pb-12 font-sans">
       {/* 1. TOP HEADER (Exact Match with Screenshot 4) */}
       <div
-        className="p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300 mb-3.5"
+        className="p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300 mb-3.5 sticky top-0 z-30"
         style={{ backgroundColor: currentTheme.headerBgColor }}
       >
         <div className="flex items-center gap-3">

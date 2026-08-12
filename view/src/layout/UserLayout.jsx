@@ -17,6 +17,11 @@ export const UserLayout = () => {
   const isHomePage = location.pathname === '/' || location.pathname === '/home';
   const showNavbar = isHomePage;
 
+  // Automatically scroll to top whenever page route changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [location.pathname]);
+
   // Fetch updated user balance/profile if available
   useEffect(() => {
     const loadProfile = async () => {

@@ -49,7 +49,7 @@ export const UserJackpot = () => {
     <div className="w-full min-h-screen bg-[#f5f6fa] select-none font-sans flex flex-col pb-24">
       {/* 1. TOP HEADER */}
       <div
-        className="w-full text-white shadow-xs transition-colors duration-300 shrink-0"
+        className="w-full text-white shadow-xs transition-colors duration-300 shrink-0 sticky top-0 z-30"
         style={{ backgroundColor: themeHeaderBg }}
       >
         {/* Top Action Bar (Back Arrow + Notification Bell) */}

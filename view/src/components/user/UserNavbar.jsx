@@ -28,7 +28,7 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
 
   return (
     <header
-      className={`w-full text-white shadow-xs transition-colors duration-300 select-none shrink-0 ${
+      className={`w-full text-white shadow-xs transition-colors duration-300 select-none shrink-0 sticky top-0 z-40 ${
         isHomePage ? 'rounded-b-[28px] shadow-md' : ''
       }`}
       style={{ backgroundColor: currentTheme.headerBgColor }}
