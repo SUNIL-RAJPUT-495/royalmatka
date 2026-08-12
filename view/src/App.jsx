@@ -21,6 +21,9 @@ import { UserContactUs } from "./pages/user/UserContactUs";
 import { UserNotificationSettings } from "./pages/user/UserNotificationSettings";
 import { UserWithdrawalsFeed } from "./pages/user/UserWithdrawalsFeed";
 import { UserGameModes } from "./pages/user/UserGameModes";
+import { UserJackpotGali } from "./pages/user/UserJackpotGali";
+import { UserJackpot } from "./pages/user/UserJackpot";
+import { UserStarline } from "./pages/user/UserStarline";
 import Aviator from "./services/aviator/pages/Aviator";
 import { AdminLayout } from "./layout/AdminLayout";
 import { Dashboard } from "./components/admin/Dashboard";
@@ -69,6 +72,13 @@ function App() {
             <Route path="/passbook" element={<UserPassbook />} />
             <Route path="/transaction-history" element={<UserPassbook />} />
             <Route path="/game-rates" element={<UserGameRates />} />
+            <Route path="/JackpotGali" element={<UserJackpotGali />} />
+            <Route path="/jackpot-gali" element={<UserJackpotGali />} />
+            <Route path="/gali-bazar" element={<UserJackpotGali />} />
+            <Route path="/starline" element={<UserStarline />} />
+            <Route path="/starline-markets" element={<UserStarline />} />
+            <Route path="/Jackpot" element={<UserJackpot />} />
+            <Route path="/jackpot" element={<UserJackpot />} />
           </Route>
 
           {/* 2. STANDALONE FULLSCREEN AVIATOR GAME ROUTE */}
