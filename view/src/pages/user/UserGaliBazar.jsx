@@ -112,6 +112,17 @@ export const UserGaliBazar = () => {
     navigate(`/play-game/${encodeURIComponent(market.name)}`);
   };
 
+  const isGreenTheme = currentTheme?.id?.includes('green') || currentTheme?.headerBgColor === '#447668';
+  const themeHeaderBg = currentTheme?.headerBgColor || (isGreenTheme ? '#447668' : '#ea580c');
+  const accentBorderColor = isGreenTheme ? '#10b981' : '#f97316';
+  const resultTextColor = isGreenTheme ? 'text-[#00c853]' : 'text-[#ea580c]';
+  const runningBadgeClass = isGreenTheme
+    ? 'bg-[#dcfce7] text-[#16a34a] border-emerald-100'
+    : 'bg-[#ffedd5] text-[#ea580c] border-orange-100';
+  const playBtnClass = isGreenTheme
+    ? 'bg-[#dcfce7] hover:bg-emerald-100 text-[#16a34a] border-emerald-200/80'
+    : 'bg-orange-50 hover:bg-orange-100 text-[#ea580c] border-orange-200/80';
+
   // Select list and title according to active tab
   const isGaliMode = activeTab === 'gali';
   const currentList = isGaliMode ? galiMarkets : starlineMarkets;
@@ -119,14 +130,13 @@ export const UserGaliBazar = () => {
 
   return (
     <div className="w-full min-h-screen bg-[#f5f6fa] select-none font-sans flex flex-col pb-24">
-      {/* 1. TOP ORANGE HEADER */}
+      {/* 1. TOP HEADER */}
       <div
         className="w-full text-white shadow-xs transition-colors duration-300 shrink-0"
-        style={{ backgroundColor: currentTheme.headerBgColor || '#f95e07' }}
+        style={{ backgroundColor: themeHeaderBg }}
       >
         {/* Top Action Bar (Back Arrow + Notification Bell) */}
         <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-          {/* Back Button -> Navigates to Home */}
           <button
             type="button"
             onClick={() => navigate('/')}
@@ -136,7 +146,6 @@ export const UserGaliBazar = () => {
             <FaArrowLeft size={15} />
           </button>
 
-          {/* Notification Button */}
           <button
             type="button"
             onClick={() => navigate('/notifications')}
@@ -212,11 +221,11 @@ export const UserGaliBazar = () => {
       </div>
 
       {/* 2. BODY CONTENT */}
-      <div className="px-4 pt-5 space-y-4">
+      <div className="px-4 pt-4 space-y-3.5">
         {/* Section Heading with Trophy */}
         <div className="flex items-center gap-2">
-          <span className="text-xl leading-none select-none">🏆</span>
-          <h1 className="text-[19px] font-extrabold text-gray-900 tracking-tight">
+          <span className="text-lg leading-none select-none">🏆</span>
+          <h1 className="text-[17px] font-bold text-gray-900 tracking-tight">
             {sectionTitle}
           </h1>
         </div>
@@ -230,25 +239,26 @@ export const UserGaliBazar = () => {
               <div
                 key={market.id || market.name}
                 onClick={() => !isClosed && handlePlayMarket(market)}
-                className={`bg-white rounded-2xl p-3.5 shadow-xs border-l-[4.5px] border-l-[#00c853] flex flex-col justify-between relative transition-all duration-200 select-none border border-gray-100 ${
+                className={`bg-white rounded-2xl p-3.5 shadow-xs border-l-[4px] flex flex-col justify-between relative transition-all duration-200 select-none border border-gray-100 ${
                   isClosed
                     ? 'opacity-95'
                     : 'cursor-pointer hover:shadow-md active:scale-[0.98]'
                 }`}
+                style={{ borderLeftColor: accentBorderColor }}
               >
                 {/* Top: Market Title */}
                 <div>
-                  <h2 className="text-xs sm:text-[13px] font-extrabold uppercase text-gray-900 tracking-tight truncate">
+                  <h2 className="text-xs sm:text-[13px] font-bold uppercase text-gray-900 tracking-wide truncate">
                     {market.name}
                   </h2>
 
-                  {/* Result: Digits in Green */}
-                  <div className="text-[#00c853] font-bold text-base sm:text-lg tracking-widest leading-tight my-1">
+                  {/* Result: Digits in Dynamic Theme Color */}
+                  <div className={`font-bold text-base sm:text-[17px] tracking-widest leading-tight my-1 ${resultTextColor}`}>
                     {market.result || '* *'}
                   </div>
 
                   {/* Market Timing with Outline Clock */}
-                  <div className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 mt-1">
+                  <div className="flex items-center gap-1 text-[11px] font-medium text-gray-500 mt-1">
                     <IoTimeOutline size={13} className="text-gray-400 shrink-0" />
                     <span>{market.time}</span>
                   </div>
@@ -262,7 +272,7 @@ export const UserGaliBazar = () => {
                       CLOSED
                     </span>
                   ) : (
-                    <span className="bg-[#dcfce7] text-[#16a34a] font-bold text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-emerald-100">
+                    <span className={`font-bold text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${runningBadgeClass}`}>
                       RUNNING
                     </span>
                   )}
@@ -279,10 +289,10 @@ export const UserGaliBazar = () => {
                         e.stopPropagation();
                         handlePlayMarket(market);
                       }}
-                      className="w-8 h-8 rounded-full bg-[#dcfce7] hover:bg-emerald-100 active:scale-90 text-[#16a34a] flex items-center justify-center border border-emerald-200/80 shadow-2xs transition-all cursor-pointer shrink-0"
+                      className={`w-8 h-8 rounded-full active:scale-90 flex items-center justify-center border shadow-2xs transition-all cursor-pointer shrink-0 ${playBtnClass}`}
                       title="Play Market"
                     >
-                      <FaPlay size={9} className="ml-0.5 text-emerald-600" />
+                      <FaPlay size={9} className="ml-0.5" />
                     </button>
                   )}
                 </div>
