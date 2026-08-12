@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { FaArrowLeft, FaTrophy, FaShareAlt } from 'react-icons/fa';
@@ -8,33 +8,53 @@ export const UserGameRates = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
 
-  const themeColor = currentTheme?.headerBgColor || '#f95e07';
+  // Dynamic Theme Colors
+  const isGreenTheme = currentTheme?.id?.includes('green') || currentTheme?.headerBgColor === '#447668';
+  const themeColor = currentTheme?.headerBgColor || (isGreenTheme ? '#447668' : '#f95e07');
+  
+  // Rate items theme-matched background, border, and text color
+  const rateBoxClass = isGreenTheme
+    ? 'bg-[#ecfdf5] border-[#a7f3d0]'
+    : 'bg-[#fff7ed] border-[#fed7aa]';
+  const rateTextClass = isGreenTheme ? 'text-[#047857]' : 'text-[#ea580c]';
 
-  const MAIN_PANA_RATES = [
-    { title: 'Single ank', subtitle: 'Single digit betting', rate: '1 ka 10' },
-    { title: 'Jodi', subtitle: 'Two digit combination', rate: '1 ka 100' },
-    { title: 'Single Panna', subtitle: 'Three digit single panna', rate: '1 ka 160' },
-    { title: 'Double Panna', subtitle: 'Three digit double panna', rate: '1 ka 320' },
-    { title: 'Triple Panna', subtitle: 'Three digit triple panna', rate: '1 ka 700' },
-    { title: 'Half Sangam', subtitle: 'Half sangam combination', rate: '1 ka 1000' },
-    { title: 'Full Sangam', subtitle: 'Full sangam - highest payout!', rate: '1 ka 10000' }
-  ];
+  // Backend state preparation (fallback to initial dummy data)
+  const [loading, setLoading] = useState(false);
+  const [rates, setRates] = useState({
+    featured: {
+      title: 'Single ank',
+      subtitle: 'Single digit betting',
+      gameType: 'Single ank',
+      rate: '1 ka 10'
+    },
+    mainPana: [
+      { title: 'Single ank', subtitle: 'Single digit betting', rate: '1 ka 10' },
+      { title: 'Jodi', subtitle: 'Two digit combination', rate: '1 ka 100' },
+      { title: 'Single Panna', subtitle: 'Three digit single panna', rate: '1 ka 160' },
+      { title: 'Double Panna', subtitle: 'Three digit double panna', rate: '1 ka 320' },
+      { title: 'Triple Panna', subtitle: 'Three digit triple panna', rate: '1 ka 700' },
+      { title: 'Half Sangam', subtitle: 'Half sangam combination', rate: '1 ka 1000' },
+      { title: 'Full Sangam', subtitle: 'Full sangam - highest payout!', rate: '1 ka 10000' }
+    ],
+    starline: [
+      { title: 'Single ank', subtitle: 'Single digit betting', rate: '1 ka 10' },
+      { title: 'Single Panna', subtitle: 'Three digit single panna', rate: '1 ka 160' },
+      { title: 'Double Panna', subtitle: 'Three digit double panna', rate: '1 ka 320' },
+      { title: 'Triple Panna', subtitle: 'Three digit triple panna', rate: '1 ka 800' }
+    ],
+    gali: [
+      { title: 'Single ank', subtitle: 'Single digit betting', rate: '1 ka 10' },
+      { title: 'Jodi', subtitle: 'Two digit combination', rate: '1 ka 100' }
+    ],
+    jackpot: [
+      { title: 'Jodi', subtitle: 'Two digit combination', rate: '1 ka 100' }
+    ]
+  });
 
-  const STARLINE_RATES = [
-    { title: 'Single ank', subtitle: 'Single digit betting', rate: '1 ka 10' },
-    { title: 'Single Panna', subtitle: 'Three digit single panna', rate: '1 ka 160' },
-    { title: 'Double Panna', subtitle: 'Three digit double panna', rate: '1 ka 320' },
-    { title: 'Triple Panna', subtitle: 'Three digit triple panna', rate: '1 ka 800' }
-  ];
-
-  const GALI_RATES = [
-    { title: 'Single ank', subtitle: 'Single digit betting', rate: '1 ka 10' },
-    { title: 'Jodi', subtitle: 'Two digit combination', rate: '1 ka 100' }
-  ];
-
-  const JACKPOT_RATES = [
-    { title: 'Jodi', subtitle: 'Two digit combination', rate: '1 ka 100' }
-  ];
+  useEffect(() => {
+    // Ready for future backend API fetch:
+    // e.g. api.get('/game-rates').then(res => setRates(res.data)).catch(...)
+  }, []);
 
   return (
     <div className="w-full min-h-screen bg-[#f5f6fa] select-none font-sans flex flex-col pb-28">
@@ -86,9 +106,9 @@ export const UserGameRates = () => {
 
       {/* 2. BODY CONTENT */}
       <div className="px-4 pt-4 space-y-4">
-        {/* TOP FEATURED GAME CARD (Exact from Screenshot 1) */}
+        {/* TOP FEATURED GAME CARD */}
         <div
-          className="rounded-3xl p-5 text-white shadow-sm transition-colors duration-300"
+          className="rounded-3xl p-5 text-white shadow-md shadow-black/5 transition-colors duration-300"
           style={{ backgroundColor: themeColor }}
         >
           <div className="flex items-center justify-between">
@@ -101,48 +121,48 @@ export const UserGameRates = () => {
 
           <div className="mt-2.5">
             <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-              Single ank
+              {rates.featured.title}
             </h2>
             <p className="text-xs text-white/90 font-normal mt-0.5">
-              Single digit betting
+              {rates.featured.subtitle}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 mt-4">
             {/* Box 1: Game Type */}
-            <div className="bg-white/20 backdrop-blur-xs rounded-2xl p-3.5 border border-white/20">
+            <div className="bg-white/20 backdrop-blur-xs rounded-2xl p-3.5 border border-white/20 shadow-2xs">
               <span className="text-[10px] sm:text-[11px] text-white/80 font-medium block">
                 Game Type
               </span>
               <span className="text-xs sm:text-sm font-bold text-white block mt-0.5">
-                Single ank
+                {rates.featured.gameType}
               </span>
             </div>
 
             {/* Box 2: Game Rate */}
-            <div className="bg-white/20 backdrop-blur-xs rounded-2xl p-3.5 border border-white/20">
+            <div className="bg-white/20 backdrop-blur-xs rounded-2xl p-3.5 border border-white/20 shadow-2xs">
               <span className="text-[10px] sm:text-[11px] text-white/80 font-medium block">
                 Game Rate
               </span>
               <span className="text-xs sm:text-base font-bold text-white block mt-0.5">
-                1 ka 10
+                {rates.featured.rate}
               </span>
             </div>
           </div>
         </div>
 
-        {/* SECTION 1: Main Pana (Screenshot 1) */}
-        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-gray-100 shadow-2xs space-y-3">
+        {/* SECTION 1: Main Pana */}
+        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-gray-100/90 shadow-md shadow-black/5 space-y-3">
           <div className="flex items-center justify-between pb-0.5">
             <h3 className="text-sm font-bold text-gray-900">Main Pana</h3>
             <IoBookmarkOutline className="text-gray-400" size={16} />
           </div>
 
           <div className="space-y-2.5">
-            {MAIN_PANA_RATES.map((item, index) => (
+            {rates.mainPana.map((item, index) => (
               <div
                 key={index}
-                className="bg-[#ecfdf5] border border-[#a7f3d0] rounded-2xl p-3 sm:p-3.5 flex items-center justify-between transition-colors"
+                className={`${rateBoxClass} border rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-2xs hover:shadow-xs transition-all`}
               >
                 <div>
                   <h4 className="text-xs sm:text-[13px] font-bold text-gray-900 leading-tight">
@@ -154,7 +174,7 @@ export const UserGameRates = () => {
                 </div>
 
                 <div className="text-right shrink-0 ml-2">
-                  <span className="text-xs sm:text-[13px] font-bold text-[#047857] tracking-tight">
+                  <span className={`text-xs sm:text-[13px] font-bold tracking-tight ${rateTextClass}`}>
                     {item.rate}
                   </span>
                 </div>
@@ -163,18 +183,18 @@ export const UserGameRates = () => {
           </div>
         </div>
 
-        {/* SECTION 2: Starline (Screenshot 2) */}
-        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-gray-100 shadow-2xs space-y-3">
+        {/* SECTION 2: Starline */}
+        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-gray-100/90 shadow-md shadow-black/5 space-y-3">
           <div className="flex items-center justify-between pb-0.5">
             <h3 className="text-sm font-bold text-gray-900">Starline</h3>
             <IoBookmarkOutline className="text-gray-400" size={16} />
           </div>
 
           <div className="space-y-2.5">
-            {STARLINE_RATES.map((item, index) => (
+            {rates.starline.map((item, index) => (
               <div
                 key={index}
-                className="bg-[#ecfdf5] border border-[#a7f3d0] rounded-2xl p-3 sm:p-3.5 flex items-center justify-between transition-colors"
+                className={`${rateBoxClass} border rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-2xs hover:shadow-xs transition-all`}
               >
                 <div>
                   <h4 className="text-xs sm:text-[13px] font-bold text-gray-900 leading-tight">
@@ -186,7 +206,7 @@ export const UserGameRates = () => {
                 </div>
 
                 <div className="text-right shrink-0 ml-2">
-                  <span className="text-xs sm:text-[13px] font-bold text-[#047857] tracking-tight">
+                  <span className={`text-xs sm:text-[13px] font-bold tracking-tight ${rateTextClass}`}>
                     {item.rate}
                   </span>
                 </div>
@@ -195,18 +215,18 @@ export const UserGameRates = () => {
           </div>
         </div>
 
-        {/* SECTION 3: Gali (Screenshot 2) */}
-        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-gray-100 shadow-2xs space-y-3">
+        {/* SECTION 3: Gali */}
+        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-gray-100/90 shadow-md shadow-black/5 space-y-3">
           <div className="flex items-center justify-between pb-0.5">
             <h3 className="text-sm font-bold text-gray-900">Gali</h3>
             <IoBookmarkOutline className="text-gray-400" size={16} />
           </div>
 
           <div className="space-y-2.5">
-            {GALI_RATES.map((item, index) => (
+            {rates.gali.map((item, index) => (
               <div
                 key={index}
-                className="bg-[#ecfdf5] border border-[#a7f3d0] rounded-2xl p-3 sm:p-3.5 flex items-center justify-between transition-colors"
+                className={`${rateBoxClass} border rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-2xs hover:shadow-xs transition-all`}
               >
                 <div>
                   <h4 className="text-xs sm:text-[13px] font-bold text-gray-900 leading-tight">
@@ -218,7 +238,7 @@ export const UserGameRates = () => {
                 </div>
 
                 <div className="text-right shrink-0 ml-2">
-                  <span className="text-xs sm:text-[13px] font-bold text-[#047857] tracking-tight">
+                  <span className={`text-xs sm:text-[13px] font-bold tracking-tight ${rateTextClass}`}>
                     {item.rate}
                   </span>
                 </div>
@@ -227,18 +247,18 @@ export const UserGameRates = () => {
           </div>
         </div>
 
-        {/* SECTION 4: Jackpot (Screenshot 2) */}
-        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-gray-100 shadow-2xs space-y-3">
+        {/* SECTION 4: Jackpot */}
+        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-gray-100/90 shadow-md shadow-black/5 space-y-3">
           <div className="flex items-center justify-between pb-0.5">
             <h3 className="text-sm font-bold text-gray-900">Jackpot</h3>
             <IoBookmarkOutline className="text-gray-400" size={16} />
           </div>
 
           <div className="space-y-2.5">
-            {JACKPOT_RATES.map((item, index) => (
+            {rates.jackpot.map((item, index) => (
               <div
                 key={index}
-                className="bg-[#ecfdf5] border border-[#a7f3d0] rounded-2xl p-3 sm:p-3.5 flex items-center justify-between transition-colors"
+                className={`${rateBoxClass} border rounded-2xl p-3 sm:p-3.5 flex items-center justify-between shadow-2xs hover:shadow-xs transition-all`}
               >
                 <div>
                   <h4 className="text-xs sm:text-[13px] font-bold text-gray-900 leading-tight">
@@ -250,7 +270,7 @@ export const UserGameRates = () => {
                 </div>
 
                 <div className="text-right shrink-0 ml-2">
-                  <span className="text-xs sm:text-[13px] font-bold text-[#047857] tracking-tight">
+                  <span className={`text-xs sm:text-[13px] font-bold tracking-tight ${rateTextClass}`}>
                     {item.rate}
                   </span>
                 </div>
