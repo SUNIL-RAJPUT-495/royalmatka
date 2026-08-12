@@ -60,6 +60,7 @@ function App() {
             <Route path="/support" element={<UserContactUs />} />
             <Route path="/notifications" element={<UserNotificationSettings />} />
             <Route path="/notification-settings" element={<UserNotificationSettings />} />
+            <Route path="/all-withdrawals" element={<UserWithdrawalsFeed />} />
             <Route path="/live-withdrawals" element={<UserWithdrawalsFeed />} />
             <Route path="/withdrawals-feed" element={<UserWithdrawalsFeed />} />
             <Route path="/profile" element={<UserProfile />} />
