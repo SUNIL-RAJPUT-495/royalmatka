@@ -2,6 +2,9 @@
 export const baseURL = "https://royalmatkaapi.growva.tech";
 
 const SummaryApi = {
+    aviatorSocket: {
+        url: baseURL
+    },
     creatUser: {
         url: baseURL + "/api/user/create-user",
         method: "post"

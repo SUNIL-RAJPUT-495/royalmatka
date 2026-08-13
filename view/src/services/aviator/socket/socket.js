@@ -1,10 +1,12 @@
-import { baseURL } from "../../../common/SummerAPI";
+import SummaryApi from "../../../common/SummerAPI";
 
 const getSocketUrl = () => {
   if (import.meta.env.VITE_AVIATOR_SOCKET_URL) return import.meta.env.VITE_AVIATOR_SOCKET_URL;
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-  if (baseURL && (baseURL.startsWith("http://") || baseURL.startsWith("https://"))) {
-    return baseURL;
+  
+  const socketBase = SummaryApi.aviatorSocket?.url || "http://localhost:5000";
+  if (socketBase && (socketBase.startsWith("http://") || socketBase.startsWith("https://"))) {
+    return socketBase;
   }
   if (typeof window !== "undefined" && window.location?.hostname) {
     return `http://${window.location.hostname}`;
