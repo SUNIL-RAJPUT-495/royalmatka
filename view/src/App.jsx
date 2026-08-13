@@ -52,6 +52,13 @@ import { DepositRequestsManagement } from "./pages/admin/DepositRequestsManageme
 import { JackpotGaliBids } from "./pages/admin/JackpotGaliBids";
 import { JackpotGaliResults } from "./pages/admin/JackpotGaliResults";
 import { StarLineAdmin } from "./pages/admin/StarLineAdmin";
+import { GameRatesAdmin } from "./pages/admin/GameRatesAdmin";
+import { ResultAdmin } from "./pages/admin/ResultAdmin";
+import { MatkaResultPage } from "./pages/admin/MatkaResultPage";
+import { AdminPanel } from "./pages/admin/AdminPanel";
+import { NotificationSender } from "./pages/admin/NotificationSender";
+import { AdminNotificationSettings } from "./pages/admin/AdminNotificationSettings";
+import { AdminChat } from "./pages/admin/AdminChat";
 function App() {
   return (
     <ThemeProvider>
@@ -112,15 +119,24 @@ function App() {
           {/* 3. ADMIN PANEL ROUTES */}
           <Route path="/systum" element={<AdminLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="AddGame" element={<AddGame />} />
+            <Route path="AddGame" element={<AdminPanel />} />
             <Route path="AdminBid" element={<AdminBid />} />
-            <Route path="matka-results" element={<MatkaResults />} />
-            <Route path="ResultDecleare" element={<MatkaResults />} />
+            <Route path="matka-results" element={<MatkaResultPage />} />
+            <Route path="MatkaResultPage" element={<MatkaResultPage />} />
+            <Route path="ResultDecleare" element={<ResultAdmin />} />
+            <Route path="AdminPanel" element={<AdminPanel />} />
+            <Route path="mechanics" element={<AdminPanel />} />
             <Route path="theme-settings" element={<ThemeSettings />} />
             <Route path="AdminAccessManager" element={<AdminAccessManager />} />
             <Route path="admin-access" element={<AdminAccessManager />} />
             <Route path="welcome-popup" element={<WelcomePopupAdmin />} />
             <Route path="WelcomePopupAdmin" element={<WelcomePopupAdmin />} />
+            <Route path="NotificationSender" element={<NotificationSender />} />
+            <Route path="notification-sender" element={<NotificationSender />} />
+            <Route path="notification-settings" element={<AdminNotificationSettings />} />
+            <Route path="AdminNotificationSettings" element={<AdminNotificationSettings />} />
+            <Route path="admin-chat" element={<AdminChat />} />
+            <Route path="AdminChat" element={<AdminChat />} />
             <Route path="how-to-play" element={<AdminHowToPlay />} />
             <Route path="AdminHowToPlay" element={<AdminHowToPlay />} />
             <Route path="contact-management" element={<ContactManagement />} />
@@ -157,6 +173,10 @@ function App() {
             <Route path="starline" element={<StarLineAdmin />} />
             <Route path="jackpotgali" element={<StarLineAdmin />} />
             <Route path="jackpot-gali" element={<StarLineAdmin />} />
+            <Route path="GameRatesAdmin" element={<GameRatesAdmin />} />
+            <Route path="game-rates" element={<GameRatesAdmin />} />
+            <Route path="ResultAdmin" element={<ResultAdmin />} />
+            <Route path="results" element={<ResultAdmin />} />
           </Route>
         </Routes>
       </BrowserRouter>

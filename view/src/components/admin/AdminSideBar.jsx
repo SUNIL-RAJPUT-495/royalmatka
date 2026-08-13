@@ -4,7 +4,7 @@ import {
     FaUserShield, FaTrophy, FaStar, FaDice, FaCrown, FaMoneyBillWave,
     FaHandHoldingUsd, FaUsersCog, FaLightbulb, FaUserTimes, FaFileAlt,
     FaComments, FaBell, FaPalette, FaPhoneAlt, FaQuestionCircle,
-    FaCreditCard, FaChartPie, FaGift, FaQrcode, FaCheckCircle, FaPercent
+    FaCreditCard, FaChartPie, FaQrcode, FaCheckCircle, FaPercent
 } from "react-icons/fa";
 import { 
     MdDashboard, MdGames, MdScoreboard, MdHistory, MdPersonRemove, 
@@ -17,6 +17,11 @@ import { TbMoneybag, TbReportAnalytics } from "react-icons/tb";
 import { RiCoupon3Line, RiAdminLine } from "react-icons/ri";
 
 export const AdminSideBar = ({ closeSidebar }) => {
+    // Dynamic Admin Name / Username
+    const adminName = localStorage.getItem("admin_name") || "Mr. Matka";
+    const adminRole = localStorage.getItem("admin_role") || "Pavan";
+    const avatarLetter = (adminName || "M").charAt(0).toUpperCase();
+
     const menuSections = [
         {
             heading: "Main Menu",
@@ -111,19 +116,23 @@ export const AdminSideBar = ({ closeSidebar }) => {
     ];
 
     return (
-        // Main Sidebar Background
-        <div className='h-screen w-64 md:w-72 bg-black flex flex-col shadow-2xl transition-all duration-300'>
+        // Sidebar Container matching dark slate theme
+        <div className='h-screen w-64 md:w-72 bg-[#16202c] flex flex-col shadow-2xl transition-all duration-300 border-r border-white/5'>
 
             {/* Logo Section */}
-            <div className='px-6 py-6 flex items-center gap-3 border-b border-white/10 shrink-0'>
-                <div className='bg-[#ef4444] p-2 rounded-xl shadow-lg text-white'>
-                    <FaUserShield size={22} />
+            
+
+            {/* Dynamic Admin Profile Section */}
+            <div className="px-6 py-4 flex items-center gap-3 border-b border-white/5 shrink-0 bg-slate-900/10">
+                <div className="w-11 h-11 rounded-full bg-[#ef4444] flex items-center justify-center text-white text-lg font-bold shadow-sm select-none shrink-0">
+                    {avatarLetter}
                 </div>
-                <div>
-                    <h2 className='text-lg font-black text-white tracking-wider leading-none'>
-                        ROYAL<span className="text-[#ef4444]">1008</span>
-                    </h2>
-                    <span className='text-[10px] font-bold text-gray-400 tracking-widest uppercase'>Control Panel</span>
+                <div className="flex-1 text-left min-w-0">
+                    <h4 className="text-xs font-bold text-white tracking-wide truncate">{adminName}</h4>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[10px] text-gray-400 font-semibold truncate">{adminRole}</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                    </div>
                 </div>
             </div>
 
@@ -132,7 +141,7 @@ export const AdminSideBar = ({ closeSidebar }) => {
                 {menuSections.map((section, sectionIndex) => (
                     <div key={sectionIndex} className="mb-6">
                         {/* Section Heading */}
-                        <h3 className="px-4 mb-2 text-[11px] font-black text-white/50 uppercase tracking-[2px]">
+                        <h3 className="px-4 mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left">
                             {section.heading}
                         </h3>
 
@@ -144,24 +153,21 @@ export const AdminSideBar = ({ closeSidebar }) => {
                                     to={item.link}
                                     onClick={closeSidebar}
                                     className={({ isActive }) => `
-                                        group flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200
+                                        group flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 text-left
                                         ${isActive
-                                            ? 'bg-white text-[#31004A] shadow-lg shadow-black/20 font-bold'
-                                            : 'text-gray-300 hover:bg-white/10 hover:text-white font-medium'}
+                                            ? 'bg-[#ef4444] text-white shadow-lg shadow-red-500/20 font-bold'
+                                            : 'text-gray-300 hover:bg-white/5 hover:text-white font-semibold'}
                                     `}
                                 >
                                     {({ isActive }) => (
                                         <>
                                             <item.icons
                                                 size={18}
-                                                className={`shrink-0 transition-colors ${isActive ? 'text-[#31004A]' : 'text-white/60 group-hover:text-white'}`}
+                                                className={`shrink-0 transition-colors ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}
                                             />
-                                            <span className={`text-xs md:text-sm tracking-wide truncate ${isActive ? 'text-[#31004A]' : ''}`}>
+                                            <span className="text-xs tracking-wide truncate">
                                                 {item.itemsDetails}
                                             </span>
-                                            {isActive && (
-                                                <div className="ml-auto w-1.5 h-1.5 bg-[#31004A] rounded-full animate-pulse shrink-0"></div>
-                                            )}
                                         </>
                                     )}
                                 </NavLink>
@@ -171,18 +177,14 @@ export const AdminSideBar = ({ closeSidebar }) => {
                 ))}
             </div>
 
-            {/* Footer / Logout Placeholder */}
-            <div className="p-4 border-t border-white/10 shrink-0">
-                <div className="flex items-center gap-3 p-2 bg-white/10 backdrop-blur-sm rounded-xl border border-white/5 shadow-sm">
-                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#31004A] text-xs font-black">
-                        A
-                    </div>
-                    <div className="flex-1">
-                        <p className="text-xs font-bold text-white truncate">System Admin</p>
-                        <p className="text-[10px] text-green-400 font-bold uppercase tracking-wider">Online</p>
-                    </div>
-                </div>
+            {/* Footer / Copyright Section */}
+            <div className="px-6 py-4 border-t border-white/5 text-[10px] text-gray-500 font-semibold flex items-center justify-between shrink-0 bg-slate-900/10">
+                <span>© 2025 TARA777</span>
+                <span className="text-[#ef4444] font-bold">Admin Panel</span>
             </div>
+
         </div>
     );
 };
+
+export default AdminSideBar;
