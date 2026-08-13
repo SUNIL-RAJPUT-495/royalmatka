@@ -59,6 +59,7 @@ import { AdminPanel } from "./pages/admin/AdminPanel";
 import { NotificationSender } from "./pages/admin/NotificationSender";
 import { AdminNotificationSettings } from "./pages/admin/AdminNotificationSettings";
 import { AdminChat } from "./pages/admin/AdminChat";
+import { AdminLogin } from "./pages/admin/AdminLogin";
 function App() {
   return (
     <ThemeProvider>
@@ -116,8 +117,14 @@ function App() {
           <Route path="/aviator" element={<Aviator />} />
           <Route path="/game/aviator" element={<Aviator />} />
 
-          {/* 3. ADMIN PANEL ROUTES */}
+          {/* 3. ADMIN LOGIN ROUTES */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/systum/login" element={<AdminLogin />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
+
+          {/* 4. ADMIN PANEL ROUTES */}
           <Route path="/systum" element={<AdminLayout />}>
+            <Route path="login" element={<AdminLogin />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="AddGame" element={<AdminPanel />} />
             <Route path="AdminBid" element={<AdminBid />} />

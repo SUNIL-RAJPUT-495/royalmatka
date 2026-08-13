@@ -13,6 +13,10 @@ const SummaryApi = {
         url: baseURL + "/api/user/login-user",
         method: "post"
     },
+    adminLogin: {
+        url: baseURL + "/api/user/admin-login",
+        method: "post"
+    },
     getUserProfile: {
         url: baseURL + "/api/user/get-user-profile",
         method: "get"
