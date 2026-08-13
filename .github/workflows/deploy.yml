@@ -17,26 +17,20 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-
           script: |
             set -e
 
             cd /var/www/royalmatka
 
-            echo "Updating code..."
             git fetch origin main
             git reset --hard origin/main
 
-            echo "Installing backend..."
             cd api
             npm install --production
-
-            echo "Restarting backend..."
             pm2 restart royalmatka-api
 
-            echo "Building frontend..."
             cd ../view
             npm install
             npm run build
 
-            echo "Deployment completed!"
+            pm2 save
