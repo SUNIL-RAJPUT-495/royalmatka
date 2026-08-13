@@ -12,6 +12,7 @@ import connectDB from "./config/db.js";
 import authRoutes from "./services/auth/routes/auth.routes.js";
 import initializeAviatorSockets from "./services/aviator/socket/index.js";
 import aviatorRoutes from "./services/aviator/routes/aviator.routes.js";
+import marketRoutes from "./services/matka/routes/market.routes.js";
 import GameEngine from "./services/aviator/game/GameEngine.js";
 
 dotenv.config();
@@ -41,6 +42,7 @@ app.use("/api", limiter);
 // Mount API routes
 app.use("/api/user", authRoutes);
 app.use("/api/aviator", aviatorRoutes);
+app.use("/api/market", marketRoutes);
 
 // Test Route
 app.get("/", (req, res) => {

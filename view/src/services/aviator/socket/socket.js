@@ -69,6 +69,7 @@ class SafeSocketClient {
       this.ws.onerror = (err) => {
         this.connected = false;
         console.warn("Socket error encountered");
+        this.emitLocal("disconnect");
       };
     } catch (err) {
       this.connected = false;
