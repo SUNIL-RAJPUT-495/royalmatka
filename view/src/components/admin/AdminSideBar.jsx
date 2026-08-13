@@ -37,6 +37,7 @@ export const AdminSideBar = ({ closeSidebar }) => {
                 { icons: FaTrophy, itemsDetails: "Matka Results", link: "matka-results" },
                 { icons: FaCheckCircle, itemsDetails: "Declare Results", link: "ResultDecleare" },
                 { icons: FaPercent, itemsDetails: "Game Rates", link: "game-rates" },
+                { icons: FaRocket, itemsDetails: "Aviator", link: "aviator" },
             ]
         },
         // {

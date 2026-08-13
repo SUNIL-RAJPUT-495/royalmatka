@@ -140,6 +140,7 @@ function App() {
             <Route path="how-to-play" element={<AdminHowToPlay />} />
             <Route path="AdminHowToPlay" element={<AdminHowToPlay />} />
             <Route path="contact-management" element={<ContactManagement />} />
+            <Route path="aviator" element={<Aviator />} />
             <Route path="ContactManagement" element={<ContactManagement />} />
             <Route path="contact" element={<ContactManagement />} />
             <Route path="upi" element={<UpiSettings />} />

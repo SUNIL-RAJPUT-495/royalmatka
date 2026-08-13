@@ -1,20 +1,21 @@
-import SummaryApi from "../../../common/SummerAPI";
+import SummaryApi, { baseURL } from "../../../common/SummerAPI";
 
 const getSocketUrl = () => {
   if (import.meta.env.VITE_AVIATOR_SOCKET_URL) return import.meta.env.VITE_AVIATOR_SOCKET_URL;
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
   
-  const socketBase = SummaryApi.aviatorSocket?.url || "http://localhost:5000";
+  const socketBase = SummaryApi.aviatorSocket?.url || baseURL || "http://localhost:5010";
   if (socketBase && (socketBase.startsWith("http://") || socketBase.startsWith("https://"))) {
     return socketBase;
   }
   if (typeof window !== "undefined" && window.location?.hostname) {
-    return `http://${window.location.hostname}`;
+    const protocol = window.location.protocol === "https:" ? "https:" : "http:";
+    return `${protocol}//${window.location.hostname}:5010`;
   }
-  return "http://localhost:5000";
+  return "http://localhost:5010";
 };
 
-// Zero-dependency Event-driven Socket Client (compatible with socket.io events)
+// Zero-dependency Event-driven Socket Client with auto-reconnect
 class SafeSocketClient {
   constructor(url) {
     this.url = url;
@@ -22,20 +23,29 @@ class SafeSocketClient {
     this.id = 'aviator-sock-' + Math.random().toString(36).substr(2, 9);
     this.connected = false;
     this.ws = null;
+    this.reconnectTimer = null;
+    this.isManualDisconnect = false;
     this.init();
   }
 
   init() {
+    if (this.isManualDisconnect) return;
     try {
-      const wsUrl = this.url.startsWith("https") 
-        ? this.url.replace(/^https/, 'wss') 
-        : this.url.replace(/^http/, 'ws');
+      const targetUrl = getSocketUrl();
+      const wsUrl = targetUrl.startsWith("https") 
+        ? targetUrl.replace(/^https/, 'wss') 
+        : targetUrl.replace(/^http/, 'ws');
+      
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
         this.connected = true;
         console.log("🟢 Connected to Aviator Socket Server:", this.id);
         this.emitLocal("connect");
+        if (this.reconnectTimer) {
+          clearTimeout(this.reconnectTimer);
+          this.reconnectTimer = null;
+        }
       };
 
       this.ws.onmessage = (event) => {
@@ -53,14 +63,27 @@ class SafeSocketClient {
         this.connected = false;
         console.log("🔴 Disconnected from Aviator Socket Server");
         this.emitLocal("disconnect");
+        this.scheduleReconnect();
       };
 
-      this.ws.onerror = () => {
+      this.ws.onerror = (err) => {
         this.connected = false;
+        console.warn("Socket error encountered");
       };
     } catch (err) {
-      // Fallback gracefully without throwing
       this.connected = false;
+      this.scheduleReconnect();
+    }
+  }
+
+  scheduleReconnect() {
+    if (this.isManualDisconnect) return;
+    if (!this.reconnectTimer) {
+      this.reconnectTimer = setTimeout(() => {
+        this.reconnectTimer = null;
+        console.log("🔄 Reconnecting to Aviator Socket...");
+        this.init();
+      }, 3000);
     }
   }
 
@@ -108,6 +131,11 @@ class SafeSocketClient {
   }
 
   disconnect() {
+    this.isManualDisconnect = true;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
     if (this.ws) {
       try {
         this.ws.close();
