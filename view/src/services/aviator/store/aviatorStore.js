@@ -288,8 +288,10 @@ export const useAviatorStore = create((set, get) => {
 
         socket.on("connect", () => {
           set({ isConnected: true });
+          socket.emit("get_state");
           // Stop local standalone timers when socket is active
           if (countdownInterval) clearInterval(countdownInterval);
+          if (gameLoopInterval) clearInterval(gameLoopInterval);
           if (flightRequestFrame) cancelAnimationFrame(flightRequestFrame);
         });
 
@@ -299,20 +301,37 @@ export const useAviatorStore = create((set, get) => {
           get().startWaitingRound();
         });
 
-        socket.on("game:state", (data) => {
+        const handleGameState = (data) => {
           if (!data) return;
           const statusMap = { WAITING: "waiting", RUNNING: "flying", CRASHED: "crashed" };
+          const formattedHistory = Array.isArray(data.history)
+            ? data.history.map(h => typeof h === 'object' ? (h.crash || h.multiplier) : h)
+            : get().history;
+
           set({
-            status: statusMap[data.status] || "waiting",
+            status: statusMap[data.status] || data.status || "waiting",
             multiplier: data.multiplier || 1.00,
             crashMultiplier: data.crashAt || 1.00,
-            countdown: data.countdown || 5,
-            history: data.history?.map(h => typeof h === 'object' ? h.crash : h) || get().history
+            countdown: data.countdown !== undefined ? data.countdown : 5,
+            history: formattedHistory
           });
+        };
+
+        socket.on("game:init", handleGameState);
+        socket.on("game:state", handleGameState);
+
+        socket.on("game:history", (data) => {
+          if (Array.isArray(data)) {
+            const formatted = data.map(h => typeof h === 'object' ? (h.crash || h.multiplier) : h);
+            set({ history: formatted });
+          }
         });
 
         socket.on("game:status", (data) => {
-          if (data.status === "WAITING") {
+          const statusMap = { WAITING: "waiting", RUNNING: "flying", CRASHED: "crashed" };
+          const newStatus = statusMap[data.status] || data.status || "waiting";
+
+          if (newStatus === "waiting") {
             set((state) => {
               const updatedCards = state.betCards.map(card => ({
                 ...card,
@@ -327,10 +346,16 @@ export const useAviatorStore = create((set, get) => {
                 status: "waiting",
                 multiplier: 1.00,
                 crashMultiplier: data.crashAt || state.crashMultiplier,
-                countdown: data.countdown || 5,
+                countdown: data.countdown !== undefined ? data.countdown : 5,
                 liveBets: generateSimulatedBets(),
                 betCards: updatedCards
               };
+            });
+          } else {
+            set({
+              status: newStatus,
+              crashMultiplier: data.crashAt || get().crashMultiplier,
+              countdown: data.countdown !== undefined ? data.countdown : get().countdown
             });
           }
         });
@@ -349,7 +374,6 @@ export const useAviatorStore = create((set, get) => {
             crashMultiplier: data?.crashAt || get().crashMultiplier
           });
         });
-
 
         socket.on("game:tick", (data) => {
           const currentMult = data.multiplier;
@@ -381,6 +405,7 @@ export const useAviatorStore = create((set, get) => {
           });
 
           set({
+            status: "flying",
             multiplier: currentMult,
             liveBets: updatedLiveBets
           });
@@ -410,7 +435,9 @@ export const useAviatorStore = create((set, get) => {
             };
           });
 
-          const formattedHistory = data.history ? data.history.map(h => typeof h === 'object' ? h.crash : h) : [crashMult, ...state.history].slice(0, 60);
+          const formattedHistory = data.history 
+            ? data.history.map(h => typeof h === 'object' ? (h.crash || h.multiplier) : h) 
+            : [crashMult, ...state.history].slice(0, 60);
 
           set({
             status: "crashed",
@@ -422,8 +449,10 @@ export const useAviatorStore = create((set, get) => {
         });
       }
 
-      // If socket is not connected yet, launch local standalone loop as fallback
-      if (!socket.connected && !gameLoopInterval && !countdownInterval && !flightRequestFrame) {
+      if (socket.connected) {
+        set({ isConnected: true });
+        socket.emit("get_state");
+      } else if (!gameLoopInterval && !countdownInterval && !flightRequestFrame) {
         get().startWaitingRound();
       }
     },

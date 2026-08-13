@@ -2,17 +2,24 @@ import SummaryApi, { baseURL } from "../../../common/SummerAPI";
 
 const getSocketUrl = () => {
   if (import.meta.env.VITE_AVIATOR_SOCKET_URL) return import.meta.env.VITE_AVIATOR_SOCKET_URL;
-  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (import.meta.env.VITE_API_URL) {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    return apiUrl.replace(/\/api\/?$/, "");
+  }
   
-  const socketBase = SummaryApi.aviatorSocket?.url || baseURL || "http://localhost:5010";
+  if (typeof window !== "undefined" && window.location?.hostname) {
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol === "https:" ? "https:" : "http:";
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return `${protocol}//${hostname}:5000`;
+    }
+  }
+
+  const socketBase = SummaryApi.aviatorSocket?.url || baseURL || "http://localhost:5000";
   if (socketBase && (socketBase.startsWith("http://") || socketBase.startsWith("https://"))) {
     return socketBase;
   }
-  if (typeof window !== "undefined" && window.location?.hostname) {
-    const protocol = window.location.protocol === "https:" ? "https:" : "http:";
-    return `${protocol}//${window.location.hostname}:5010`;
-  }
-  return "http://localhost:5010";
+  return "http://localhost:5000";
 };
 
 // Zero-dependency Event-driven Socket Client with auto-reconnect

@@ -8,7 +8,6 @@ import CashoutManager from "./CashoutManager.js";
 import HistoryManager from "./HistoryManager.js";
 import SocketManager from "./SocketManager.js";
 
-
 class GameEngine {
     constructor() {
         this.gameInterval = null;
@@ -21,11 +20,8 @@ class GameEngine {
     // =============================
     start() {
         if (this.running) return;
-
         this.running = true;
-
         console.log("🚀 Aviator Game Engine Started");
-
         this.startWaiting();
     }
 
@@ -33,11 +29,8 @@ class GameEngine {
     // Waiting Phase
     // =============================
     async startWaiting() {
-
         gameState.reset();
-
         gameState.crashAt = await CrashEngine.generate();
-
         gameState.status = "WAITING";
         gameState.countdown = 5;
 
@@ -51,12 +44,9 @@ class GameEngine {
             crashAt: gameState.crashAt
         });
 
-        // 2. Start Countdown Timer
+        // Start Countdown Timer
         this.countdownInterval = setInterval(async () => {
-
             gameState.countdown--;
-
-            console.log(`⏳ ${gameState.countdown}`);
 
             SocketManager.emit("game:countdown", {
                 countdown: gameState.countdown,
@@ -64,43 +54,33 @@ class GameEngine {
             });
 
             if (gameState.countdown <= 0) {
-
                 clearInterval(this.countdownInterval);
-
                 await this.startRound();
-
             }
-
         }, 1000);
-
     }
 
     // =============================
     // Start Round
     // =============================
     async startRound() {
-
         gameState.roundId = randomUUID();
-
         gameState.status = "RUNNING";
-
         gameState.startedAt = new Date();
-
         gameState.endedAt = null;
-
         gameState.multiplier = MultiplierEngine.reset();
 
-        if (!gameState.crashAt) {
-            gameState.crashAt = await CrashEngine.generate();
+        // Check if crash multiplier override exists or generate fresh
+        const freshCrash = await CrashEngine.generate();
+        if (freshCrash) {
+            gameState.crashAt = freshCrash;
         }
 
         // Create Round In Database
         await RoundManager.createRound();
 
         console.log("\n=======================================");
-        console.log(`🎮 Round Started`);
-        console.log(`🆔 Round ID : ${gameState.roundId}`);
-        console.log(`💥 Crash At : ${gameState.crashAt}x`);
+        console.log(`🎮 Round Started | Round ID: ${gameState.roundId} | Crash At: ${gameState.crashAt}x`);
         console.log("=======================================\n");
 
         SocketManager.emit("game:start", {
@@ -110,17 +90,13 @@ class GameEngine {
         });
 
         this.startMultiplier();
-
     }
-
 
     // =============================
     // Multiplier Loop
     // =============================
     startMultiplier() {
-
         this.gameInterval = setInterval(async () => {
-
             gameState.multiplier = MultiplierEngine.next(
                 gameState.multiplier
             );
@@ -131,25 +107,18 @@ class GameEngine {
             });
 
             if (gameState.multiplier >= gameState.crashAt) {
-
                 clearInterval(this.gameInterval);
-
                 await this.endRound();
-
             }
-
         }, MultiplierEngine.tickRate);
-
     }
 
     // =============================
     // End Round
     // =============================
     async endRound() {
-
         gameState.status = "CRASHED";
         CashoutManager.crashRound();
-
         gameState.endedAt = new Date();
 
         await RoundManager.endRound();
@@ -160,9 +129,11 @@ class GameEngine {
             endedAt: gameState.endedAt
         });
 
+        const historyArray = HistoryManager.getAll().map(h => typeof h === 'object' ? h.crash : h);
+
         SocketManager.emit("game:crash", {
             crashAt: gameState.crashAt,
-            history: HistoryManager.getAll()
+            history: historyArray
         });
 
         BetManager.clear();
@@ -175,22 +146,16 @@ class GameEngine {
         setTimeout(() => {
             this.startWaiting();
         }, 3000);
-
     }
-
 
     // =============================
     // Stop Engine
     // =============================
     stop() {
-
         clearInterval(this.countdownInterval);
         clearInterval(this.gameInterval);
-
         this.running = false;
-
         console.log("🛑 Game Engine Stopped");
-
     }
 
     // =============================
@@ -207,9 +172,18 @@ class GameEngine {
     }
 
     setNextCrashMultiplier(multiplier) {
-        CrashEngine.setNextCrash(multiplier);
-        console.log(`🎯 Admin set next crash multiplier to ${multiplier}x`);
-        return { success: true, message: `Next round crash set to ${multiplier}x` };
+        const mult = Number(parseFloat(multiplier).toFixed(2));
+        CrashEngine.setNextCrash(mult);
+        gameState.crashAt = mult;
+        console.log(`🎯 Admin set crash multiplier to ${mult}x`);
+
+        SocketManager.emit("game:status", {
+            status: gameState.status,
+            countdown: gameState.countdown,
+            crashAt: mult
+        });
+
+        return { success: true, message: `Next round crash set to ${mult}x` };
     }
 
     getAdminStats() {
@@ -222,13 +196,9 @@ class GameEngine {
         };
     }
 
-    // =============================
-    // Current Game State
-    // =============================
     getState() {
         return gameState.getState();
     }
-
 }
 
 export default new GameEngine();

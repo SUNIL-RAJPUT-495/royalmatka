@@ -8,7 +8,7 @@ export const History = () => {
   const dropdownRef = useRef(null);
 
   const getMultiplierColor = (multVal) => {
-    const mult = typeof multVal === "number" ? multVal : parseFloat(multVal || 1);
+    const mult = typeof multVal === "number" ? multVal : parseFloat(multVal?.crash || multVal || 1);
     if (mult < 1.5) return "text-blue-400";
     if (mult < 3.0) return "text-purple-400";
     return "text-pink-400";
@@ -29,7 +29,10 @@ export const History = () => {
     };
   }, [isOpen]);
 
-  const displayedHistory = history.map((h) => (typeof h === "number" ? h : parseFloat(h || 1)));
+  const displayedHistory = (Array.isArray(history) ? history : []).map((h) => {
+    const val = typeof h === "number" ? h : parseFloat(h?.crash || h || 1);
+    return isNaN(val) ? 1.00 : val;
+  });
 
   const line1 = displayedHistory.slice(0, 20);
   const line2 = displayedHistory.slice(20, 40);

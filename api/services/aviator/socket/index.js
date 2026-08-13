@@ -13,26 +13,55 @@ const initializeAviatorSockets = (server) => {
     ws.id = "sock_" + Math.random().toString(36).substr(2, 9);
     console.log(`🔌 New client connected: ${ws.id}`);
 
+    const historyArray = HistoryManager.getAll().map(h => typeof h === 'object' ? h.crash : h);
+
     // Send initial game settings / status
     ws.send(JSON.stringify({
       event: "game:status",
       data: {
         status: gameState.status || "WAITING",
         countdown: gameState.countdown || 5,
-        multiplier: gameState.multiplier || 1.00
+        multiplier: gameState.multiplier || 1.00,
+        crashAt: gameState.crashAt || 1.00
+      }
+    }));
+
+    // Send initial full game state
+    ws.send(JSON.stringify({
+      event: "game:init",
+      data: {
+        status: gameState.status || "WAITING",
+        countdown: gameState.countdown || 5,
+        multiplier: gameState.multiplier || 1.00,
+        crashAt: gameState.crashAt || 1.00,
+        history: historyArray
       }
     }));
 
     // Send history
     ws.send(JSON.stringify({
       event: "game:history",
-      data: gameState.history || [1.5, 2.1, 1.1, 4.3, 1.8, 12.4]
+      data: historyArray
     }));
 
     ws.on("message", (message) => {
       try {
         const parsed = JSON.parse(message);
         const { event, data } = parsed;
+
+        if (event === "get_state") {
+          const currentHistory = HistoryManager.getAll().map(h => typeof h === 'object' ? h.crash : h);
+          ws.send(JSON.stringify({
+            event: "game:init",
+            data: {
+              status: gameState.status || "WAITING",
+              countdown: gameState.countdown || 5,
+              multiplier: gameState.multiplier || 1.00,
+              crashAt: gameState.crashAt || 1.00,
+              history: currentHistory
+            }
+          }));
+        }
 
         if (event === "place_bet") {
           const amount = Number(data?.amount || 10);
