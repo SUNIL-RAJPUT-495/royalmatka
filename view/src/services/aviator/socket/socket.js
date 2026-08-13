@@ -7,7 +7,12 @@ const getSocketUrl = () => {
     return "http://localhost:8082";
   }
   if (baseURL && (baseURL.startsWith("http://") || baseURL.startsWith("https://"))) {
-    return baseURL;
+    try {
+      const urlObj = new URL(baseURL);
+      return `${urlObj.protocol}//${urlObj.hostname}:8082`;
+    } catch (e) {
+      return baseURL;
+    }
   }
   if (typeof window !== "undefined" && window.location?.hostname) {
     return `http://${window.location.hostname}:8082`;
