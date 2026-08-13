@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, Flag, Download, Search, Filter, ChevronLeft, ChevronRight, HelpCircle 
+import {
+  Users, Flag, Download, Search, Filter, ChevronLeft, ChevronRight, HelpCircle
 } from 'lucide-react';
 import AxiosAdmin from '../../utils/axiosAdmin';
 import SummaryApi from '../../common/SummerAPI';
@@ -44,7 +44,7 @@ export const AdminReferralsPage = () => {
 
   return (
     <div className="min-h-screen bg-[#f8f9fc] p-6 font-sans text-gray-800 text-left select-none">
-      
+
       {/* 1. Page Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-3">
@@ -63,11 +63,10 @@ export const AdminReferralsPage = () => {
               setFlaggedOnly(!flaggedOnly);
               toast.success(flaggedOnly ? "Showing all referrals" : "Showing flagged referrals only");
             }}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-3xs cursor-pointer active:scale-95 ${
-              flaggedOnly 
-                ? 'bg-[#f59e0b] text-white' 
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-3xs cursor-pointer active:scale-95 ${flaggedOnly
+                ? 'bg-[#f59e0b] text-white'
                 : 'bg-[#fffbeb] hover:bg-[#fef3c7] text-[#d97706] border border-[#fef3c7]'
-            }`}
+              }`}
           >
             <Flag className="w-3.5 h-3.5" />
             <span>Show Flagged Only</span>
@@ -130,7 +129,7 @@ export const AdminReferralsPage = () => {
         {/* 4. Footer Pagination */}
         <div className="flex justify-between items-center text-xs text-gray-400 font-semibold pt-2">
           <span>Showing page 1 of 1</span>
-          
+
           <div className="flex items-center gap-2">
             <button
               disabled

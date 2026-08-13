@@ -37,7 +37,7 @@ export const UserProfile = () => {
     createdAt: '17/7/2026'
   };
 
-  const onOpenSidebar = context.onOpenSidebar || (() => {});
+  const onOpenSidebar = context.onOpenSidebar || (() => { });
 
   // Login & Security Modal state (Bottom Sheet)
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
@@ -338,11 +338,10 @@ export const UserProfile = () => {
                   setSecurityTab('mpin');
                   setErrorMessage('');
                 }}
-                className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors border-b-2 ${
-                  securityTab === 'mpin'
+                className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors border-b-2 ${securityTab === 'mpin'
                     ? 'border-[#f97316] text-[#f97316] bg-white'
                     : 'border-transparent text-gray-500 hover:text-gray-800'
-                }`}
+                  }`}
               >
                 <FaKey size={12} />
                 <span>Change MPIN</span>
@@ -354,11 +353,10 @@ export const UserProfile = () => {
                   setSecurityTab('password');
                   setErrorMessage('');
                 }}
-                className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors border-b-2 ${
-                  securityTab === 'password'
+                className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors border-b-2 ${securityTab === 'password'
                     ? 'border-[#f97316] text-[#f97316] bg-white'
                     : 'border-transparent text-gray-500 hover:text-gray-800'
-                }`}
+                  }`}
               >
                 <FaLock size={12} />
                 <span>Change Password</span>
@@ -449,8 +447,8 @@ export const UserProfile = () => {
                 {isSubmitting
                   ? 'Updating...'
                   : securityTab === 'password'
-                  ? 'Update Password'
-                  : 'Update MPIN'}
+                    ? 'Update Password'
+                    : 'Update MPIN'}
               </button>
             </form>
           </div>

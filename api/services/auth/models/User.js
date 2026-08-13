@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
   },
   balance: {
     type: Number,
-    default: 10000 // default balance 10,000 INR
+    default: 0
   },
   role: {
     type: String,
@@ -35,6 +35,41 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ["Active", "Blocked"],
     default: "Active"
+  },
+  registrationIp: {
+    type: String,
+    default: ""
+  },
+  registrationDate: {
+    type: Date,
+    default: Date.now
+  },
+  lastLoginIp: {
+    type: String,
+    default: ""
+  },
+  lastLoginDate: {
+    type: Date,
+    default: Date.now
+  },
+  referralCode: {
+    type: String,
+    unique: true,
+    sparse: true,
+    uppercase: true,
+    trim: true
+  },
+  referredBy: {
+    type: String,
+    default: ""
+  },
+  totalReferrals: {
+    type: Number,
+    default: 0
+  },
+  referralEarnings: {
+    type: Number,
+    default: 0
   }
 }, { timestamps: true });
 

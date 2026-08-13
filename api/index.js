@@ -100,7 +100,7 @@ const PORT = process.env.PORT || 5010;
 // Start Express HTTP Server
 const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  
+
   // Initialize WebSocket server directly on the Express server instance
   initializeAviatorSockets(server);
 
