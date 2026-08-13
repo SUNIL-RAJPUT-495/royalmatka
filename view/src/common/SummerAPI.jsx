@@ -2,9 +2,29 @@
  export const baseURL = "https://royalmatkaapi.growva.tech";
 
 const SummaryApi = {
-    // Aviator Socket Base
+    // Aviator Socket & Admin Endpoints
     aviatorSocket: {
         url: baseURL
+    },
+    getAviatorSettings: {
+        url: baseURL + "/api/aviator/settings",
+        method: "get"
+    },
+    updateAviatorSettings: {
+        url: baseURL + "/api/aviator/settings",
+        method: "post"
+    },
+    forceCrashNext: {
+        url: baseURL + "/api/aviator/force-crash-next",
+        method: "post"
+    },
+    forceCrashNow: {
+        url: baseURL + "/api/aviator/force-crash-now",
+        method: "post"
+    },
+    getAviatorStats: {
+        url: baseURL + "/api/aviator/stats",
+        method: "get"
     },
 
     // User Auth Endpoints

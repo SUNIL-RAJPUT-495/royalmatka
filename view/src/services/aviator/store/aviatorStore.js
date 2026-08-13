@@ -114,20 +114,40 @@ const INITIAL_BALANCE = getInitialUserBalance();
 const PRESET_AMOUNTS = isUSD ? [1, 2, 5, 10] : [100, 200, 500, 1000];
 const SIMULATED_BET_AMOUNTS = isUSD ? [1, 2, 5, 10, 20, 50, 100] : [100, 200, 500, 1000, 2000, 5000, 10000];
 
-// Helper to generate a random crash multiplier
-const generateCrashMultiplier = () => {
-  const rand = Math.random();
-  if (rand < 0.08) {
-    return 1.00;
-  } else if (rand < 0.50) {
-    return parseFloat((1.01 + Math.random() * 0.98).toFixed(2));
-  } else if (rand < 0.85) {
-    return parseFloat((2.00 + Math.random() * 5.99).toFixed(2));
-  } else if (rand < 0.96) {
-    return parseFloat((8.00 + Math.random() * 21.99).toFixed(2));
+// Helper to generate crash multiplier (Admin Guaranteed Profit Algorithm - 25% House Edge)
+const generateCrashMultiplier = (placedBetTotal = 0) => {
+  const profitMargin = 0.25; // 25% Admin Profit Margin
+  let crashPoint = 1.20;
+
+  if (placedBetTotal > 0) {
+    const maxAllowedPayout = placedBetTotal * (1 - profitMargin);
+    const rand = Math.random();
+
+    if (rand < 0.35) {
+      // 35% chance: Early crash 1.00x - 1.15x (Immediate Admin Profit)
+      crashPoint = parseFloat((1.00 + Math.random() * 0.15).toFixed(2));
+    } else if (rand < 0.75) {
+      // 40% chance: Controlled crash 1.16x - 1.85x
+      crashPoint = parseFloat((1.16 + Math.random() * 0.69).toFixed(2));
+    } else if (rand < 0.95) {
+      // 20% chance: Moderate crash 1.86x - 2.80x
+      crashPoint = parseFloat((1.86 + Math.random() * 0.94).toFixed(2));
+    } else {
+      // 5% chance: Small stretch 2.81x - 4.50x
+      crashPoint = parseFloat((2.81 + Math.random() * 1.69).toFixed(2));
+    }
+
+    const maxCap = Math.max(1.00, parseFloat((maxAllowedPayout / placedBetTotal).toFixed(2)));
+    crashPoint = Math.min(crashPoint, maxCap);
   } else {
-    return parseFloat((30.00 + Math.random() * 220.00).toFixed(2));
+    const rand = Math.random();
+    if (rand < 0.25) crashPoint = parseFloat((1.00 + Math.random() * 0.18).toFixed(2));
+    else if (rand < 0.70) crashPoint = parseFloat((1.19 + Math.random() * 1.50).toFixed(2));
+    else if (rand < 0.92) crashPoint = parseFloat((2.70 + Math.random() * 3.30).toFixed(2));
+    else crashPoint = parseFloat((6.00 + Math.random() * 15.00).toFixed(2));
   }
+
+  return Number(Math.max(1.00, crashPoint).toFixed(2));
 };
 
 // Generate simulated bets at the start of a round
@@ -571,7 +591,8 @@ export const useAviatorStore = create((set, get) => {
       if (socket.connected) return;
       get().stopGameLoop();
       
-      const crashPoint = generateCrashMultiplier();
+      const placedTotal = get().betCards.reduce((sum, c) => c.isPlaced ? sum + c.amount : sum, 0);
+      const crashPoint = generateCrashMultiplier(placedTotal);
       const startTime = Date.now();
 
       set({

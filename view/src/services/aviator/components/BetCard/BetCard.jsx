@@ -16,6 +16,7 @@ export const BetCard = ({ index }) => {
   } = useAviatorStore();
 
   const card = betCards[index];
+  const isLocked = card.isPlaced || card.isQueued;
   const quickAmounts = isUSD ? [1, 2, 5, 10] : [100, 200, 500, 1000];
   const [betAmountInput, setBetAmountInput] = useState(card.amount.toFixed(2));
 
@@ -24,6 +25,7 @@ export const BetCard = ({ index }) => {
   }, [card.amount, isUSD]);
 
   const handleAmountChange = (val) => {
+    if (isLocked) return;
     setBetAmountInput(val);
     const num = parseFloat(val);
     if (!isNaN(num) && num > 0) {
@@ -32,6 +34,7 @@ export const BetCard = ({ index }) => {
   };
 
   const adjustAmount = (modifier) => {
+    if (isLocked) return;
     let current = card.amount;
     if (modifier === "minus") {
       current = isUSD ? Math.max(0.1, parseFloat((current - 1).toFixed(2))) : Math.max(10, Math.floor(current - 100));
@@ -74,22 +77,28 @@ export const BetCard = ({ index }) => {
       {/* Left Column: Controls & Presets */}
       <div className="flex flex-col gap-2.5 w-1/2 min-w-[130px]">
         {/* Unified Input Container */}
-        <div className="flex items-center justify-between bg-[#000000]/40 rounded-full p-0.5 border border-white/5">
+        <div className={`flex items-center justify-between bg-[#000000]/40 rounded-full p-0.5 border border-white/5 transition-all ${
+          isLocked ? 'opacity-60 cursor-not-allowed bg-black/60' : ''
+        }`}>
           <button
+            disabled={isLocked}
             onClick={() => adjustAmount("minus")}
-            className="w-8 h-8 flex items-center justify-center bg-[#1d2025] hover:bg-[#282c34] active:scale-95 text-[#9ea0a3] hover:text-white rounded-full font-bold text-lg transition-all cursor-pointer select-none"
+            className="w-8 h-8 flex items-center justify-center bg-[#1d2025] hover:bg-[#282c34] active:scale-95 text-[#9ea0a3] hover:text-white rounded-full font-bold text-lg transition-all cursor-pointer select-none disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none"
           >
             −
           </button>
           <input
             type="text"
+            disabled={isLocked}
+            readOnly={isLocked}
             value={betAmountInput}
             onChange={(e) => handleAmountChange(e.target.value)}
-            className="w-12 bg-transparent text-white text-center font-black text-base border-none focus:outline-none focus:ring-0 p-0"
+            className="w-12 bg-transparent text-white text-center font-black text-base border-none focus:outline-none focus:ring-0 p-0 disabled:opacity-60 disabled:cursor-not-allowed"
           />
           <button
+            disabled={isLocked}
             onClick={() => adjustAmount("plus")}
-            className="w-8 h-8 flex items-center justify-center bg-[#1d2025] hover:bg-[#282c34] active:scale-95 text-[#9ea0a3] hover:text-white rounded-full font-bold text-lg transition-all cursor-pointer select-none"
+            className="w-8 h-8 flex items-center justify-center bg-[#1d2025] hover:bg-[#282c34] active:scale-95 text-[#9ea0a3] hover:text-white rounded-full font-bold text-lg transition-all cursor-pointer select-none disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none"
           >
             +
           </button>
@@ -100,8 +109,9 @@ export const BetCard = ({ index }) => {
           {quickAmounts.map((amt) => (
             <button
               key={`preset-${amt}`}
-              onClick={() => updateBetCard(index, { amount: amt })}
-              className="bg-[#1d2025] hover:bg-[#282c34] text-[#9ea0a3] hover:text-white text-xs font-black py-1.5 rounded-full transition-all cursor-pointer flex items-center justify-center"
+              disabled={isLocked}
+              onClick={() => !isLocked && updateBetCard(index, { amount: amt })}
+              className="bg-[#1d2025] hover:bg-[#282c34] text-[#9ea0a3] hover:text-white text-xs font-black py-1.5 rounded-full transition-all cursor-pointer flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none"
             >
               {amt}
             </button>
