@@ -25,7 +25,9 @@ class SafeSocketClient {
 
   init() {
     try {
-      const wsUrl = this.url.replace(/^http/, 'ws');
+      const wsUrl = this.url.startsWith("https") 
+        ? this.url.replace(/^https/, 'wss') 
+        : this.url.replace(/^http/, 'ws');
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
