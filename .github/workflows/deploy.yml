@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Prepare SSH key
         run: |
           mkdir -p ~/.ssh
@@ -42,12 +43,19 @@ jobs:
             git reset --hard origin/main
 
             echo "Deploying backend..."
-            cd api
+            cd /var/www/royalmatka/api
+
             npm install --production
-            pm2 restart royalmatka-api
+
+            pm2 restart royalmatka-api --update-env
+
+            echo "Testing backend..."
+            sleep 2
+            curl -f http://127.0.0.1:5010
 
             echo "Deploying frontend..."
-            cd ../view
+            cd /var/www/royalmatka/view
+
             npm install
             npm run build
 
