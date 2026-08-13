@@ -80,14 +80,10 @@ const PORT = process.env.PORT || 5000;
 // Start Express HTTP Server
 const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-});
-
-// Start Dedicated WebSocket Server on port 8082 for Aviator Game Loop
-const socketServer = http.createServer(app);
-initializeAviatorSockets(socketServer);
-socketServer.listen(8082, () => {
-  console.log("🎮 Aviator WebSocket Server running on port 8082");
   
+  // Initialize WebSocket server directly on the Express server instance
+  initializeAviatorSockets(server);
+
   // Initialize and start the Game loop engine
   GameEngine.start();
 });
