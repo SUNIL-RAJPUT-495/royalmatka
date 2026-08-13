@@ -17,19 +17,68 @@ import {
 import { IoFlashSharp, IoSparkles } from 'react-icons/io5';
 
 export const AviatorAdminControl = () => {
-  const { status, multiplier, crashMultiplier, history, liveBets } = useAviatorStore();
+  const storeData = useAviatorStore();
 
   const [nextCrashInput, setNextCrashInput] = useState('2.00');
   const [profitMarginInput, setProfitMarginInput] = useState('25');
   const [loadingAction, setLoadingAction] = useState(false);
   const [activeNextCrash, setActiveNextCrash] = useState(null);
 
+  // Live backend stats state
+  const [apiStats, setApiStats] = useState(null);
+
+  // Poll backend stats every 1 second
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await AxiosAdmin({
+          url: SummaryApi.getAviatorStats?.url || '/api/aviator/stats',
+          method: SummaryApi.getAviatorStats?.method || 'get'
+        }).catch(() => null);
+
+        if (res?.data?.success && res.data.data) {
+          setApiStats(res.data.data);
+        }
+      } catch (e) {}
+    };
+
+    const fetchSettings = async () => {
+      try {
+        const res = await AxiosAdmin({
+          url: SummaryApi.getAviatorSettings?.url || '/api/aviator/settings',
+          method: SummaryApi.getAviatorSettings?.method || 'get'
+        }).catch(() => null);
+
+        if (res?.data?.data?.settings?.targetProfitPercent !== undefined) {
+          setProfitMarginInput(res.data.data.settings.targetProfitPercent.toString());
+        }
+      } catch (e) {}
+    };
+
+    fetchStats();
+    fetchSettings();
+    const interval = setInterval(fetchStats, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Quick crash presets
   const crashPresets = ['1.10', '1.25', '1.50', '2.00', '3.00', '5.00', '10.00', '50.00'];
 
-  // Calculate live stats
-  const totalBetAmount = liveBets.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
-  const totalCashedOut = liveBets.reduce((sum, b) => sum + (Number(b.wonAmount) || 0), 0);
+  // Combined stats (Live API stats + store fallback)
+  const status = (apiStats?.status?.toLowerCase()) || storeData.status;
+  const currentMultiplier = apiStats?.multiplier || storeData.multiplier;
+  const crashPointVal = apiStats?.crashAt || storeData.crashMultiplier;
+  const liveBetsList = (apiStats?.players && apiStats.players.length > 0) ? apiStats.players : storeData.liveBets;
+  const historyList = (apiStats?.history && apiStats.history.length > 0) ? apiStats.history : storeData.history;
+
+  const totalBetAmount = apiStats?.totalBetAmount !== undefined 
+    ? apiStats.totalBetAmount 
+    : liveBetsList.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
+
+  const totalCashedOut = apiStats?.totalCashout !== undefined 
+    ? apiStats.totalCashout 
+    : liveBetsList.reduce((sum, b) => sum + (Number(b.wonAmount) || 0), 0);
+
   const adminProfit = Math.max(0, totalBetAmount - totalCashedOut);
   const profitPercentage = totalBetAmount > 0 ? Math.round((adminProfit / totalBetAmount) * 100) : 100;
 
@@ -160,14 +209,14 @@ export const AviatorAdminControl = () => {
         <div className="bg-gradient-to-br from-slate-900 to-gray-900 text-white rounded-3xl p-5 border border-gray-800 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[120px]">
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-xs font-bold uppercase tracking-wider">Live Flight</span>
-            <FaPlane size={16} className={status === 'flying' ? 'text-red-500 animate-bounce' : 'text-slate-500'} />
+            <FaPlane size={16} className={status === 'flying' || status === 'running' ? 'text-red-500 animate-bounce' : 'text-slate-500'} />
           </div>
           <div className="mt-2">
-            <span className={`text-4xl font-black tracking-tight ${status === 'flying' ? 'text-emerald-400' : 'text-white'}`}>
-              {status === 'flying' ? `${multiplier.toFixed(2)}x` : `${crashMultiplier.toFixed(2)}x`}
+            <span className={`text-4xl font-black tracking-tight ${status === 'flying' || status === 'running' ? 'text-emerald-400' : 'text-white'}`}>
+              {status === 'flying' || status === 'running' ? `${Number(currentMultiplier).toFixed(2)}x` : `${Number(crashPointVal).toFixed(2)}x`}
             </span>
             <span className="text-[10px] text-slate-400 block font-medium mt-0.5">
-              {status === 'flying' ? '🚀 Flight in progress' : '💥 Crash Multiplier'}
+              {status === 'flying' || status === 'running' ? '🚀 Flight in progress' : '💥 Crash Multiplier'}
             </span>
           </div>
         </div>
@@ -183,7 +232,7 @@ export const AviatorAdminControl = () => {
           <div className="mt-2">
             <span className="text-2xl font-black text-gray-900 tracking-tight">₹{totalBetAmount.toLocaleString('en-IN')}</span>
             <span className="text-[10px] text-gray-400 block font-medium mt-0.5">
-              {liveBets.length} Active Players in Round
+              {liveBetsList.length} Active Players in Round
             </span>
           </div>
         </div>
@@ -352,10 +401,10 @@ export const AviatorAdminControl = () => {
       <div className="bg-white rounded-3xl p-5 border border-gray-200 shadow-3xs space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Recent Round Multipliers</h3>
-          <span className="text-[10px] text-gray-400 font-medium">Last {history.length} Rounds</span>
+          <span className="text-[10px] text-gray-400 font-medium">Last {historyList.length} Rounds</span>
         </div>
         <div className="flex items-center gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
-          {history.slice(0, 30).map((h, idx) => {
+          {historyList.slice(0, 30).map((h, idx) => {
             const mult = typeof h === 'object' ? (h.crash || h.multiplier || 1.0) : Number(h);
             let colorClass = 'bg-blue-50 text-blue-700 border-blue-200';
             if (mult >= 2.0 && mult < 10.0) colorClass = 'bg-purple-50 text-purple-700 border-purple-200';
@@ -381,11 +430,11 @@ export const AviatorAdminControl = () => {
             <p className="text-xs text-gray-400 font-normal mt-0.5">Real-time player bet details</p>
           </div>
           <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">
-            {liveBets.length} Players
+            {liveBetsList.length} Players
           </span>
         </div>
 
-        {liveBets.length === 0 ? (
+        {liveBetsList.length === 0 ? (
           <div className="p-8 text-center text-gray-400 text-xs font-medium">
             No bets placed in the current round yet.
           </div>
@@ -402,7 +451,7 @@ export const AviatorAdminControl = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-gray-700">
-                {liveBets.map((player, idx) => (
+                {liveBetsList.map((player, idx) => (
                   <tr key={player.id || idx} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-3.5 px-4 font-bold text-gray-900">
                       {player.username || player.user || `User_${idx + 1}`}
