@@ -66,10 +66,12 @@ const initializeAviatorSockets = (server) => {
         if (event === "place_bet") {
           const amount = Number(data?.amount || 10);
           const autoCashout = data?.autoCashout ? Number(data.autoCashout) : null;
-          const userId = data?.userId || ws.id;
+          const userId = data?.userId || data?.mobile || ws.id;
+          const username = data?.username || data?.user || ws.id;
 
           const res = BetManager.placeBet({
             userId,
+            username,
             amount,
             autoCashout
           });

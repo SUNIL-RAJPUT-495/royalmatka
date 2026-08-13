@@ -19,7 +19,6 @@ class BetManager {
         amount,
         autoCashout = null
     }) {
-        // Amount Validation
         const amt = Number(amount) || 0;
         if (amt < 1) {
             return {
@@ -29,6 +28,16 @@ class BetManager {
         }
 
         const idKey = userId || `user_${Date.now()}_${Math.random()}`;
+
+        // Deduplication: If bet already exists for this user in current round, return existing
+        if (gameState.players.has(idKey)) {
+            const existingPlayer = gameState.players.get(idKey);
+            return {
+                success: true,
+                message: "Bet Already Placed",
+                data: existingPlayer
+            };
+        }
 
         const player = {
             id: idKey,

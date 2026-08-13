@@ -71,16 +71,20 @@ export const AviatorAdminControl = () => {
   const status = (apiStats?.status?.toLowerCase()) || storeData.status;
   const currentMultiplier = apiStats?.multiplier || storeData.multiplier;
   const crashPointVal = apiStats?.crashAt || storeData.crashMultiplier;
-  const liveBetsList = (apiStats?.players && apiStats.players.length > 0) ? apiStats.players : storeData.liveBets;
+  
+  const liveBetsList = (apiStats?.players && Array.isArray(apiStats.players))
+    ? apiStats.players
+    : storeData.liveBets;
+
   const historyList = (apiStats?.history && apiStats.history.length > 0) ? apiStats.history : storeData.history;
 
   const totalBetAmount = apiStats?.totalBetAmount !== undefined 
     ? apiStats.totalBetAmount 
-    : liveBetsList.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
+    : liveBetsList.reduce((sum, b) => sum + (Number(b.amount || b.betAmount) || 0), 0);
 
   const totalCashedOut = apiStats?.totalCashout !== undefined 
     ? apiStats.totalCashout 
-    : liveBetsList.reduce((sum, b) => sum + (Number(b.wonAmount) || 0), 0);
+    : liveBetsList.reduce((sum, b) => sum + (Number(b.wonAmount || b.payout) || 0), 0);
 
   const adminProfit = Math.max(0, totalBetAmount - totalCashedOut);
   const profitPercentage = totalBetAmount > 0 ? Math.round((adminProfit / totalBetAmount) * 100) : 100;
