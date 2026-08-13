@@ -147,21 +147,17 @@ export const UserHome = () => {
         {games.map((game) => {
           const isClosed = game.is_closed ?? (game.status === 'closed');
           
-          let resultDisplay = game.result;
+          let resultDisplay = game.display_result || game.result;
           if (!resultDisplay) {
-            const oPana = game.open_result_pana || game.open_pana || '***';
-            const cPana = game.close_result_pana || game.close_pana || '***';
-            const oDigit = game.open_digit !== undefined && game.open_digit !== null && game.open_digit !== ''
-              ? game.open_digit
-              : oPana !== '***'
-              ? oPana.split('').reduce((a, b) => a + parseInt(b || 0, 10), 0) % 10
-              : '*';
-            const cDigit = game.close_digit !== undefined && game.close_digit !== null && game.close_digit !== ''
-              ? game.close_digit
-              : cPana !== '***'
-              ? cPana.split('').reduce((a, b) => a + parseInt(b || 0, 10), 0) % 10
-              : '*';
-            resultDisplay = `${oPana}-${oDigit}${cDigit}-${cPana}`;
+            const oPana = game.result_open || game.open_result_pana || game.open_pana || '***';
+            const cPana = game.result_close || game.close_result_pana || game.close_pana || '***';
+            let jodi = game.jodi_result || game.jodi || '**';
+            if (jodi === '**' || !jodi) {
+              const oDigit = oPana !== '***' ? oPana.split('').reduce((a, b) => a + parseInt(b || 0, 10), 0) % 10 : '*';
+              const cDigit = cPana !== '***' ? cPana.split('').reduce((a, b) => a + parseInt(b || 0, 10), 0) % 10 : '*';
+              jodi = `${oDigit}${cDigit}`;
+            }
+            resultDisplay = `${oPana}-${jodi}-${cPana}`;
           }
 
           return (

@@ -59,7 +59,7 @@ export const BetCard = ({ index }) => {
     } else {
       const err = placeBet(index);
       if (err) {
-        toast.error(err);
+        toast.error(`⚠️ ${err}! Please add funds to your wallet to place a bet.`);
       } else {
         toast.success("Bet placed!");
       }

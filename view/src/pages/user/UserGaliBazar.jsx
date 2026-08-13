@@ -4,6 +4,8 @@ import { useTheme } from '../../context/ThemeContext';
 import { FaArrowLeft, FaPlay, FaChartLine } from 'react-icons/fa';
 import { IoNotificationsOutline, IoStarOutline, IoTimeOutline, IoGridOutline, IoFlashSharp } from 'react-icons/io5';
 import { fetchGame } from '../../utils/api';
+import Axios from '../../utils/axios';
+import SummaryApi from '../../common/SummerAPI';
 
 // 1. STARLINE / HOURLY JACKPOT MARKETS (Screenshot 2: "Jackpot Markets")
 const DEFAULT_STARLINE_MARKETS = [
@@ -63,29 +65,35 @@ export const UserGaliBazar = () => {
   useEffect(() => {
     const loadMarkets = async () => {
       try {
-        const res = await fetchGame();
-        if (res && Array.isArray(res) && res.length > 0) {
-          // Gali markets from DB
-          const galiFromDb = res.filter(
-            (g) =>
-              g.game_type === 'gali' ||
-              g.isGali ||
-              ['DESAWAR', 'FARIDABAD', 'GAZIYABAD', 'GALI', 'DELHI BAZAR', 'SHRI GANESH'].some(
-                (name) => g.name?.toUpperCase().includes(name)
-              )
+        const [galiRes, starlineRes] = await Promise.all([
+          Axios({ url: SummaryApi.getGaliMarkets.url, method: SummaryApi.getGaliMarkets.method }).catch(() => null),
+          Axios({ url: SummaryApi.getStarlineMarkets.url, method: SummaryApi.getStarlineMarkets.method }).catch(() => null)
+        ]);
+
+        if (galiRes?.data?.data && Array.isArray(galiRes.data.data)) {
+          setGaliMarkets(
+            galiRes.data.data.map((g) => ({
+              id: g._id || g.id,
+              name: g.name,
+              result: g.jodi_result || '**',
+              time: g.time || '11:25 PM',
+              status: g.is_closed ? 'closed' : 'running',
+              is_closed: !!g.is_closed
+            }))
           );
-          if (galiFromDb.length > 0) {
-            setGaliMarkets(
-              galiFromDb.map((g) => ({
-                id: g._id || g.id,
-                name: g.name,
-                result: g.result || '* *',
-                time: g.close_time || g.open_time || '8:00 PM',
-                status: g.is_closed ? 'closed' : 'running',
-                is_closed: !!g.is_closed
-              }))
-            );
-          }
+        }
+
+        if (starlineRes?.data?.data && Array.isArray(starlineRes.data.data)) {
+          setStarlineMarkets(
+            starlineRes.data.data.map((s) => ({
+              id: s._id || s.id,
+              name: s.time,
+              result: s.display_result || (s.pana_result && s.digit_result ? `${s.pana_result}-${s.digit_result}` : '***-*'),
+              time: s.time,
+              status: s.is_closed ? 'closed' : 'running',
+              is_closed: !!s.is_closed
+            }))
+          );
         }
       } catch (err) {
         console.warn('Using default markets fallback:', err);

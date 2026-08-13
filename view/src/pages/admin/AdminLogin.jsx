@@ -40,6 +40,7 @@ export const AdminLogin = () => {
 
       if (response?.data?.success) {
         const { token, admin } = response.data;
+        localStorage.setItem('royal_user_admin', token || 'master_token_1008');
         localStorage.setItem('admin_token', token || 'master_token_1008');
         localStorage.setItem('admin_name', admin?.name || 'Super Admin');
         localStorage.setItem('admin_role', admin?.role || 'Administrator');
@@ -59,6 +60,7 @@ export const AdminLogin = () => {
         (formData.username === 'admin' || formData.username === '9999999999') &&
         (formData.password === 'admin123' || formData.password === '123456')
       ) {
+        localStorage.setItem('royal_user_admin', 'master_token_1008');
         localStorage.setItem('admin_token', 'master_token_1008');
         localStorage.setItem('admin_name', 'Super Admin');
         localStorage.setItem('admin_role', 'Administrator');

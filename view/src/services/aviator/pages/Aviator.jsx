@@ -7,15 +7,44 @@ import GameArea from "../components/GameArea/GameArea";
 import BetPanel from "../components/BetPanel/BetPanel";
 import LiveFeed from "../components/LiveFeed/LiveFeed";
 
+import Axios from "../../../utils/axios";
+import SummaryApi from "../../../common/SummerAPI";
+
 const Aviator = () => {
-    const { initGameLoop, stopGameLoop } = useAviatorStore();
+    const { initGameLoop, stopGameLoop, setBalance } = useAviatorStore();
 
     useEffect(() => {
         initGameLoop();
+
+        const syncWalletBalance = async () => {
+            try {
+                const savedUserStr = localStorage.getItem('user_data');
+                let savedUser = null;
+                try { if (savedUserStr) savedUser = JSON.parse(savedUserStr); } catch (e) {}
+
+                const res = await Axios({
+                    url: SummaryApi.getUserProfile.url,
+                    method: SummaryApi.getUserProfile.method,
+                    params: { mobile: savedUser?.mobile || '' }
+                }).catch(() => null);
+
+                const u = res?.data?.user || res?.data?.data || savedUser;
+                if (u) {
+                    const withdrowalable = Number(u.wallet?.withdrowalable ?? u.withdrowalable) || 0;
+                    const bonus = Number(u.wallet?.bonusBalance ?? u.bonusBalance) || 0;
+                    setBalance(withdrowalable + bonus);
+                }
+            } catch (err) {
+                console.warn('Aviator wallet sync error:', err);
+            }
+        };
+
+        syncWalletBalance();
+
         return () => {
             stopGameLoop();
         };
-    }, [initGameLoop, stopGameLoop]);
+    }, [initGameLoop, stopGameLoop, setBalance]);
 
     return (
         <div className="min-h-screen  bg-black   text-white flex flex-col font-sans select-none relative overflow-hidden">

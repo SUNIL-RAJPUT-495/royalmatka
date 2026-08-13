@@ -1,5 +1,32 @@
 import { useSyncExternalStore } from "react";
 import socket from "../socket/socket";
+import Axios from "../../../utils/axios";
+import SummaryApi from "../../../common/SummerAPI";
+
+const syncWalletWithBackend = async (amount, action) => {
+  try {
+    const savedUserStr = typeof window !== 'undefined' ? localStorage.getItem('user_data') : null;
+    let savedUser = null;
+    try { if (savedUserStr) savedUser = JSON.parse(savedUserStr); } catch (e) {}
+
+    const res = await Axios({
+      url: SummaryApi.updateUserWallet.url,
+      method: SummaryApi.updateUserWallet.method,
+      data: {
+        amount: Number(amount),
+        action: action,
+        mobile: savedUser?.mobile || '',
+        userId: savedUser?._id || savedUser?.id || ''
+      }
+    });
+
+    if (res.data?.user && typeof window !== 'undefined') {
+      localStorage.setItem('user_data', JSON.stringify(res.data.user));
+    }
+  } catch (err) {
+    console.warn("Wallet sync failed:", err);
+  }
+};
 
 // Built-in store creator
 export const create = (createState) => {
@@ -68,8 +95,22 @@ const getUrlParams = () => {
 const urlParams = getUrlParams();
 const isUSD = urlParams.currency === "USD";
 
-// Set initial values based on currency
-const INITIAL_BALANCE = isUSD ? 3000.00 : 10000.00;
+// Helper to get real user wallet balance from localStorage
+const getInitialUserBalance = () => {
+  try {
+    const savedUserStr = typeof window !== 'undefined' ? localStorage.getItem('user_data') : null;
+    if (savedUserStr) {
+      const u = JSON.parse(savedUserStr);
+      const withdrowalable = Number(u?.wallet?.withdrowalable ?? u?.withdrowalable) || 0;
+      const bonus = Number(u?.wallet?.bonusBalance ?? u?.bonusBalance) || 0;
+      return withdrowalable + bonus;
+    }
+  } catch (e) {}
+  return 0;
+};
+
+// Set initial values based on user wallet balance
+const INITIAL_BALANCE = getInitialUserBalance();
 const PRESET_AMOUNTS = isUSD ? [1, 2, 5, 10] : [100, 200, 500, 1000];
 const SIMULATED_BET_AMOUNTS = isUSD ? [1, 2, 5, 10, 20, 50, 100] : [100, 200, 500, 1000, 2000, 5000, 10000];
 
@@ -187,7 +228,7 @@ export const useAviatorStore = create((set, get) => {
       return { betCards: updatedCards };
     }),
 
-    // Placing a bet
+    // Placing a bet - Instant money deduction on click
     placeBet: (index) => {
       const state = get();
       const card = state.betCards[index];
@@ -198,6 +239,9 @@ export const useAviatorStore = create((set, get) => {
         return "Insufficient Balance";
       }
 
+      // 1. Instant deduction from backend database
+      syncWalletWithBackend(card.amount, 'deduct');
+
       // Emit to backend socket if connected
       if (socket.connected) {
         socket.emit("place_bet", {
@@ -206,32 +250,40 @@ export const useAviatorStore = create((set, get) => {
         });
       }
 
-      if (state.status === "waiting") {
-        set((state) => {
-          const updatedCards = [...state.betCards];
-          updatedCards[index] = { ...updatedCards[index], isPlaced: true, isQueued: false };
-          return {
-            balance: parseFloat((state.balance - card.amount).toFixed(2)),
-            betCards: updatedCards
-          };
-        });
-      } else {
-        get().updateBetCard(index, { isQueued: true });
-      }
+      // 2. Instant deduction from local UI balance
+      const isWaiting = state.status === "waiting";
+      set((state) => {
+        const updatedCards = [...state.betCards];
+        updatedCards[index] = {
+          ...updatedCards[index],
+          isPlaced: isWaiting,
+          isQueued: !isWaiting
+        };
+        return {
+          balance: parseFloat(Math.max(0, state.balance - card.amount).toFixed(2)),
+          betCards: updatedCards
+        };
+      });
+
       return null;
     },
 
-    // Cancel a bet
+    // Cancel a bet - Instant refund on cancel
     cancelBet: (index) => {
       const state = get();
       const card = state.betCards[index];
 
-      if (card.isQueued) {
-        get().updateBetCard(index, { isQueued: false });
-      } else if (card.isPlaced && state.status === "waiting") {
+      if (card.isQueued || (card.isPlaced && state.status === "waiting")) {
+        // Instant refund to backend database
+        syncWalletWithBackend(card.amount, 'credit');
+        
         set((state) => {
           const updatedCards = [...state.betCards];
-          updatedCards[index] = { ...updatedCards[index], isPlaced: false };
+          updatedCards[index] = {
+            ...updatedCards[index],
+            isPlaced: false,
+            isQueued: false
+          };
           return {
             balance: parseFloat((state.balance + card.amount).toFixed(2)),
             betCards: updatedCards
@@ -249,6 +301,9 @@ export const useAviatorStore = create((set, get) => {
 
       const cashOutMult = forceMultiplier || state.multiplier;
       const winAmt = parseFloat((card.amount * cashOutMult).toFixed(2));
+
+      // Sync win crediting with MongoDB backend
+      syncWalletWithBackend(winAmt, 'credit');
 
       if (socket.connected) {
         socket.emit("cashout");
@@ -333,14 +388,17 @@ export const useAviatorStore = create((set, get) => {
 
           if (newStatus === "waiting") {
             set((state) => {
-              const updatedCards = state.betCards.map(card => ({
-                ...card,
-                isPlaced: card.autoBet || card.isQueued,
-                isQueued: false,
-                isCashedOut: false,
-                cashOutMultiplier: null,
-                wonAmount: null
-              }));
+              const updatedCards = state.betCards.map(card => {
+                const newlyPlaced = card.autoBet || card.isQueued;
+                return {
+                  ...card,
+                  isPlaced: newlyPlaced,
+                  isQueued: false,
+                  isCashedOut: false,
+                  cashOutMultiplier: null,
+                  wonAmount: null
+                };
+              });
 
               return {
                 status: "waiting",
@@ -473,10 +531,10 @@ export const useAviatorStore = create((set, get) => {
 
       set((state) => {
         const updatedCards = state.betCards.map(card => {
-          const nextIsPlaced = card.autoBet || card.isQueued;
+          const newlyPlaced = card.autoBet || card.isQueued;
           return {
             ...card,
-            isPlaced: nextIsPlaced,
+            isPlaced: newlyPlaced,
             isQueued: false,
             isCashedOut: false,
             cashOutMultiplier: null,
@@ -484,18 +542,12 @@ export const useAviatorStore = create((set, get) => {
           };
         });
 
-        const totalDeducted = updatedCards.reduce((acc, card) => {
-          if (card.isPlaced) return acc + card.amount;
-          return acc;
-        }, 0);
-
         return {
           status: "waiting",
           multiplier: 1.00,
           countdown: 5.0,
           liveBets: generateSimulatedBets(),
-          betCards: updatedCards,
-          balance: parseFloat(Math.max(0, state.balance - totalDeducted).toFixed(2))
+          betCards: updatedCards
         };
       });
 

@@ -228,7 +228,9 @@ export const DepositRequestsManagement = () => {
                         <div className="font-bold text-gray-900">{deposit.userId?.name || 'N/A'}</div>
                         <div className="text-[10px] text-gray-450 mt-0.5">{deposit.userId?.email || 'N/A'}</div>
                       </td>
-                      <td className="px-5 py-4 font-mono text-gray-500 text-[11px]">{deposit.transactionId || 'N/A'}</td>
+                      <td className="px-5 py-4 font-mono text-gray-800 font-bold text-[11px] select-all">
+                        {deposit.utrNumber || deposit.accountDetails || deposit.transactionId || 'N/A'}
+                      </td>
                       <td className="px-5 py-4 font-bold text-gray-950 text-sm">₹{(deposit.amount || 0).toLocaleString('en-IN')}</td>
                       <td className="px-5 py-4 text-gray-450 font-semibold whitespace-nowrap">
                         {new Date(deposit.createdAt || deposit.date).toLocaleString('en-IN', {

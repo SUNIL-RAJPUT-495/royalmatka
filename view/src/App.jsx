@@ -61,6 +61,7 @@ import { AdminNotificationSettings } from "./pages/admin/AdminNotificationSettin
 import { AdminChat } from "./pages/admin/AdminChat";
 import { AdminLogin } from "./pages/admin/AdminLogin";
 import { UserAuth } from "./pages/user/UserAuth";
+import { NotFoundPage } from "./pages/NotFoundPage";
 import { AdminProtectedRoute, UserProtectedRoute } from "./components/routes/ProtectedRoute";
 function App() {
   return (
@@ -132,9 +133,8 @@ function App() {
           <Route path="/admin-login" element={<AdminLogin />} />
 
           {/* 4. ADMIN PANEL ROUTES (PROTECTED BY ADMIN MIDDLEWARE) */}
-          <Route path="/systum" element={<AdminLayout />}>
-            <Route path="login" element={<AdminLogin />} />
-            <Route element={<AdminProtectedRoute />}>
+          <Route path="/systum" element={<AdminProtectedRoute />}>
+            <Route element={<AdminLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="AddGame" element={<AdminPanel />} />
@@ -198,6 +198,9 @@ function App() {
               <Route path="results" element={<ResultAdmin />} />
             </Route>
           </Route>
+
+          {/* 5. CATCH-ALL 404 PAGE NOT FOUND ROUTE */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

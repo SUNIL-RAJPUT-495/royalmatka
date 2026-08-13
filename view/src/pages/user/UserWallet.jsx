@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import Axios from '../../utils/axios';
+import SummaryApi from '../../common/SummerAPI';
 import {
   FaCreditCard,
   FaChevronRight,
@@ -17,22 +19,107 @@ export const UserWallet = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
   const context = useOutletContext() || {};
-  const user = context.user || { name: 'Shubham', walletBalance: 9.0 };
+
+  const localUserStr = localStorage.getItem("user_data");
+  let localUser = null;
+  try {
+    if (localUserStr) localUser = JSON.parse(localUserStr);
+  } catch (e) { }
+
+  const [currentUser, setCurrentUser] = useState(
+    (context.user && context.user.role !== 'Admin')
+      ? context.user
+      : (localUser && localUser.role !== 'Admin' ? localUser : (context.user || localUser || {}))
+  );
+
+  const displayBalance = Number(currentUser.balance !== undefined ? currentUser.balance : (currentUser.walletBalance !== undefined ? currentUser.walletBalance : 0)).toFixed(2);
 
   const [activeFilter, setActiveFilter] = useState('All');
-  const [lastUpdatedTime, setLastUpdatedTime] = useState(() => new Date().toLocaleTimeString());
+  const [lastUpdatedTime, setLastUpdatedTime] = useState(() => new Date().toLocaleTimeString('en-IN'));
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [dbTransactions, setDbTransactions] = useState([]);
 
-  const handleRefreshBalance = () => {
+  // Fetch live profile & transactions on mount
+  const fetchWalletData = async () => {
     setIsRefreshing(true);
-    setTimeout(() => {
-      setLastUpdatedTime(new Date().toLocaleTimeString());
+    try {
+      // 1. Fetch latest User Profile
+      const profileRes = await Axios({
+        url: SummaryApi.getUserProfile.url,
+        method: SummaryApi.getUserProfile.method,
+        params: { mobile: currentUser.mobile || '' }
+      }).catch(() => null);
+
+      const updatedUser = profileRes?.data?.user || profileRes?.data?.data;
+      if (updatedUser) {
+        setCurrentUser(updatedUser);
+        localStorage.setItem("user_data", JSON.stringify(updatedUser));
+      }
+
+      // 2. Fetch User Transactions
+      const txRes = await Axios({
+        url: SummaryApi.getUserTransactions.url,
+        method: SummaryApi.getUserTransactions.method,
+        params: {
+          mobile: currentUser.mobile || '',
+          userId: currentUser._id || currentUser.id || ''
+        }
+      }).catch(() => null);
+
+      if (txRes?.data?.transactions && Array.isArray(txRes.data.transactions)) {
+        const formatted = txRes.data.transactions.map((tx, idx) => {
+          const dateStr = tx.createdAt ? new Date(tx.createdAt).toLocaleString('en-IN') : 'Just now';
+          let category = 'Games';
+          let txType = tx.amount < 0 ? 'loss' : 'bonus';
+          let title = tx.type || 'Game Bet';
+
+          if (tx.type === 'Deposit') {
+            category = 'Deposits';
+            txType = 'deposit';
+            title = 'Deposit';
+          } else if (tx.type === 'Withdrawal') {
+            category = 'Withdrawals';
+            txType = 'withdrawal';
+            title = 'Withdrawal';
+          } else if (tx.type === 'Bonus') {
+            category = 'Bonuses';
+            txType = 'bonus';
+            title = 'Bonus';
+          } else if (tx.type === 'Win' || tx.type === 'Game' || (tx.remark && tx.remark.toLowerCase().includes('aviator'))) {
+            category = 'Games';
+            title = tx.amount < 0 ? 'Aviator Bet' : 'Aviator Win';
+          }
+
+          return {
+            id: tx._id || `tx-${idx}`,
+            type: txType,
+            title: title,
+            time: dateStr,
+            tag: tx.remark || tx.method || 'Aviator Casino',
+            amount: tx.amount,
+            category: category
+          };
+        });
+        setDbTransactions(formatted);
+      }
+      setLastUpdatedTime(new Date().toLocaleTimeString('en-IN'));
+    } catch (err) {
+      console.warn("Wallet refresh error:", err);
+    } finally {
       setIsRefreshing(false);
-    }, 400);
+    }
   };
 
-  // Dummy transactions matching exact screenshot
-  const transactions = [
+  useEffect(() => {
+    fetchWalletData();
+  }, []);
+
+  const handleRefreshBalance = () => {
+    fetchWalletData();
+  };
+
+  // Transactions list (Live DB + fallback screenshot data)
+  const transactions = dbTransactions.length > 0 ? dbTransactions : [
     {
       id: 'tx1',
       type: 'loss',
@@ -109,13 +196,32 @@ export const UserWallet = () => {
             </div>
           </div>
 
-          <div className="my-1">
-            <span className="text-3xl font-bold text-white tracking-tight">
-              ₹{Number(user.walletBalance || 9).toFixed(0)}
-            </span>
+          <div className="my-1 flex items-baseline justify-between">
+            <div>
+              <span className="text-3xl font-bold text-white tracking-tight">
+                ₹{displayBalance}
+              </span>
+              <span className="text-[10px] text-white/80 block font-semibold">Total Available Balance</span>
+            </div>
           </div>
 
-          <div className="flex items-center justify-between text-xs pt-1 border-t border-white/15">
+          {/* 2-Balance Breakdown: Withdrawable & Bonus */}
+          <div className="grid grid-cols-2 gap-2 mt-2 mb-3">
+            <div className="bg-white/15 rounded-xl p-2.5 border border-white/20">
+              <span className="text-[9px] font-bold text-white/90 uppercase tracking-wider block">Withdrawable</span>
+              <span className="text-sm font-bold text-white block mt-0.5">
+                ₹{Number(currentUser.wallet?.withdrowalable !== undefined ? currentUser.wallet.withdrowalable : (currentUser.balance || 0)).toFixed(2)}
+              </span>
+            </div>
+            <div className="bg-white/15 rounded-xl p-2.5 border border-white/20">
+              <span className="text-[9px] font-bold text-yellow-200 uppercase tracking-wider block">Bonus Money</span>
+              <span className="text-sm font-bold text-yellow-300 block mt-0.5">
+                ₹{Number(currentUser.wallet?.bonusBalance || 0).toFixed(2)}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-xs pt-2 border-t border-white/15">
             <div className="text-[11px] text-white/80 font-normal leading-tight">
               Last updated<br />
               <span className="font-semibold text-white">{lastUpdatedTime}</span>
@@ -182,7 +288,7 @@ export const UserWallet = () => {
 
         {/* 3. PAYMENT DETAILS CARD */}
         <div
-          onClick={() => navigate('/payment-methods')}
+          onClick={() => navigate('/bank-details')}
           className="bg-white rounded-2xl p-4 border border-gray-100/90 shadow-2xs flex items-center justify-between cursor-pointer hover:bg-gray-50 active:scale-[0.99] transition-all"
         >
           <div className="flex items-center gap-3.5">

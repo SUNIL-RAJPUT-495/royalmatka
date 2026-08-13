@@ -250,8 +250,21 @@ export const ViewUser = () => {
                         </div>
 
                         <div className="pt-16 mt-2 border-t border-gray-100">
-                            <p className="text-[#6e6b7b] text-[15px] mb-1 mt-3">Available Balance</p>
-                            <p className="text-[22px] font-bold text-[#4b4b4b] mb-6">₹{(user.wallet?.realBalance || 0) + (user.wallet?.bonusBalance || 0)}</p>
+                            <p className="text-[#6e6b7b] text-[12px] font-bold uppercase tracking-wider mb-0.5 mt-3">Total Available Balance</p>
+                            <p className="text-[24px] font-extrabold text-[#4b4b4b] mb-2">
+                                ₹{(user.wallet?.withdrowalable ?? user.wallet?.realBalance ?? user.balance ?? 0) + (user.wallet?.bonusBalance || 0)}
+                            </p>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs mb-5 bg-gray-50 p-2.5 rounded border border-gray-150">
+                                <div>
+                                    <span className="text-[10px] font-bold text-gray-500 block uppercase tracking-wider">Withdrawable</span>
+                                    <span className="font-bold text-emerald-600">₹{user.wallet?.withdrowalable ?? user.wallet?.realBalance ?? user.balance ?? 0}</span>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-bold text-purple-600 block uppercase tracking-wider">Bonus</span>
+                                    <span className="font-bold text-purple-700">₹{user.wallet?.bonusBalance || 0}</span>
+                                </div>
+                            </div>
 
                             <div className="flex gap-4">
                                 <button
@@ -275,14 +288,10 @@ export const ViewUser = () => {
                 <div className="flex-1 bg-white rounded shadow-[0_0_5px_rgba(0,0,0,0.05)] border border-gray-100 p-6">
                     <h3 className="text-[16px] font-bold text-[#4b4b4b] mb-4 border-b border-gray-100 pb-2">Personal Information</h3>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         <div className="bg-gray-50 p-3 rounded border border-gray-100">
                             <span className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Full Name</span>
                             <span className="text-[13px] font-semibold text-[#4b4b4b]">{user.name}</span>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded border border-gray-100">
-                            <span className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Security Pin</span>
-                            <span className="text-[13px] font-semibold text-[#4b4b4b]">N/A</span>
                         </div>
                         <div className="bg-gray-50 p-3 rounded border border-gray-100">
                             <span className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Mobile</span>
@@ -294,6 +303,38 @@ export const ViewUser = () => {
                         <div className="bg-gray-50 p-3 rounded border border-gray-100">
                             <span className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Password</span>
                             <span className="text-[13px] font-semibold text-[#4b4b4b]">********</span>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded border border-gray-100">
+                            <span className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Role</span>
+                            <span className="text-[13px] font-semibold text-[#4b4b4b]">{user.role || 'User'}</span>
+                        </div>
+                    </div>
+
+                    <h3 className="text-[16px] font-bold text-[#4b4b4b] mb-4 border-b border-gray-100 pb-2">Registration & Activity Logs</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <div className="bg-blue-50/60 p-3 rounded border border-blue-100">
+                            <span className="block text-[11px] font-bold text-blue-600 uppercase tracking-wider mb-1">Registration Date & Time</span>
+                            <span className="text-[12px] font-bold text-blue-900">
+                                {user.registrationDate || user.createdAt ? formatDate(user.registrationDate || user.createdAt) : 'N/A'}
+                            </span>
+                        </div>
+                        <div className="bg-blue-50/60 p-3 rounded border border-blue-100">
+                            <span className="block text-[11px] font-bold text-blue-600 uppercase tracking-wider mb-1">Registration IP</span>
+                            <span className="text-[13px] font-bold text-blue-900 font-mono">
+                                {user.registrationIp || '127.0.0.1'}
+                            </span>
+                        </div>
+                        <div className="bg-emerald-50/60 p-3 rounded border border-emerald-100">
+                            <span className="block text-[11px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Last Login Date & Time</span>
+                            <span className="text-[12px] font-bold text-emerald-900">
+                                {user.lastLoginDate || user.updatedAt ? formatDate(user.lastLoginDate || user.updatedAt) : 'N/A'}
+                            </span>
+                        </div>
+                        <div className="bg-emerald-50/60 p-3 rounded border border-emerald-100">
+                            <span className="block text-[11px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Last Login IP</span>
+                            <span className="text-[13px] font-bold text-emerald-900 font-mono">
+                                {user.lastLoginIp || user.registrationIp || '127.0.0.1'}
+                            </span>
                         </div>
                     </div>
 

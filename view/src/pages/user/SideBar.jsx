@@ -120,11 +120,11 @@ export const SideBar = ({
 
             {/* Name, ID and Balance Pill */}
             <div>
-              <h3 className="font-bold text-base leading-tight text-white">{user.name || 'Shubham'}</h3>
-              <p className="text-xs text-white/80 font-normal mt-0.5">ID: {user.mobile || '8079003424'}</p>
+              <h3 className="font-bold text-base leading-tight text-white">{user.name || 'User'}</h3>
+              <p className="text-xs text-white/80 font-normal mt-0.5">ID: {user.mobile || ''}</p>
               <div className="inline-flex items-center gap-1 bg-white/20 px-2.5 py-0.5 rounded-full text-[11px] font-semibold mt-1 border border-white/25">
                 <HiOutlineSparkles size={11} className="text-yellow-300" />
-                <span>₹ {Number(user.walletBalance || 9).toFixed(2)}</span>
+                <span>₹ {Number(user.balance !== undefined ? user.balance : (user.walletBalance !== undefined ? user.walletBalance : 0)).toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -191,9 +191,11 @@ export const SideBar = ({
             <button
               onClick={() => {
                 closeSidebar();
+                localStorage.removeItem('user_token');
                 localStorage.removeItem('token');
+                localStorage.removeItem('access_token');
                 localStorage.removeItem('user_data');
-                window.location.href = '/';
+                window.location.href = '/login';
               }}
               className="w-full bg-[#fff1f2] hover:bg-[#ffe4e6] active:scale-[0.99] border border-red-100 rounded-2xl p-3 flex items-center gap-3 transition-all cursor-pointer"
             >

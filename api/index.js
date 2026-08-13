@@ -13,6 +13,7 @@ import authRoutes from "./services/auth/routes/auth.routes.js";
 import initializeAviatorSockets from "./services/aviator/socket/index.js";
 import aviatorRoutes from "./services/aviator/routes/aviator.routes.js";
 import marketRoutes from "./services/matka/routes/market.routes.js";
+import paymentRoutes from "./services/auth/routes/payment.routes.js";
 import GameEngine from "./services/aviator/game/GameEngine.js";
 
 dotenv.config();
@@ -21,6 +22,7 @@ dotenv.config();
 connectDB();
 
 const app = express();
+app.set("trust proxy", true);
 
 // Security & Middleware
 app.use(helmet());
@@ -33,8 +35,9 @@ app.use(morgan("dev"));
 // Rate Limiter
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: "Too many requests, please try again later.",
+  max: 10000,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 app.use("/api", limiter);
@@ -43,6 +46,7 @@ app.use("/api", limiter);
 app.use("/api/user", authRoutes);
 app.use("/api/aviator", aviatorRoutes);
 app.use("/api/market", marketRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // Test Route
 app.get("/", (req, res) => {

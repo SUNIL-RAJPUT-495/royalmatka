@@ -1,26 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, Phone, MessageCircle, Mail, MapPin, Send, Save, 
-  RefreshCw, Trash2, CheckCircle2, User, Key, Eye, EyeOff
+  RefreshCw, Trash2, CheckCircle2, User, Key, Eye, EyeOff, Upload, QrCode
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Axios from '../../utils/axios';
+import SummaryApi from '../../common/SummerAPI';
 
 export const UpiSettings = () => {
   // UPI ID List
   const [upiList, setUpiList] = useState([
     { id: 1, upiId: 'royal1008@ybl', displayName: 'Royal Play', isActive: true }
   ]);
-  const [newUpiId, setNewUpiId] = useState('');
-  const [newDisplayName, setNewDisplayName] = useState('');
-  const [newIsActive, setNewIsActive] = useState(false);
+  const [newUpiId, setNewUpiId] = useState('royal1008@ybl');
+  const [newDisplayName, setNewDisplayName] = useState('Royal Play');
+  const [newIsActive, setNewIsActive] = useState(true);
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
 
   // OTP Verification state
   const [isOtpEnabled, setIsOtpEnabled] = useState(true);
 
   // Add-Fund System state
-  const [activeFundSystem, setActiveFundSystem] = useState('PayFromUPI'); // 'IMB' | 'PayFromUPI' | 'Manual'
+  const [activeFundSystem, setActiveFundSystem] = useState('Manual'); // 'IMB' | 'PayFromUPI' | 'Manual'
   const [imbToken, setImbToken] = useState('****');
-  const [payFromUpiToken, setPayFromUpiToken] = useState('3f8b89d81d23456789abcdef0123456789abcdef');
+  const [payFromUpiToken, setPayFromUpiToken] = useState('');
   const [showImbToken, setShowImbToken] = useState(false);
   const [showPayFromUpiToken, setShowPayFromUpiToken] = useState(false);
 
@@ -28,6 +31,73 @@ export const UpiSettings = () => {
   const [minAmount, setMinAmount] = useState('100');
   const [maxAmount, setMaxAmount] = useState('20000');
   const [quickAmountString, setQuickAmountString] = useState('100,300,500,1000,5000,10000');
+
+  // Load backend payment settings on mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await Axios({
+          url: SummaryApi.getPaymentSettings.url,
+          method: SummaryApi.getPaymentSettings.method
+        });
+        if (res.data?.settings) {
+          const s = res.data.settings;
+          setNewUpiId(s.upiId || 'royal1008@ybl');
+          setNewDisplayName(s.displayName || 'Royal Play');
+          setQrCodeUrl(s.qrCodeUrl || '');
+          setActiveFundSystem(s.activeFundSystem || 'Manual');
+          setMinAmount(String(s.minAmount || 100));
+          setMaxAmount(String(s.maxAmount || 20000));
+          if (s.quickAmounts && s.quickAmounts.length > 0) {
+            setQuickAmountString(s.quickAmounts.join(','));
+          }
+          setIsOtpEnabled(s.isOtpEnabled !== false);
+        }
+      } catch (err) {
+        console.warn('Using default UPI settings');
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const handleSaveAllSettings = async () => {
+    try {
+      const payload = {
+        upiId: newUpiId,
+        displayName: newDisplayName,
+        qrCodeUrl: qrCodeUrl,
+        activeFundSystem: activeFundSystem,
+        minAmount: Number(minAmount),
+        maxAmount: Number(maxAmount),
+        quickAmounts: quickAmountString.split(',').map(v => Number(v.trim())).filter(v => !isNaN(v)),
+        isOtpEnabled: isOtpEnabled
+      };
+
+      const res = await Axios({
+        url: SummaryApi.updatePaymentSettings.url,
+        method: SummaryApi.updatePaymentSettings.method,
+        data: payload
+      });
+
+      if (res.data?.success) {
+        toast.success(res.data.message || 'Payment settings saved successfully! 🎉');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save payment settings');
+    }
+  };
+
+  const handleQrUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setQrCodeUrl(reader.result);
+        toast.success('QR Code Scanner uploaded! Click Save Settings.');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Parse quick amounts
   const quickAmounts = quickAmountString
@@ -146,6 +216,37 @@ export const UpiSettings = () => {
                   <span className="text-[9px] text-gray-400 font-semibold block">This name will be displayed to users during payment</span>
                 </div>
 
+                {/* QR Code Scanner Upload */}
+                <div className="space-y-1.5 pt-3 border-t border-gray-100">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                    <QrCode size={12} className="text-orange-500" />
+                    <span>UPI QR Code Scanner Image</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    {qrCodeUrl ? (
+                      <img src={qrCodeUrl} alt="QR Scanner" className="w-20 h-20 object-contain rounded-xl border border-gray-200 shadow-2xs bg-white" />
+                    ) : (
+                      <div className="w-20 h-20 rounded-xl border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-gray-400 text-xs font-semibold">
+                        No QR Image
+                      </div>
+                    )}
+                    <div className="flex-1 space-y-2">
+                      <label className="bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 text-xs font-bold px-3 py-2 rounded-lg cursor-pointer inline-flex items-center gap-1.5 transition-all shadow-2xs">
+                        <Upload size={14} />
+                        <span>Upload Scanner Image</span>
+                        <input type="file" accept="image/*" onChange={handleQrUpload} className="hidden" />
+                      </label>
+                      <input 
+                        type="text" 
+                        placeholder="Or paste QR Image URL"
+                        value={qrCodeUrl}
+                        onChange={(e) => setQrCodeUrl(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-xs font-semibold"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Switch Active */}
                 <div className="flex items-center justify-between py-2 border-t border-gray-100 mt-2">
                   <div>
@@ -166,11 +267,12 @@ export const UpiSettings = () => {
             </div>
 
             <button 
-              type="submit"
-              onClick={handleAddUpi}
-              className="w-full bg-[#ef4444] hover:bg-red-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm uppercase tracking-wider text-xs mt-4"
+              type="button"
+              onClick={handleSaveAllSettings}
+              className="w-full bg-[#ef4444] hover:bg-red-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm uppercase tracking-wider text-xs mt-4 cursor-pointer"
             >
-              <span>+ Add UPI</span>
+              <Save size={14} />
+              <span>Save Payment & QR Settings</span>
             </button>
           </div>
 
@@ -400,8 +502,9 @@ export const UpiSettings = () => {
           </div>
 
           <button 
-            onClick={() => toast.success('Add-Fund settings saved')}
-            className="w-full bg-[#f97316] hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all uppercase tracking-wider text-xs"
+            type="button"
+            onClick={handleSaveAllSettings}
+            className="w-full bg-[#f97316] hover:bg-orange-600 active:scale-98 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all uppercase tracking-wider text-xs cursor-pointer shadow-sm"
           >
             <Save size={13} />
             <span>Save Add-Fund System</span>
@@ -473,8 +576,9 @@ export const UpiSettings = () => {
           </div>
 
           <button 
-            onClick={() => toast.success('Payment limits saved')}
-            className="w-full bg-[#f97316] hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all uppercase tracking-wider text-xs"
+            type="button"
+            onClick={handleSaveAllSettings}
+            className="w-full bg-[#f97316] hover:bg-orange-600 active:scale-98 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all uppercase tracking-wider text-xs cursor-pointer shadow-sm"
           >
             <Save size={13} />
             <span>Save Payment Limits</span>

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { FaArrowLeft, FaTrophy, FaShareAlt } from 'react-icons/fa';
 import { IoBookmarkOutline, IoSparkles } from 'react-icons/io5';
+import Axios from '../../utils/axios';
+import SummaryApi from '../../common/SummerAPI';
 
 export const UserGameRates = () => {
   const { currentTheme } = useTheme();
@@ -32,7 +34,7 @@ export const UserGameRates = () => {
       { title: 'Jodi', subtitle: 'Two digit combination', rate: '1 ka 100' },
       { title: 'Single Panna', subtitle: 'Three digit single panna', rate: '1 ka 160' },
       { title: 'Double Panna', subtitle: 'Three digit double panna', rate: '1 ka 320' },
-      { title: 'Triple Panna', subtitle: 'Three digit triple panna', rate: '1 ka 700' },
+      { title: 'Triple Panna', subtitle: 'Three digit triple panna', rate: '1 ka 800' },
       { title: 'Half Sangam', subtitle: 'Half sangam combination', rate: '1 ka 1000' },
       { title: 'Full Sangam', subtitle: 'Full sangam - highest payout!', rate: '1 ka 10000' }
     ],
@@ -52,8 +54,55 @@ export const UserGameRates = () => {
   });
 
   useEffect(() => {
-    // Ready for future backend API fetch:
-    // e.g. api.get('/game-rates').then(res => setRates(res.data)).catch(...)
+    const fetchRates = async () => {
+      setLoading(true);
+      try {
+        const res = await Axios({
+          url: SummaryApi.getGameRates.url,
+          method: SummaryApi.getGameRates.method
+        });
+
+        if (res.data?.data && Array.isArray(res.data.data)) {
+          const activeList = res.data.data.filter(r => r.active !== false);
+
+          const mainPanaList = activeList
+            .filter(r => r.category === 'Main Pana')
+            .map(r => ({ title: r.name, subtitle: r.desc || `${r.name} betting`, rate: r.value }));
+            
+          const starlineList = activeList
+            .filter(r => r.category === 'Starline')
+            .map(r => ({ title: r.name, subtitle: r.desc || `${r.name} betting`, rate: r.value }));
+            
+          const galiList = activeList
+            .filter(r => r.category === 'Gali / Disawar')
+            .map(r => ({ title: r.name, subtitle: r.desc || `${r.name} betting`, rate: r.value }));
+            
+          const jackpotList = activeList
+            .filter(r => r.category === 'Jackpot')
+            .map(r => ({ title: r.name, subtitle: r.desc || `${r.name} betting`, rate: r.value }));
+
+          const featuredItem = activeList.find(r => r.starred) || activeList[0];
+
+          setRates({
+            featured: featuredItem ? {
+              title: featuredItem.name,
+              subtitle: featuredItem.desc || `${featuredItem.name} betting`,
+              gameType: featuredItem.name,
+              rate: featuredItem.value
+            } : rates.featured,
+            mainPana: mainPanaList.length > 0 ? mainPanaList : rates.mainPana,
+            starline: starlineList.length > 0 ? starlineList : rates.starline,
+            gali: galiList.length > 0 ? galiList : rates.gali,
+            jackpot: jackpotList.length > 0 ? jackpotList : rates.jackpot
+          });
+        }
+      } catch (err) {
+        console.warn('Using default rates fallback');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRates();
   }, []);
 
   return (

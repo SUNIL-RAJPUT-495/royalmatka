@@ -10,9 +10,12 @@ import SummaryApi from '../common/SummerAPI';
 export const UserLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
+  const [isBlockedModalOpen, setIsBlockedModalOpen] = useState(false);
+  const [blockedMessage, setBlockedMessage] = useState('');
+
   const [userData, setUserData] = useState(() => {
     const saved = localStorage.getItem('user_data');
-    return saved ? JSON.parse(saved) : { name: 'Shubham', mobile: '8079003424', walletBalance: 9.0 };
+    return saved ? JSON.parse(saved) : null;
   });
 
   const isHomePage = location.pathname === '/' || location.pathname === '/home';
@@ -23,26 +26,50 @@ export const UserLayout = () => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [location.pathname]);
 
+  const handleRedirectToLogin = () => {
+    localStorage.removeItem('royal_matka_user');
+    localStorage.removeItem('user_token');
+    localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user_data');
+    window.location.href = '/login';
+  };
+
   // Fetch updated user balance/profile if available
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('royal_matka_user') || localStorage.getItem('user_token') || localStorage.getItem('token') || localStorage.getItem('access_token');
         if (!token) return;
+
+        const savedDataStr = localStorage.getItem('user_data');
+        let savedData = null;
+        try { if (savedDataStr) savedData = JSON.parse(savedDataStr); } catch (e) { }
+        const mobile = savedData?.mobile || '';
+
         const res = await Axios({
-          url: SummaryApi.getUserProfile.url,
+          url: `${SummaryApi.getUserProfile.url}?mobile=${encodeURIComponent(mobile)}`,
           method: SummaryApi.getUserProfile.method
         });
-        if (res.data?.user) {
+
+        if (res.data?.user && res.data.user.role !== 'Admin') {
           setUserData(res.data.user);
           localStorage.setItem('user_data', JSON.stringify(res.data.user));
         }
       } catch (err) {
-        console.warn('Could not fetch latest profile, using cached data');
+        if (err.response?.data?.isBlocked === true || err.response?.data?.isDeleted === true) {
+          const msg = err.response?.data?.message || 'Your account has been blocked or deleted by administrator.';
+          setBlockedMessage(msg);
+          setIsBlockedModalOpen(true);
+        } else {
+          console.warn('Could not fetch profile update:', err.message);
+        }
       }
     };
     loadProfile();
   }, []);
+
+  const calculatedBalance = Number(userData ? (userData.balance !== undefined ? userData.balance : (userData.walletBalance !== undefined ? userData.walletBalance : 0)) : 0).toFixed(2);
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col relative text-gray-900 font-sans">
@@ -50,7 +77,7 @@ export const UserLayout = () => {
       {showNavbar && (
         <UserNavbar
           onOpenSidebar={() => setIsSidebarOpen(true)}
-          walletBalance={userData?.walletBalance || 9}
+          walletBalance={calculatedBalance}
         />
       )}
 
@@ -71,6 +98,35 @@ export const UserLayout = () => {
 
       {/* 5. WELCOME POPUP MODAL (ONCE PER SESSION) */}
       <WelcomePopup />
+
+      {/* 6. ACCOUNT BLOCKED / DELETED POPUP MODAL */}
+      {isBlockedModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-300">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl text-center space-y-4 border border-red-100">
+            {/* Red Alert Icon */}
+            <div className="w-16 h-16 rounded-full bg-red-50 border-4 border-red-100 flex items-center justify-center mx-auto text-red-500 shadow-sm animate-bounce">
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 tracking-tight">Account Restricted</h3>
+              <p className="text-xs text-gray-600 font-medium mt-1 leading-relaxed">
+                {blockedMessage || "Your account has been blocked or deleted by the administrator. Access to Royal Matka has been restricted."}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleRedirectToLogin}
+              className="w-full py-3.5 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold text-xs rounded-2xl shadow-md transition-all cursor-pointer"
+            >
+              Go to Login Page
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

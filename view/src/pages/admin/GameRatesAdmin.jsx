@@ -71,9 +71,23 @@ export const GameRatesAdmin = () => {
     fetchRates();
   }, []);
 
-  const handleToggleActive = (id) => {
-    setRates(prev => prev.map(r => r.id === id ? { ...r, active: !r.active } : r));
-    toast.success('Rate status updated!');
+  const handleToggleActive = async (rateItem) => {
+    try {
+      const res = await AxiosAdmin({
+        url: SummaryApi.updateGameRate.url,
+        method: SummaryApi.updateGameRate.method,
+        data: {
+          id: rateItem._id || rateItem.id,
+          active: !rateItem.active
+        }
+      });
+      if (res.data?.success) {
+        toast.success('Rate status updated! 🎉');
+        fetchRates();
+      }
+    } catch (e) {
+      toast.error('Failed to update rate status');
+    }
   };
 
   const handleEditClick = (rate) => {
@@ -81,16 +95,35 @@ export const GameRatesAdmin = () => {
     setEditOpen(true);
   };
 
-  const handleSaveEdit = (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
     if (!editRate.name.trim() || !editRate.value.trim()) {
       toast.error('Name and Rate Value cannot be empty');
       return;
     }
-    setRates(prev => prev.map(r => r.id === editRate.id ? { ...editRate } : r));
-    setEditOpen(false);
-    setEditRate(null);
-    toast.success('Rate updated successfully!');
+    try {
+      const res = await AxiosAdmin({
+        url: SummaryApi.updateGameRate.url,
+        method: SummaryApi.updateGameRate.method,
+        data: {
+          id: editRate._id || editRate.id,
+          name: editRate.name,
+          desc: editRate.desc,
+          value: editRate.value,
+          category: editRate.category,
+          starred: editRate.starred,
+          active: editRate.active
+        }
+      });
+      if (res.data?.success) {
+        toast.success(res.data.message || 'Game rate saved to database! 🎉');
+        setEditOpen(false);
+        setEditRate(null);
+        fetchRates();
+      }
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to update rate');
+    }
   };
 
   const handleDeleteClick = (id) => {
@@ -98,11 +131,22 @@ export const GameRatesAdmin = () => {
     setDeleteConfirmOpen(true);
   };
 
-  const confirmDeleteRate = () => {
-    setRates(prev => prev.filter(r => r.id !== pendingDeleteId));
-    setDeleteConfirmOpen(false);
-    setPendingDeleteId(null);
-    toast.success('Rate deleted successfully');
+  const confirmDeleteRate = async () => {
+    if (!pendingDeleteId) return;
+    try {
+      const res = await AxiosAdmin({
+        url: `${SummaryApi.deleteGameRate.url}?id=${pendingDeleteId}`,
+        method: SummaryApi.deleteGameRate.method
+      });
+      if (res.data?.success) {
+        toast.success('Rate deleted from database!');
+        setDeleteConfirmOpen(false);
+        setPendingDeleteId(null);
+        fetchRates();
+      }
+    } catch (e) {
+      toast.error('Failed to delete rate');
+    }
   };
 
   const handleAddClick = (category) => {
@@ -113,26 +157,31 @@ export const GameRatesAdmin = () => {
     setAddOpen(true);
   };
 
-  const handleSaveAdd = (e) => {
+  const handleSaveAdd = async (e) => {
     e.preventDefault();
     if (!newRateName.trim() || !newRateValue.trim()) {
       toast.error('Please enter Name and Rate Value');
       return;
     }
-
-    const newRate = {
-      id: Date.now(),
-      name: newRateName,
-      desc: newRateDesc || `${newRateName} betting`,
-      value: newRateValue,
-      category: newRateCategory,
-      starred: false,
-      active: true
-    };
-
-    setRates(prev => [...prev, newRate]);
-    setAddOpen(false);
-    toast.success('New rate category created!');
+    try {
+      const res = await AxiosAdmin({
+        url: SummaryApi.addGameRate.url,
+        method: SummaryApi.addGameRate.method,
+        data: {
+          name: newRateName.trim(),
+          desc: newRateDesc.trim(),
+          value: newRateValue.trim(),
+          category: newRateCategory
+        }
+      });
+      if (res.data?.success) {
+        toast.success('New rate saved to database! 🎉');
+        setAddOpen(false);
+        fetchRates();
+      }
+    } catch (e) {
+      toast.error('Failed to add new rate');
+    }
   };
 
   // Grouped category properties matching screenshots
@@ -263,30 +312,43 @@ export const GameRatesAdmin = () => {
                             <span className="text-[7px]">▼</span>
                           </div>
                           <div>
-                            <div className="flex items-center gap-1">
-                              <span className="font-bold text-gray-900">{rate.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className={`font-bold transition-all ${!rate.active ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+                                {rate.name}
+                              </span>
                               {rate.starred && <span className="text-yellow-400 text-xs">⭐</span>}
+                              {!rate.active && (
+                                <span className="text-[9px] font-bold text-red-500 bg-red-50 border border-red-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                  <span>Off</span>
+                                </span>
+                              )}
                             </div>
-                            <span className="text-[10px] text-gray-400 font-medium mt-0.5 block">{rate.desc}</span>
+                            <span className={`text-[10px] font-medium mt-0.5 block ${!rate.active ? 'line-through text-gray-400' : 'text-gray-400'}`}>
+                              {rate.desc}
+                            </span>
                           </div>
                         </div>
 
                         {/* Right side controls */}
                         <div className="flex items-center gap-3">
                           {/* Rate Badge */}
-                          <span className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border uppercase tracking-wider ${rateBadgeClass}`}>
+                          <span className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border uppercase tracking-wider transition-all ${
+                            !rate.active 
+                              ? 'bg-gray-100 text-gray-400 border-gray-200 line-through' 
+                              : rateBadgeClass
+                          }`}>
                             {rate.value}
                           </span>
 
                           {/* Eye / Visibility Status Toggle */}
                           <button
-                            onClick={() => handleToggleActive(rate.id)}
+                            onClick={() => handleToggleActive(rate)}
                             className={`p-1.5 rounded-lg border transition-all cursor-pointer active:scale-90 ${
                               rate.active 
                                 ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-600 hover:text-white' 
-                                : 'bg-gray-50 text-gray-450 border-gray-200 hover:bg-gray-200'
+                                : 'bg-red-50 text-red-500 border-red-200 hover:bg-red-500 hover:text-white'
                             }`}
-                            title={rate.active ? "Deactivate Rate" : "Activate Rate"}
+                            title={rate.active ? "Deactivate (Hide from User App)" : "Activate (Show on User App)"}
                           >
                             {rate.active ? <Eye size={12} /> : <EyeOff size={12} />}
                           </button>
@@ -302,7 +364,7 @@ export const GameRatesAdmin = () => {
 
                           {/* Delete Button */}
                           <button
-                            onClick={() => handleDeleteClick(rate.id)}
+                            onClick={() => handleDeleteClick(rate._id || rate.id)}
                             className="p-1.5 bg-red-50 border border-red-200 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all cursor-pointer active:scale-90"
                             title="Delete Rate"
                           >

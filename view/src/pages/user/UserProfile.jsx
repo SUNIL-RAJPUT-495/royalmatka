@@ -28,14 +28,33 @@ export const UserProfile = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
   const context = useOutletContext() || {};
-  const user = context.user || {
-    name: 'Shubham',
-    mobile: '8079003424',
-    walletBalance: 9.0,
-    gamesPlayed: 0,
-    winsCount: 0,
-    createdAt: '17/7/2026'
+
+  // Retrieve user data dynamically from context or localStorage
+  const localUserStr = localStorage.getItem("user_data");
+  let localUser = null;
+  try {
+    if (localUserStr) localUser = JSON.parse(localUserStr);
+  } catch (e) { }
+
+  const candidate = (context.user && context.user.role !== 'Admin') 
+    ? context.user 
+    : (localUser && localUser.role !== 'Admin' ? localUser : null);
+
+  const user = candidate || {
+    name: 'User',
+    mobile: 'N/A',
+    balance: 0,
+    registrationDate: new Date()
   };
+
+  const regDateRaw = user.registrationDate || user.createdAt || new Date();
+  const formattedRegDate = new Date(regDateRaw).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric'
+  });
+
+  const displayBalance = Number(user.balance !== undefined ? user.balance : (user.walletBalance || 0)).toFixed(2);
 
   const onOpenSidebar = context.onOpenSidebar || (() => { });
 
@@ -99,18 +118,22 @@ export const UserProfile = () => {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('user_token');
     localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
     localStorage.removeItem('user_data');
     toast.success('Logged out successfully');
-    window.location.href = '/';
+    window.location.href = '/login';
   };
 
   const handleDeleteAccount = () => {
     if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      localStorage.removeItem('user_token');
       localStorage.removeItem('token');
+      localStorage.removeItem('access_token');
       localStorage.removeItem('user_data');
       toast.success('Account deleted');
-      window.location.href = '/';
+      window.location.href = '/login';
     }
   };
 
@@ -164,7 +187,7 @@ export const UserProfile = () => {
             </div>
             <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium mt-0.5">
               <FaMedal size={11} className="text-amber-500" />
-              <span>Member since {user.createdAt || '17/7/2026'}</span>
+              <span>Member since {formattedRegDate}</span>
             </div>
           </div>
         </div>
@@ -178,7 +201,7 @@ export const UserProfile = () => {
             </div>
             <span className="text-[11px] font-medium text-gray-400">Balance</span>
             <span className="text-sm font-bold text-[#f97316] mt-0.5">
-              ₹{Number(user.walletBalance || 9).toFixed(2)}
+              ₹{displayBalance}
             </span>
           </div>
 

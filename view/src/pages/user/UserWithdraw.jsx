@@ -10,20 +10,77 @@ import {
   FaMobileAlt
 } from 'react-icons/fa';
 import { IoWalletOutline } from 'react-icons/io5';
+import toast from 'react-hot-toast';
 
 export const UserWithdraw = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
   const context = useOutletContext() || {};
-  const user = context.user || { walletBalance: 9.0 };
+
+  const localUserStr = localStorage.getItem("user_data");
+  let localUser = null;
+  try {
+    if (localUserStr) localUser = JSON.parse(localUserStr);
+  } catch (e) { }
+
+  const user = (context.user && context.user.role !== 'Admin')
+    ? context.user
+    : (localUser && localUser.role !== 'Admin' ? localUser : (context.user || localUser || {}));
+
+  const withdrawableBalance = Number(
+    user.wallet?.withdrowalable !== undefined
+      ? user.wallet.withdrowalable
+      : (user.balance !== undefined ? user.balance : (user.walletBalance || 0))
+  );
 
   const [amount, setAmount] = useState('1000');
   const [method, setMethod] = useState('bank'); // 'bank' or 'upi'
-  const [upiId, setUpiId] = useState('');
+  const [upiId, setUpiId] = useState(() => {
+    const primaryUpi = (user.upiIds && user.upiIds.length > 0) ? user.upiIds[0]?.upiId : (user.paymentInfo?.upiId || '');
+    return primaryUpi || '';
+  });
   const [showRules, setShowRules] = useState(false);
 
+  const localBankStr = localStorage.getItem('bank_details');
+  let localBank = null;
+  try { if (localBankStr) localBank = JSON.parse(localBankStr); } catch (e) { }
+
+  const primaryBank = (user.bankAccounts && user.bankAccounts.length > 0)
+    ? (user.bankAccounts.find(b => b.isPrimary) || user.bankAccounts[0])
+    : (user.bankDetails || user.paymentInfo || localBank || null);
+
+  const hasBankDetails = Boolean(
+    primaryBank && (primaryBank.accountNumber || primaryBank.bankName)
+  );
+
   const numAmount = Number(amount);
-  const isValidAmount = numAmount >= 1000 && numAmount <= Number(user.walletBalance || 9);
+  const isValidMethod = method === 'bank' ? hasBankDetails : Boolean(upiId && upiId.trim().length >= 3);
+  const isValidAmount = numAmount > 0 && isValidMethod;
+
+  const handleProceed = () => {
+    if (numAmount < 100) {
+      toast.error('Minimum withdrawal amount is ₹100');
+      return;
+    }
+    if (withdrawableBalance > 0 && numAmount > withdrawableBalance) {
+      toast.error(`Amount exceeds available withdrawable balance (₹${withdrawableBalance.toFixed(2)})`);
+      return;
+    }
+    if (method === 'bank' && !hasBankDetails) {
+      toast.error('Please add bank details first');
+      navigate('/bank-details');
+      return;
+    }
+    if (method === 'upi' && (!upiId || upiId.trim().length < 3)) {
+      toast.error('Please enter a valid UPI ID');
+      return;
+    }
+
+    toast.success('Withdrawal request submitted successfully! 🎉');
+    setTimeout(() => {
+      navigate('/passbook');
+    }, 1000);
+  };
 
   return (
     <div className="w-full select-none pb-8 font-sans">
@@ -52,7 +109,7 @@ export const UserWithdraw = () => {
           <div>
             <span className="text-xs font-semibold text-gray-500">Available Balance</span>
             <div className="text-2xl font-bold text-gray-900 mt-0.5">
-              ₹{Number(user.walletBalance || 9).toFixed(2)}
+              ₹{withdrawableBalance.toFixed(2)}
             </div>
           </div>
 
@@ -156,7 +213,7 @@ export const UserWithdraw = () => {
               />
             </div>
             <div className="text-[10px] font-medium text-gray-400 mt-1">
-              Minimum ₹1000 • Available: ₹{Number(user.walletBalance || 9).toFixed(2)}
+              Minimum ₹1000 • Available: ₹{withdrawableBalance.toFixed(2)}
             </div>
           </div>
 
@@ -196,21 +253,46 @@ export const UserWithdraw = () => {
 
           {/* Field 3: Bank Account / UPI */}
           {method === 'bank' ? (
-            <div
-              onClick={() => navigate('/bank-details')}
-              className="border-2 border-dashed border-gray-200 hover:border-gray-300 rounded-2xl p-3.5 flex items-center gap-3.5 bg-gray-50/60 cursor-pointer transition-colors"
-            >
-              <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 shrink-0">
-                <FaUniversity size={15} />
-              </div>
-              <div>
-                <h5 className="text-xs font-bold text-gray-900">Bank Account</h5>
-                <span className="text-[11px] text-[#f97316] font-semibold flex items-center gap-1 mt-0.5">
-                  <span>Tap to add bank details</span>
+            hasBankDetails ? (
+              <div
+                onClick={() => navigate('/bank-details')}
+                className="border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/70 rounded-2xl p-3.5 flex items-center justify-between cursor-pointer transition-all shadow-2xs"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <FaUniversity size={15} />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-bold text-gray-900">
+                      {primaryBank.bankName || 'Saved Bank Account'}
+                    </h5>
+                    <p className="text-[11px] font-mono font-semibold text-emerald-900 mt-0.5">
+                      A/C: {primaryBank.accountNumber || primaryBank.accNo} {primaryBank.ifscCode ? `• IFSC: ${primaryBank.ifscCode}` : ''}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[11px] text-emerald-700 font-bold flex items-center gap-1 bg-white/90 px-2.5 py-1 rounded-xl border border-emerald-200 shadow-2xs">
+                  <span>Edit</span>
                   <span>→</span>
                 </span>
               </div>
-            </div>
+            ) : (
+              <div
+                onClick={() => navigate('/bank-details')}
+                className="border-2 border-dashed border-gray-200 hover:border-gray-300 rounded-2xl p-3.5 flex items-center gap-3.5 bg-gray-50/60 cursor-pointer transition-colors"
+              >
+                <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 shrink-0">
+                  <FaUniversity size={15} />
+                </div>
+                <div>
+                  <h5 className="text-xs font-bold text-gray-900">Bank Account</h5>
+                  <span className="text-[11px] text-[#f97316] font-semibold flex items-center gap-1 mt-0.5">
+                    <span>Tap to add bank details</span>
+                    <span>→</span>
+                  </span>
+                </div>
+              </div>
+            )
           ) : (
             <div>
               <div className="bg-gray-50/80 rounded-2xl border border-gray-200 p-2 flex items-center gap-2.5 focus-within:border-[#f97316] transition-colors">
@@ -234,11 +316,11 @@ export const UserWithdraw = () => {
           {/* Submit Button */}
           <button
             type="button"
-            disabled={!isValidAmount}
-            className={`w-full py-3.5 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+            onClick={handleProceed}
+            className={`w-full py-3.5 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
               isValidAmount
-                ? 'bg-[#f97316] hover:bg-orange-600 text-white shadow-md cursor-pointer'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                ? 'bg-[#f97316] hover:bg-orange-600 active:scale-98 text-white shadow-md'
+                : 'bg-orange-400/90 text-white shadow-xs'
             }`}
           >
             <FaChevronRight size={10} />

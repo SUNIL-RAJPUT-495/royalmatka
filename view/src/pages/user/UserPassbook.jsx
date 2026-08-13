@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import Axios from '../../utils/axios';
+import SummaryApi from '../../common/SummerAPI';
 import {
   FaArrowLeft,
   FaFileAlt,
@@ -20,9 +22,61 @@ export const UserPassbook = () => {
   // 1. DEFAULT ACTIVE TAB IS 'All'
   const [activeTab, setActiveTab] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [dbTransactions, setDbTransactions] = useState([]);
 
-  // Transactions list matching exact screenshot
-  const allTransactions = [
+  // Fetch transactions from backend
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      setLoading(true);
+      try {
+        const savedUserStr = localStorage.getItem('user_data');
+        let savedUser = null;
+        try { if (savedUserStr) savedUser = JSON.parse(savedUserStr); } catch (e) {}
+
+        const res = await Axios({
+          url: SummaryApi.getUserTransactions.url,
+          method: SummaryApi.getUserTransactions.method,
+          params: { mobile: savedUser?.mobile || '' }
+        });
+
+        if (res.data?.transactions && Array.isArray(res.data.transactions)) {
+          const formatted = res.data.transactions.map((tx, idx) => {
+            const dateStr = tx.createdAt ? new Date(tx.createdAt).toLocaleString('en-IN') : 'Just now';
+            const code = tx.transactionId ? `#${tx.transactionId.slice(-5)}` : `#tx-${idx}`;
+            
+            let category = 'Games';
+            if (tx.type === 'Deposit') category = 'Deposits';
+            else if (tx.type === 'Withdrawal') category = 'Withdrawals';
+            else if (tx.type === 'Bonus') category = 'Bonuses';
+
+            return {
+              id: tx._id || `tx-${idx}`,
+              code,
+              title: `${tx.type || 'Transaction'} ${code}`,
+              date: dateStr,
+              type: tx.type || 'Game',
+              amount: tx.amount,
+              utr: tx.utrNumber || tx.transactionId || 'N/A',
+              status: tx.status || 'Confirmed',
+              category: category,
+              notes: tx.remark || ''
+            };
+          });
+          setDbTransactions(formatted);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch transactions from backend');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
+  // Combined transactions list (Live DB + screenshot fallback data)
+  const allTransactions = dbTransactions.length > 0 ? dbTransactions : [
     {
       id: 'tx-1',
       code: '#be160',

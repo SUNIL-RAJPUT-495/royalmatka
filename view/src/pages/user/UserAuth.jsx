@@ -213,7 +213,12 @@ export const UserAuth = () => {
 
       if (res.data?.success) {
         toast.success("Account Created Successfully! Welcome 🎉");
-        if (res.data.token) localStorage.setItem("token", res.data.token);
+        if (res.data.token) {
+          localStorage.setItem("royal_matka_user", res.data.token);
+          localStorage.setItem("user_token", res.data.token);
+          localStorage.setItem("token", res.data.token);
+          localStorage.setItem("access_token", res.data.token);
+        }
         if (res.data.user) localStorage.setItem("user_data", JSON.stringify(res.data.user));
 
         setTimeout(() => {
@@ -288,7 +293,12 @@ export const UserAuth = () => {
 
       if (res.data?.success) {
         toast.success(res.data.message || "Login Successful! 🎉");
-        if (res.data.token) localStorage.setItem("token", res.data.token);
+        if (res.data.token) {
+          localStorage.setItem("royal_matka_user", res.data.token);
+          localStorage.setItem("user_token", res.data.token);
+          localStorage.setItem("token", res.data.token);
+          localStorage.setItem("access_token", res.data.token);
+        }
         if (res.data.user) localStorage.setItem("user_data", JSON.stringify(res.data.user));
 
         setTimeout(() => {
@@ -322,7 +332,12 @@ export const UserAuth = () => {
 
       if (res.data?.success) {
         toast.success("Login Successful! 🎉");
-        if (res.data.token) localStorage.setItem("token", res.data.token);
+        if (res.data.token) {
+          localStorage.setItem("royal_matka_user", res.data.token);
+          localStorage.setItem("user_token", res.data.token);
+          localStorage.setItem("token", res.data.token);
+          localStorage.setItem("access_token", res.data.token);
+        }
         if (res.data.user) localStorage.setItem("user_data", JSON.stringify(res.data.user));
 
         setTimeout(() => {

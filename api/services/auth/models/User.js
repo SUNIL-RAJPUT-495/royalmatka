@@ -26,6 +26,18 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  wallet: {
+    withdrowalable: {
+      type: Number,
+      default: 0,
+      description: "Money deposited or won by the user"
+    },
+    bonusBalance: {
+      type: Number,
+      default: 0,
+      description: "Bonus money from referrals or signup"
+    }
+  },
   role: {
     type: String,
     enum: ["User", "Admin"],
@@ -70,7 +82,25 @@ const userSchema = new mongoose.Schema({
   referralEarnings: {
     type: Number,
     default: 0
-  }
+  },
+  bankAccounts: [
+    {
+      bankName: { type: String, trim: true },
+      accountHolderName: { type: String, trim: true },
+      accountNumber: { type: String, trim: true },
+      ifscCode: { type: String, uppercase: true, trim: true },
+      isPrimary: { type: Boolean, default: false },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ],
+  upiIds: [
+    {
+      upiId: { type: String, trim: true },
+      provider: { type: String, default: "UPI" },
+      isPrimary: { type: Boolean, default: false },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ]
 }, { timestamps: true });
 
 export const User = mongoose.model("User", userSchema);
