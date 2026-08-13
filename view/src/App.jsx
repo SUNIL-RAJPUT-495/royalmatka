@@ -60,63 +60,71 @@ import { NotificationSender } from "./pages/admin/NotificationSender";
 import { AdminNotificationSettings } from "./pages/admin/AdminNotificationSettings";
 import { AdminChat } from "./pages/admin/AdminChat";
 import { AdminLogin } from "./pages/admin/AdminLogin";
+import { UserAuth } from "./pages/user/UserAuth";
 import { AdminProtectedRoute, UserProtectedRoute } from "./components/routes/ProtectedRoute";
 function App() {
   return (
     <ThemeProvider>
       <BrowserRouter>
         <Routes>
-          {/* 1. USER APP ROUTES (WRAPPED IN USER LAYOUT) */}
-          <Route element={<UserLayout />}>
-            <Route path="/" element={<UserHome />} />
-            <Route path="/home" element={<UserHome />} />
-            <Route path="/wallet" element={<UserWallet />} />
-            <Route path="/deposit" element={<UserDeposit />} />
-            <Route path="/add-fund" element={<UserDeposit />} />
-            <Route path="/withdraw" element={<UserWithdraw />} />
-            <Route path="/bank-details" element={<UserBankDetails />} />
-            <Route path="/my-bids" element={<UserBids />} />
-            <Route path="/mybids" element={<UserBids />} />
-            <Route path="/bids" element={<UserBids />} />
-            <Route path="/game-history" element={<UserBidsHub />} />
-            <Route path="/gamehistory" element={<UserBidsHub />} />
-            <Route path="/bids-hub" element={<UserBidsHub />} />
-            <Route path="/bids-menu" element={<UserBidsHub />} />
-            <Route path="/bids-history" element={<UserBidsHistory />} />
-            <Route path="/casino" element={<UserCasino />} />
-            <Route path="/play-game/:marketName" element={<UserGameModes />} />
-            <Route path="/game-modes/:marketName" element={<UserGameModes />} />
-            <Route path="/market-games/:marketName" element={<UserGameModes />} />
-            <Route path="/charts" element={<UserCharts />} />
-            <Route path="/charts-list" element={<UserCharts />} />
-            <Route path="/how-to-play" element={<UserHowToPlay />} />
-            <Route path="/mpin-settings" element={<UserMpinSettings />} />
-            <Route path="/security-settings" element={<UserMpinSettings />} />
-            <Route path="/contact-us" element={<UserContactUs />} />
-            <Route path="/support" element={<UserContactUs />} />
-            <Route path="/notifications" element={<UserNotificationSettings />} />
-            <Route path="/notification-settings" element={<UserNotificationSettings />} />
-            <Route path="/all-withdrawals" element={<UserWithdrawalsFeed />} />
-            <Route path="/live-withdrawals" element={<UserWithdrawalsFeed />} />
-            <Route path="/withdrawals-feed" element={<UserWithdrawalsFeed />} />
-            <Route path="/profile" element={<UserProfile />} />
-            <Route path="/tips" element={<UserWinningTips />} />
-            <Route path="/winning-tips" element={<UserWinningTips />} />
-            <Route path="/passbook" element={<UserPassbook />} />
-            <Route path="/transaction-history" element={<UserPassbook />} />
-            <Route path="/game-rates" element={<UserGameRates />} />
-            <Route path="/JackpotGali" element={<UserJackpotGali />} />
-            <Route path="/jackpot-gali" element={<UserJackpotGali />} />
-            <Route path="/gali-bazar" element={<UserJackpotGali />} />
-            <Route path="/starline" element={<UserStarline />} />
-            <Route path="/starline-markets" element={<UserStarline />} />
-            <Route path="/Jackpot" element={<UserJackpot />} />
-            <Route path="/jackpot" element={<UserJackpot />} />
-          </Route>
+          {/* USER AUTH ROUTES */}
+          <Route path="/login" element={<UserAuth />} />
+          <Route path="/register" element={<UserAuth />} />
+          <Route path="/signup" element={<UserAuth />} />
 
-          {/* 2. STANDALONE FULLSCREEN AVIATOR GAME ROUTE */}
-          <Route path="/aviator" element={<Aviator />} />
-          <Route path="/game/aviator" element={<Aviator />} />
+          {/* 1. PROTECTED USER APP ROUTES */}
+          <Route element={<UserProtectedRoute />}>
+            <Route element={<UserLayout />}>
+              <Route path="/" element={<UserHome />} />
+              <Route path="/home" element={<UserHome />} />
+              <Route path="/wallet" element={<UserWallet />} />
+              <Route path="/deposit" element={<UserDeposit />} />
+              <Route path="/add-fund" element={<UserDeposit />} />
+              <Route path="/withdraw" element={<UserWithdraw />} />
+              <Route path="/bank-details" element={<UserBankDetails />} />
+              <Route path="/my-bids" element={<UserBids />} />
+              <Route path="/mybids" element={<UserBids />} />
+              <Route path="/bids" element={<UserBids />} />
+              <Route path="/game-history" element={<UserBidsHub />} />
+              <Route path="/gamehistory" element={<UserBidsHub />} />
+              <Route path="/bids-hub" element={<UserBidsHub />} />
+              <Route path="/bids-menu" element={<UserBidsHub />} />
+              <Route path="/bids-history" element={<UserBidsHistory />} />
+              <Route path="/casino" element={<UserCasino />} />
+              <Route path="/play-game/:marketName" element={<UserGameModes />} />
+              <Route path="/game-modes/:marketName" element={<UserGameModes />} />
+              <Route path="/market-games/:marketName" element={<UserGameModes />} />
+              <Route path="/charts" element={<UserCharts />} />
+              <Route path="/charts-list" element={<UserCharts />} />
+              <Route path="/how-to-play" element={<UserHowToPlay />} />
+              <Route path="/mpin-settings" element={<UserMpinSettings />} />
+              <Route path="/security-settings" element={<UserMpinSettings />} />
+              <Route path="/contact-us" element={<UserContactUs />} />
+              <Route path="/support" element={<UserContactUs />} />
+              <Route path="/notifications" element={<UserNotificationSettings />} />
+              <Route path="/notification-settings" element={<UserNotificationSettings />} />
+              <Route path="/all-withdrawals" element={<UserWithdrawalsFeed />} />
+              <Route path="/live-withdrawals" element={<UserWithdrawalsFeed />} />
+              <Route path="/withdrawals-feed" element={<UserWithdrawalsFeed />} />
+              <Route path="/profile" element={<UserProfile />} />
+              <Route path="/tips" element={<UserWinningTips />} />
+              <Route path="/winning-tips" element={<UserWinningTips />} />
+              <Route path="/passbook" element={<UserPassbook />} />
+              <Route path="/transaction-history" element={<UserPassbook />} />
+              <Route path="/game-rates" element={<UserGameRates />} />
+              <Route path="/JackpotGali" element={<UserJackpotGali />} />
+              <Route path="/jackpot-gali" element={<UserJackpotGali />} />
+              <Route path="/gali-bazar" element={<UserJackpotGali />} />
+              <Route path="/starline" element={<UserStarline />} />
+              <Route path="/starline-markets" element={<UserStarline />} />
+              <Route path="/Jackpot" element={<UserJackpot />} />
+              <Route path="/jackpot" element={<UserJackpot />} />
+            </Route>
+
+            {/* 2. STANDALONE FULLSCREEN AVIATOR GAME ROUTE */}
+            <Route path="/aviator" element={<Aviator />} />
+            <Route path="/game/aviator" element={<Aviator />} />
+          </Route>
 
           {/* 3. ADMIN LOGIN ROUTES */}
           <Route path="/admin/login" element={<AdminLogin />} />

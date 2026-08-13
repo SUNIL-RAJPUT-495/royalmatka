@@ -11,15 +11,15 @@ const getSocketUrl = () => {
     const hostname = window.location.hostname;
     const protocol = window.location.protocol === "https:" ? "https:" : "http:";
     if (hostname === "localhost" || hostname === "127.0.0.1") {
-      return `${protocol}//${hostname}:5000`;
+      return `${protocol}//${hostname}:5010`;
     }
   }
 
-  const socketBase = SummaryApi.aviatorSocket?.url || baseURL || "http://localhost:5000";
+  const socketBase = SummaryApi.aviatorSocket?.url || baseURL || "http://localhost:5010";
   if (socketBase && (socketBase.startsWith("http://") || socketBase.startsWith("https://"))) {
     return socketBase;
   }
-  return "http://localhost:5000";
+  return "http://localhost:5010";
 };
 
 // Zero-dependency Event-driven Socket Client with auto-reconnect

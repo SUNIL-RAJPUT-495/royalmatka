@@ -95,7 +95,7 @@ app.use((req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5010;
 
 // Start Express HTTP Server
 const server = app.listen(PORT, () => {

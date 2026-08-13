@@ -18,18 +18,14 @@ export const AdminProtectedRoute = () => {
   return <Outlet />;
 };
 
-/**
- * Protected Route for User Account / Sensitive actions
- * Restricts access to /wallet, /withdraw, /deposit, etc.
- */
 export const UserProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  const userData = localStorage.getItem('user_data');
   const userToken = localStorage.getItem('user_token');
-  const isUserLoggedIn = localStorage.getItem('is_user_logged_in') === 'true' || Boolean(localStorage.getItem('user_mobile'));
+  const isUserLoggedIn = Boolean(token || userData || userToken);
 
-  // If user is not logged in, allow demo preview or redirect to home
-  if (!userToken && !isUserLoggedIn) {
-    // Return children for now to support seamless demo browsing, but show toast warning on restricted action
-    return children ? children : <Outlet />;
+  if (!isUserLoggedIn) {
+    return <Navigate to="/login" replace />;
   }
 
   return children ? children : <Outlet />;

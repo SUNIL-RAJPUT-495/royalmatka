@@ -9,6 +9,18 @@ const SummaryApi = {
         url: baseURL + "/api/user/create-user",
         method: "post"
     },
+    sendOtp: {
+        url: baseURL + "/api/user/send-otp",
+        method: "post"
+    },
+    verifyOtp: {
+        url: baseURL + "/api/user/verify-otp",
+        method: "post"
+    },
+    loginOtp: {
+        url: baseURL + "/api/user/login-otp",
+        method: "post"
+    },
     loginUser: {
         url: baseURL + "/api/user/login-user",
         method: "post"
