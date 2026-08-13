@@ -7,17 +7,70 @@ export const WelcomePopup = () => {
   const { currentTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
 
+  // Load welcome popup configuration from local storage
+  const [config, setConfig] = useState(() => {
+    const saved = localStorage.getItem('welcome_popup_config');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+    return {
+      enabled: true,
+      eliteLabel: 'Elite Experience',
+      headingLine: 'WELCOME TO',
+      brandName: 'Royal 1008',
+      trustBadgeText: "INDIA'S #1 TRUSTED APP",
+      ratesHeading: 'Live Payout Rates',
+      ratesSubLabel: '10 Ka Rate',
+      ctaButtonText: 'Start Playing Now',
+      footerLine1: 'Authorized Gaming Environment',
+      footerLine2: 'Target your success with Royal Matka 🎯',
+      heroDescription: 'Play safely with trusted rates and transparent payout rules.',
+      ratesDescription: 'Below rates are for quick reference. Please verify before placing bids.',
+      highlights: ['Fast support', 'Secure wallet', 'Instant updates'],
+      notes: ['KYC required for withdrawals.', 'Play responsibly.'],
+      statCards: [
+        { label: 'MIN DEPOSIT', value: '₹100', color: 'emerald' },
+        { label: 'MIN WITHDRAW', value: '₹1000', color: 'blue' },
+        { label: 'MIN BID POINT', value: '₹10', color: 'amber' },
+        { label: 'WITHDRAWAL', value: '6AM - 5PM', color: 'rose' }
+      ]
+    };
+  });
+
   const isGreenTheme = currentTheme?.id?.includes('green') || currentTheme?.headerBgColor === '#447668';
   const themeColor = currentTheme?.headerBgColor || (isGreenTheme ? '#447668' : '#f95e07');
 
   useEffect(() => {
-    // Show only once per browser session
-    const hasShown = sessionStorage.getItem('welcome_popup_shown');
-    if (!hasShown) {
-      setIsOpen(true);
-      sessionStorage.setItem('welcome_popup_shown', 'true');
+    // Listen for storage events (if admin changes config on another page)
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('welcome_popup_config');
+      if (saved) {
+        try {
+          setConfig(JSON.parse(saved));
+        } catch (e) {}
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    // Initial check for status
+    if (config.enabled) {
+      const hasShown = sessionStorage.getItem('welcome_popup_shown');
+      if (!hasShown) {
+        setIsOpen(true);
+        sessionStorage.setItem('welcome_popup_shown', 'true');
+      }
+    } else {
+      setIsOpen(false);
     }
-  }, []);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [config.enabled]);
 
   if (!isOpen) return null;
 
@@ -47,87 +100,69 @@ export const WelcomePopup = () => {
 
           {/* Sub-banner */}
           <div className="text-[10px] tracking-widest font-extrabold text-white/80 uppercase">
-            ✦ ELITE EXPERIENCE ✦
+            {config.eliteLabel}
           </div>
 
           {/* Welcome Title */}
           <h2 className="text-xl font-extrabold tracking-tight uppercase mt-1">
-            WELCOME TO
+            {config.headingLine}
           </h2>
 
           {/* Brand Name (Italicized Golden Highlight) */}
           <h1 className="text-4xl font-black italic tracking-tight text-yellow-300 drop-shadow-md mt-1">
-            Royal 1008
+            {config.brandName}
           </h1>
 
           {/* Trusted Badge */}
           <div className="bg-white/15 px-4 py-1.5 rounded-full border border-white/25 flex items-center gap-1.5 justify-center mt-3.5 shadow-2xs">
             <FaShieldAlt className="text-yellow-300" size={11} />
             <span className="text-[9px] font-extrabold tracking-wider text-white uppercase">
-              INDIA'S #1 TRUSTED APP
+              {config.trustBadgeText}
             </span>
           </div>
 
           {/* Description */}
           <p className="text-white/90 text-xs font-medium max-w-[270px] mt-4 leading-relaxed">
-            Play safely with trusted rates and transparent payout rules.
+            {config.heroDescription}
           </p>
         </div>
 
         {/* 2. STATS GRID (2x2 Boxes with Thick Dark Borders & Hover Wiggle) */}
         <div className="grid grid-cols-2 gap-3.5 px-5 pt-5.5">
-          {/* Box 1: Min Deposit */}
-          <div className="bg-white border-2 border-black rounded-[20px] py-4 px-2 text-center shadow-xs flex flex-col justify-center min-h-[80px] hover-wiggle hover:bg-emerald-50/65 cursor-pointer">
-            <span className="text-[10px] font-black text-emerald-650 uppercase tracking-wider">
-              MIN DEPOSIT
-            </span>
-            <span className="text-base font-black text-emerald-600 mt-1">
-              ₹100
-            </span>
-          </div>
+          {config.statCards.map((card, i) => {
+            let bgHoverClass = 'hover:bg-emerald-50/65';
+            let textClass = 'text-emerald-600';
+            if (card.color === 'blue') {
+              bgHoverClass = 'hover:bg-blue-50/65';
+              textClass = 'text-blue-600';
+            } else if (card.color === 'amber') {
+              bgHoverClass = 'hover:bg-orange-50/65';
+              textClass = 'text-[#f95e07]';
+            } else if (card.color === 'rose') {
+              bgHoverClass = 'hover:bg-rose-50/65';
+              textClass = 'text-rose-650';
+            }
 
-          {/* Box 2: Min Withdraw */}
-          <div className="bg-white border-2 border-black rounded-[20px] py-4 px-2 text-center shadow-xs flex flex-col justify-center min-h-[80px] hover-wiggle hover:bg-blue-50/65 cursor-pointer">
-            <span className="text-[10px] font-black text-blue-600 uppercase tracking-wider">
-              MIN WITHDRAW
-            </span>
-            <span className="text-base font-black text-blue-600 mt-1">
-              ₹1000
-            </span>
-          </div>
-
-          {/* Box 3: Min Bid Point */}
-          <div className="bg-white border-2 border-black rounded-[20px] py-4 px-2 text-center shadow-xs flex flex-col justify-center min-h-[80px] hover-wiggle hover:bg-orange-50/65 cursor-pointer">
-            <span className="text-[10px] font-black text-[#ea580c] uppercase tracking-wider">
-              MIN BID POINT
-            </span>
-            <span className="text-base font-black text-[#f95e07] mt-1">
-              ₹10
-            </span>
-          </div>
-
-          {/* Box 4: Withdrawal Time */}
-          <div className="bg-white border-2 border-black rounded-[20px] py-4 px-2 text-center shadow-xs flex flex-col justify-center min-h-[80px] hover-wiggle hover:bg-rose-50/65 cursor-pointer">
-            <span className="text-[10px] font-black text-rose-500 uppercase tracking-wider">
-              WITHDRAWAL
-            </span>
-            <span className="text-[12px] font-black text-rose-650 mt-1">
-              6AM - 5PM
-            </span>
-          </div>
+            return (
+              <div key={i} className={`bg-white border-2 border-black rounded-[20px] py-4 px-2 text-center shadow-xs flex flex-col justify-center min-h-[80px] hover-wiggle ${bgHoverClass} cursor-pointer`}>
+                <span className={`text-[10px] font-black uppercase tracking-wider ${textClass}`}>
+                  {card.label}
+                </span>
+                <span className={`text-base font-black ${textClass} mt-1`}>
+                  {card.value}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         {/* 3. FEATURE PILLS */}
         <div className="flex items-center justify-between gap-1.5 px-5 pt-4">
-          <span className="bg-orange-50/60 text-[#ea580c] text-[10px] font-extrabold py-1 rounded-full border border-orange-100/70 flex-1 text-center shadow-2xs">
-            Fast support
-          </span>
-          <span className="bg-orange-50/60 text-[#ea580c] text-[10px] font-extrabold py-1 rounded-full border border-orange-100/70 flex-1 text-center shadow-2xs">
-            Secure wallet
-          </span>
-          <span className="bg-orange-50/60 text-[#ea580c] text-[10px] font-extrabold py-1 rounded-full border border-orange-100/70 flex-1 text-center shadow-2xs">
-            Instant updates
-          </span>
+          {config.highlights.map((hl, i) => (
+            <span key={i} className="bg-orange-50/60 text-[#ea580c] text-[10px] font-extrabold py-1.5 rounded-full border border-orange-100/70 flex-1 text-center shadow-2xs truncate px-1">
+              {hl}
+            </span>
+          ))}
         </div>
 
         {/* 4. LIVE PAYOUT RATES CARD */}
@@ -137,11 +172,11 @@ export const WelcomePopup = () => {
             <div className="flex items-center gap-1.5">
               <span className="text-xs">📈</span>
               <h3 className="font-extrabold text-[10px] text-gray-900 tracking-wide">
-                LIVE PAYOUT RATES
+                {config.ratesHeading}
               </h3>
             </div>
             <span className="bg-gray-100 text-gray-500 text-[9px] font-bold px-2 py-0.5 rounded-md">
-              10 Ka Rate
+              {config.ratesSubLabel}
             </span>
           </div>
 
@@ -176,7 +211,7 @@ export const WelcomePopup = () => {
 
           {/* Mini disclaimer */}
           <p className="text-[9px] text-gray-400 font-medium text-center leading-normal">
-            Below rates are for quick reference. Please verify before placing bids.
+            {config.ratesDescription}
           </p>
         </div>
 
@@ -186,12 +221,11 @@ export const WelcomePopup = () => {
             IMPORTANT NOTES
           </span>
           <div className="space-y-1">
-            <p className="text-[10px] text-emerald-800 font-bold flex items-center gap-1.5">
-              <span>•</span> KYC required for withdrawals.
-            </p>
-            <p className="text-[10px] text-emerald-800 font-bold flex items-center gap-1.5">
-              <span>•</span> Play responsibly.
-            </p>
+            {config.notes.map((note, i) => (
+              <p key={i} className="text-[10px] text-emerald-800 font-bold flex items-center gap-1.5">
+                <span>•</span> {note}
+              </p>
+            ))}
           </div>
         </div>
 
@@ -203,7 +237,7 @@ export const WelcomePopup = () => {
             style={{ backgroundColor: themeColor }}
             className="w-full text-white font-extrabold text-xs tracking-wider py-3.5 rounded-2xl shadow-md flex items-center justify-center gap-2 hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer uppercase"
           >
-            <span>⭐ START PLAYING NOW</span>
+            <span>⭐ {config.ctaButtonText}</span>
             <span className="text-[10px]">▶</span>
           </button>
         </div>
@@ -211,10 +245,10 @@ export const WelcomePopup = () => {
         {/* 7. FOOTER BRAND BRANDING */}
         <div className="text-center px-5 pt-3.5 pb-5">
           <span className="text-[9px] font-extrabold text-gray-400 tracking-widest uppercase block">
-            AUTHORIZED GAMING ENVIRONMENT
+            {config.footerLine1}
           </span>
           <p className="text-[10px] text-gray-500 font-bold mt-2">
-            ⚡ Target your success with <span className="text-[#ea580c] font-black">Royal Matka</span> 🎯
+            ⚡ {config.footerLine2}
           </p>
         </div>
 

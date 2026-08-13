@@ -32,7 +32,26 @@ import { AddGame } from "./pages/admin/AddGame";
 import { AdminBid } from "./components/admin/AdminBid";
 import { MatkaResults } from "./pages/admin/MatkaResults";
 import { ThemeSettings } from "./pages/admin/ThemeSettings";
-
+import { AdminAccessManager } from "./pages/admin/AdminAccessManager";
+import { WelcomePopupAdmin } from "./pages/admin/WelcomePopupAdmin";
+import { AdminHowToPlay } from "./pages/admin/AdminHowToPlay";
+import { ContactManagement } from "./pages/admin/ContactManagement";
+import { UpiSettings } from "./pages/admin/UpiSettings";
+import { ReportsPage } from "./pages/admin/ReportsPage";
+import { AccountDeletionRequests } from "./pages/admin/AccountDeletionRequests";
+import { TipsAdmin } from "./pages/admin/TipsAdmin";
+import { WinnersHistory } from "./pages/admin/WinnersHistory";
+import { UsersList } from "./pages/admin/UsersList";
+import { ViewUser } from "./pages/admin/ViewUser";
+import { BonusManagementPage } from "./pages/admin/BonusManagementPage";
+import { AdminReferralsPage } from "./pages/admin/AdminReferralsPage";
+import { CommissionManagement } from "./pages/admin/CommissionManagement";
+import { WithdrawalManagement } from "./pages/admin/WithdrawalManagement";
+import { WithdrawalRequestsPage } from "./pages/admin/WithdrawalRequestsPage";
+import { DepositRequestsManagement } from "./pages/admin/DepositRequestsManagement";
+import { JackpotGaliBids } from "./pages/admin/JackpotGaliBids";
+import { JackpotGaliResults } from "./pages/admin/JackpotGaliResults";
+import { StarLineAdmin } from "./pages/admin/StarLineAdmin";
 function App() {
   return (
     <ThemeProvider>
@@ -98,11 +117,47 @@ function App() {
             <Route path="matka-results" element={<MatkaResults />} />
             <Route path="ResultDecleare" element={<MatkaResults />} />
             <Route path="theme-settings" element={<ThemeSettings />} />
+            <Route path="AdminAccessManager" element={<AdminAccessManager />} />
+            <Route path="admin-access" element={<AdminAccessManager />} />
+            <Route path="welcome-popup" element={<WelcomePopupAdmin />} />
+            <Route path="WelcomePopupAdmin" element={<WelcomePopupAdmin />} />
+            <Route path="how-to-play" element={<AdminHowToPlay />} />
+            <Route path="AdminHowToPlay" element={<AdminHowToPlay />} />
+            <Route path="contact-management" element={<ContactManagement />} />
+            <Route path="ContactManagement" element={<ContactManagement />} />
+            <Route path="contact" element={<ContactManagement />} />
+            <Route path="upi" element={<UpiSettings />} />
+            <Route path="upi-settings" element={<UpiSettings />} />
+            <Route path="AdminUpiSettings" element={<UpiSettings />} />
+            <Route path="reports" element={<ReportsPage />} />
+            <Route path="ReportsPage" element={<ReportsPage />} />
+            <Route path="reports-history" element={<ReportsPage />} />
+            <Route path="delete-requests" element={<AccountDeletionRequests />} />
+            <Route path="AccountDeletionRequests" element={<AccountDeletionRequests />} />
+            <Route path="tips-panel" element={<TipsAdmin />} />
+            <Route path="TipsAdmin" element={<TipsAdmin />} />
+            <Route path="WinnersHistory" element={<WinnersHistory />} />
+            <Route path="WinnersLosersHistory" element={<WinnersHistory />} />
+            <Route path="users" element={<UsersList />} />
+            <Route path="view-user/:id" element={<ViewUser />} />
+            <Route path="view-user" element={<Navigate to="/systum/users" replace />} />
+            <Route path="bonus" element={<BonusManagementPage />} />
+            <Route path="referal" element={<AdminReferralsPage />} />
+            <Route path="AdminReferralsPage" element={<AdminReferralsPage />} />
+            <Route path="commission" element={<CommissionManagement />} />
+            <Route path="admin-comission" element={<CommissionManagement />} />
+            <Route path="all-withdrawals" element={<WithdrawalManagement />} />
+            <Route path="allfw" element={<WithdrawalManagement />} />
+            <Route path="Payment" element={<DepositRequestsManagement />} />
+            <Route path="Withdraw" element={<WithdrawalRequestsPage />} />
+            <Route path="jackpot-gali-bids" element={<JackpotGaliBids />} />
+            <Route path="jackpotgali-bids" element={<JackpotGaliBids />} />
+            <Route path="jackpot-gali-results" element={<JackpotGaliResults />} />
+            <Route path="jackpotgaliResult" element={<JackpotGaliResults />} />
+            <Route path="starline" element={<StarLineAdmin />} />
+            <Route path="jackpotgali" element={<StarLineAdmin />} />
+            <Route path="jackpot-gali" element={<StarLineAdmin />} />
           </Route>
-
-          {/* Top level alias redirects */}
-          <Route path="/matka-results" element={<Navigate to="/systum/matka-results" replace />} />
-          <Route path="/theme-settings" element={<Navigate to="/systum/theme-settings" replace />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

@@ -34,22 +34,22 @@ export const AdminSideBar = ({ closeSidebar }) => {
                 { icons: FaPercent, itemsDetails: "Game Rates", link: "game-rates" },
             ]
         },
-        {
-            heading: "Starline Games",
-            items: [
-                { icons: FaStar, itemsDetails: "Starline Game", link: "starline-game" },
-                { icons: MdScoreboard, itemsDetails: "Starline Results", link: "starline-results" },
-                { icons: GiDiceSixFacesThree, itemsDetails: "Starline Bids", link: "starline-bids" },
-            ]
-        },
-        {
-            heading: "Jackpot Games",
-            items: [
-                { icons: FaDice, itemsDetails: "Jackpot Game", link: "jackpot-game" },
-                { icons: FaCrown, itemsDetails: "Jackpot Results", link: "jackpot-results" },
-                { icons: GiCardPick, itemsDetails: "Jackpot Bids", link: "jackpot-bids" },
-            ]
-        },
+        // {
+        //     heading: "Starline Games",
+        //     items: [
+        //         { icons: FaStar, itemsDetails: "Starline Game", link: "starline-game" },
+        //         { icons: MdScoreboard, itemsDetails: "Starline Results", link: "starline-results" },
+        //         { icons: GiDiceSixFacesThree, itemsDetails: "Starline Bids", link: "starline-bids" },
+        //     ]
+        // },
+        // {
+        //     heading: "Jackpot Games",
+        //     items: [
+        //         { icons: FaDice, itemsDetails: "Jackpot Game", link: "jackpot-game" },
+        //         { icons: FaCrown, itemsDetails: "Jackpot Results", link: "jackpot-results" },
+        //         { icons: GiCardPick, itemsDetails: "Jackpot Bids", link: "jackpot-bids" },
+        //     ]
+        // },
         {
             heading: "Jackpot Gali",
             items: [
