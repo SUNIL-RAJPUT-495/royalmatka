@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { UserNavbar } from '../components/user/UserNavbar';
 import { SideBar } from '../pages/user/SideBar';
 import { UserBottomNav } from '../components/user/UserBottomNav';
+import { WelcomePopup } from '../components/user/WelcomePopup';
 import Axios from '../utils/axios';
 import SummaryApi from '../common/SummerAPI';
 
@@ -67,6 +68,9 @@ export const UserLayout = () => {
 
       {/* 4. FIXED 5-BUTTON BOTTOM NAVIGATION BAR (FOOTER) */}
       <UserBottomNav />
+
+      {/* 5. WELCOME POPUP MODAL (ONCE PER SESSION) */}
+      <WelcomePopup />
     </div>
   );
 };
