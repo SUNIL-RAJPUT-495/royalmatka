@@ -1,37 +1,45 @@
 class SocketManager {
+  constructor() {
+    this.wss = null;
+  }
 
-    constructor() {
-        this.io = null;
-    }
+  initialize(wss) {
+    this.wss = wss;
+    console.log("📡 SocketManager initialized with WebSocket Server");
+  }
 
-    initialize(io) {
-        this.io = io;
-    }
+  emit(event, data) {
+    if (!this.wss) return;
+    const message = JSON.stringify({ event, data });
+    this.wss.clients.forEach((client) => {
+      if (client.readyState === 1) { // 1 = OPEN
+        try {
+          client.send(message);
+        } catch (err) {
+          console.warn("Error sending message to client:", err);
+        }
+      }
+    });
+  }
 
-    emit(event, data) {
+  emitTo(socketId, event, data) {
+    if (!this.wss) return;
+    const message = JSON.stringify({ event, data });
+    this.wss.clients.forEach((client) => {
+      if (client.id === socketId && client.readyState === 1) {
+        try {
+          client.send(message);
+        } catch (err) {
+          console.warn(`Error sending message to client ${socketId}:`, err);
+        }
+      }
+    });
+  }
 
-        if (!this.io) return;
-
-        this.io.emit(event, data);
-
-    }
-
-    emitTo(socketId, event, data) {
-
-        if (!this.io) return;
-
-        this.io.to(socketId).emit(event, data);
-
-    }
-
-    emitRoom(room, event, data) {
-
-        if (!this.io) return;
-
-        this.io.to(room).emit(event, data);
-
-    }
-
+  emitRoom(room, event, data) {
+    // Treat room emission as a general broadcast for simple local integration
+    this.emit(event, data);
+  }
 }
 
 export default new SocketManager();

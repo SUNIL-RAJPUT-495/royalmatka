@@ -1,4 +1,3 @@
-
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -6,8 +5,17 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
+import http from "http";
+
+import connectDB from "./config/db.js";
+import authRoutes from "./services/auth/routes/auth.routes.js";
+import initializeAviatorSockets from "./services/aviator/socket/index.js";
+import GameEngine from "./services/aviator/game/GameEngine.js";
 
 dotenv.config();
+
+// Connect Database
+connectDB();
 
 const app = express();
 
@@ -27,6 +35,9 @@ const limiter = rateLimit({
 });
 
 app.use("/api", limiter);
+
+// Mount API routes
+app.use("/api/user", authRoutes);
 
 // Test Route
 app.get("/", (req, res) => {
@@ -64,6 +75,17 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+// Start Express HTTP Server
+const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+});
+
+// Start Dedicated WebSocket Server on port 8082 for Aviator Game Loop
+const socketServer = http.createServer(app);
+initializeAviatorSockets(socketServer);
+socketServer.listen(8082, () => {
+  console.log("🎮 Aviator WebSocket Server running on port 8082");
+  
+  // Initialize and start the Game loop engine
+  GameEngine.start();
 });
