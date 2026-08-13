@@ -4,7 +4,7 @@ import {
     FaUserShield, FaTrophy, FaStar, FaDice, FaCrown, FaMoneyBillWave,
     FaHandHoldingUsd, FaUsersCog, FaLightbulb, FaUserTimes, FaFileAlt,
     FaComments, FaBell, FaPalette, FaPhoneAlt, FaQuestionCircle,
-    FaCreditCard, FaChartPie, FaQrcode, FaCheckCircle, FaPercent
+    FaCreditCard, FaChartPie, FaQrcode, FaCheckCircle, FaPercent, FaRocket
 } from "react-icons/fa";
 import { 
     MdDashboard, MdGames, MdScoreboard, MdHistory, MdPersonRemove, 
