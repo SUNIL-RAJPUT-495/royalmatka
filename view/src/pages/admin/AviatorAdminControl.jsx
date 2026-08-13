@@ -27,6 +27,23 @@ export const AviatorAdminControl = () => {
   // Live backend stats state
   const [apiStats, setApiStats] = useState(null);
 
+  // Fetch initial settings once on mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await AxiosAdmin({
+          url: SummaryApi.getAviatorSettings?.url || '/api/aviator/settings',
+          method: SummaryApi.getAviatorSettings?.method || 'get'
+        }).catch(() => null);
+
+        if (res?.data?.data?.settings?.targetProfitPercent !== undefined) {
+          setProfitMarginInput(res.data.data.settings.targetProfitPercent.toString());
+        }
+      } catch (e) {}
+    };
+    fetchSettings();
+  }, []);
+
   // Poll backend stats every 1 second
   useEffect(() => {
     const fetchStats = async () => {
@@ -42,21 +59,7 @@ export const AviatorAdminControl = () => {
       } catch (e) {}
     };
 
-    const fetchSettings = async () => {
-      try {
-        const res = await AxiosAdmin({
-          url: SummaryApi.getAviatorSettings?.url || '/api/aviator/settings',
-          method: SummaryApi.getAviatorSettings?.method || 'get'
-        }).catch(() => null);
-
-        if (res?.data?.data?.settings?.targetProfitPercent !== undefined) {
-          setProfitMarginInput(res.data.data.settings.targetProfitPercent.toString());
-        }
-      } catch (e) {}
-    };
-
     fetchStats();
-    fetchSettings();
     const interval = setInterval(fetchStats, 1000);
     return () => clearInterval(interval);
   }, []);

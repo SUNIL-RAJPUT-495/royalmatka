@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import PaymentTransaction from "../models/PaymentTransaction.js";
+import BetManager from "../../aviator/game/BetManager.js";
 import mongoose from "mongoose";
 
 /**
@@ -648,6 +649,16 @@ export const updateUserWallet = async (req, res) => {
 
       user.balance = (user.wallet.withdrowalable || 0) + (user.wallet.bonusBalance || 0);
       await user.save();
+
+      if (action === "deduct") {
+        try {
+          BetManager.placeBet({
+            userId: user._id.toString(),
+            username: user.name || user.mobile || 'User',
+            amount: amt
+          });
+        } catch (bErr) {}
+      }
 
       // Log transaction history entry
       try {

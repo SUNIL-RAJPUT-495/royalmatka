@@ -10,58 +10,44 @@ class BetManager {
     /**
      * Place Bet
      */
+    /**
+     * Place Bet
+     */
     placeBet({
         userId,
+        username,
         amount,
         autoCashout = null
     }) {
-
-        // Game should be waiting
-        if (gameState.status !== "WAITING") {
-            return {
-                success: false,
-                message: "Betting Closed"
-            };
-        }
-
         // Amount Validation
-        if (amount < this.MIN_BET) {
+        const amt = Number(amount) || 0;
+        if (amt < 1) {
             return {
                 success: false,
-                message: `Minimum Bet is ${this.MIN_BET}`
+                message: `Invalid Bet Amount`
             };
         }
 
-        if (amount > this.MAX_BET) {
-            return {
-                success: false,
-                message: `Maximum Bet is ${this.MAX_BET}`
-            };
-        }
-
-        // Duplicate Bet
-        if (gameState.players.has(userId)) {
-            return {
-                success: false,
-                message: "Bet Already Placed"
-            };
-        }
+        const idKey = userId || `user_${Date.now()}_${Math.random()}`;
 
         const player = {
-            userId,
-            betAmount: amount,
+            id: idKey,
+            userId: idKey,
+            username: username || userId || "User",
+            user: username || userId || "User",
+            amount: amt,
+            betAmount: amt,
             autoCashout,
-            cashoutMultiplier: null,
-            payout: 0,
+            cashOutMultiplier: null,
+            wonAmount: null,
+            isCashedOut: false,
             status: "PLAYING",
             placedAt: new Date()
         };
 
-        gameState.players.set(userId, player);
-
+        gameState.players.set(idKey, player);
         gameState.totalPlayers = gameState.players.size;
-
-        gameState.totalBetAmount += amount;
+        gameState.totalBetAmount += amt;
 
         return {
             success: true,
