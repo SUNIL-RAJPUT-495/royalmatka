@@ -6,6 +6,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import http from "http";
+import mongoose from "mongoose";
 
 import connectDB from "./config/db.js";
 import authRoutes from "./services/auth/routes/auth.routes.js";
@@ -54,6 +55,23 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
     message: "Server is healthy",
+  });
+});
+
+// Database Status Diagnostic Route
+app.get("/api/db-status", (req, res) => {
+  const states = {
+    0: "disconnected",
+    1: "connected",
+    2: "connecting",
+    3: "disconnecting"
+  };
+  const readyState = mongoose.connection.readyState;
+  res.status(200).json({
+    success: true,
+    connected: readyState === 1,
+    status: states[readyState] || "unknown",
+    readyState: readyState
   });
 });
 
