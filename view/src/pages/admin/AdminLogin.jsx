@@ -46,7 +46,7 @@ export const AdminLogin = () => {
         localStorage.setItem('is_admin_logged_in', 'true');
 
         toast.success(response.data.message || 'Login Successful! Redirecting...');
-        
+
         setTimeout(() => {
           navigate('/systum/dashboard');
         }, 600);
@@ -81,7 +81,7 @@ export const AdminLogin = () => {
 
       {/* Main Glassmorphic Form Container */}
       <div className="w-full max-w-md bg-[#16202c]/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.6)] relative z-10">
-        
+
         {/* Header Logo Badge */}
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-red-600 to-amber-500 flex items-center justify-center shadow-lg shadow-red-500/30 mb-4 transform hover:scale-105 transition-transform duration-300">
@@ -179,13 +179,24 @@ export const AdminLogin = () => {
           </button>
         </form>
 
-        {/* Demo Credentials Box */}
-        <div className="mt-8 pt-5 border-t border-white/10 text-center">
-          <p className="text-[11px] font-semibold text-gray-400 mb-1">Default Master Credentials:</p>
-          <div className="inline-flex items-center gap-3 px-3 py-1.5 bg-white/5 rounded-xl border border-white/5 text-[11px] font-mono text-gray-300">
-            <span>User: <strong className="text-amber-400">admin</strong></span>
-            <span className="text-gray-600">|</span>
-            <span>Pass: <strong className="text-amber-400">admin123</strong></span>
+        {/* Quick Fill Master Credentials Box */}
+        <div className="mt-6 pt-4 border-t border-white/10 text-center space-y-2">
+          <p className="text-[11px] font-semibold text-gray-400">Click to Auto-Fill Admin Credentials:</p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setFormData({ username: 'admin@gmail.com', password: 'admin123' })}
+              className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl text-xs font-mono text-gray-200 transition-all cursor-pointer shadow-sm"
+            >
+              <span className="text-amber-400 font-bold">admin@gmail.com</span> / <span className="text-emerald-400 font-bold">admin123</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormData({ username: 'admin', password: 'admin123' })}
+              className="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-mono text-gray-300 transition-colors cursor-pointer"
+            >
+              <span className="text-amber-400 font-bold">admin</span> / <span className="text-emerald-400 font-bold">admin123</span>
+            </button>
           </div>
         </div>
 

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { seedAdmin } from "../seedAdmin.js";
 
 const connectDB = async () => {
   try {
@@ -6,6 +7,8 @@ const connectDB = async () => {
       dbName: "royalmatka"
     });
     console.log(`📡 MongoDB Connected: ${conn.connection.host}`);
+    // Auto seed admin account upon DB connection
+    await seedAdmin();
   } catch (error) {
     console.error(`🔴 MongoDB Connection Error: ${error.message}`);
   }
