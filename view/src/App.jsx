@@ -60,6 +60,7 @@ import { NotificationSender } from "./pages/admin/NotificationSender";
 import { AdminNotificationSettings } from "./pages/admin/AdminNotificationSettings";
 import { AdminChat } from "./pages/admin/AdminChat";
 import { AdminLogin } from "./pages/admin/AdminLogin";
+import { AdminProtectedRoute, UserProtectedRoute } from "./components/routes/ProtectedRoute";
 function App() {
   return (
     <ThemeProvider>
@@ -122,69 +123,72 @@ function App() {
           <Route path="/systum/login" element={<AdminLogin />} />
           <Route path="/admin-login" element={<AdminLogin />} />
 
-          {/* 4. ADMIN PANEL ROUTES */}
+          {/* 4. ADMIN PANEL ROUTES (PROTECTED BY ADMIN MIDDLEWARE) */}
           <Route path="/systum" element={<AdminLayout />}>
             <Route path="login" element={<AdminLogin />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="AddGame" element={<AdminPanel />} />
-            <Route path="AdminBid" element={<AdminBid />} />
-            <Route path="matka-results" element={<MatkaResultPage />} />
-            <Route path="MatkaResultPage" element={<MatkaResultPage />} />
-            <Route path="ResultDecleare" element={<ResultAdmin />} />
-            <Route path="AdminPanel" element={<AdminPanel />} />
-            <Route path="mechanics" element={<AdminPanel />} />
-            <Route path="theme-settings" element={<ThemeSettings />} />
-            <Route path="AdminAccessManager" element={<AdminAccessManager />} />
-            <Route path="admin-access" element={<AdminAccessManager />} />
-            <Route path="welcome-popup" element={<WelcomePopupAdmin />} />
-            <Route path="WelcomePopupAdmin" element={<WelcomePopupAdmin />} />
-            <Route path="NotificationSender" element={<NotificationSender />} />
-            <Route path="notification-sender" element={<NotificationSender />} />
-            <Route path="notification-settings" element={<AdminNotificationSettings />} />
-            <Route path="AdminNotificationSettings" element={<AdminNotificationSettings />} />
-            <Route path="admin-chat" element={<AdminChat />} />
-            <Route path="AdminChat" element={<AdminChat />} />
-            <Route path="how-to-play" element={<AdminHowToPlay />} />
-            <Route path="AdminHowToPlay" element={<AdminHowToPlay />} />
-            <Route path="contact-management" element={<ContactManagement />} />
-            <Route path="aviator" element={<Aviator />} />
-            <Route path="ContactManagement" element={<ContactManagement />} />
-            <Route path="contact" element={<ContactManagement />} />
-            <Route path="upi" element={<UpiSettings />} />
-            <Route path="upi-settings" element={<UpiSettings />} />
-            <Route path="AdminUpiSettings" element={<UpiSettings />} />
-            <Route path="reports" element={<ReportsPage />} />
-            <Route path="ReportsPage" element={<ReportsPage />} />
-            <Route path="reports-history" element={<ReportsPage />} />
-            <Route path="delete-requests" element={<AccountDeletionRequests />} />
-            <Route path="AccountDeletionRequests" element={<AccountDeletionRequests />} />
-            <Route path="tips-panel" element={<TipsAdmin />} />
-            <Route path="TipsAdmin" element={<TipsAdmin />} />
-            <Route path="WinnersHistory" element={<WinnersHistory />} />
-            <Route path="WinnersLosersHistory" element={<WinnersHistory />} />
-            <Route path="users" element={<UsersList />} />
-            <Route path="view-user/:id" element={<ViewUser />} />
-            <Route path="view-user" element={<Navigate to="/systum/users" replace />} />
-            <Route path="bonus" element={<BonusManagementPage />} />
-            <Route path="referal" element={<AdminReferralsPage />} />
-            <Route path="AdminReferralsPage" element={<AdminReferralsPage />} />
-            <Route path="commission" element={<CommissionManagement />} />
-            <Route path="admin-comission" element={<CommissionManagement />} />
-            <Route path="all-withdrawals" element={<WithdrawalManagement />} />
-            <Route path="allfw" element={<WithdrawalManagement />} />
-            <Route path="Payment" element={<DepositRequestsManagement />} />
-            <Route path="Withdraw" element={<WithdrawalRequestsPage />} />
-            <Route path="jackpot-gali-bids" element={<JackpotGaliBids />} />
-            <Route path="jackpotgali-bids" element={<JackpotGaliBids />} />
-            <Route path="jackpot-gali-results" element={<JackpotGaliResults />} />
-            <Route path="jackpotgaliResult" element={<JackpotGaliResults />} />
-            <Route path="starline" element={<StarLineAdmin />} />
-            <Route path="jackpotgali" element={<StarLineAdmin />} />
-            <Route path="jackpot-gali" element={<StarLineAdmin />} />
-            <Route path="GameRatesAdmin" element={<GameRatesAdmin />} />
-            <Route path="game-rates" element={<GameRatesAdmin />} />
-            <Route path="ResultAdmin" element={<ResultAdmin />} />
-            <Route path="results" element={<ResultAdmin />} />
+            <Route element={<AdminProtectedRoute />}>
+              <Route index element={<Dashboard />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="AddGame" element={<AdminPanel />} />
+              <Route path="AdminBid" element={<AdminBid />} />
+              <Route path="matka-results" element={<MatkaResultPage />} />
+              <Route path="MatkaResultPage" element={<MatkaResultPage />} />
+              <Route path="ResultDecleare" element={<ResultAdmin />} />
+              <Route path="AdminPanel" element={<AdminPanel />} />
+              <Route path="mechanics" element={<AdminPanel />} />
+              <Route path="theme-settings" element={<ThemeSettings />} />
+              <Route path="AdminAccessManager" element={<AdminAccessManager />} />
+              <Route path="admin-access" element={<AdminAccessManager />} />
+              <Route path="welcome-popup" element={<WelcomePopupAdmin />} />
+              <Route path="WelcomePopupAdmin" element={<WelcomePopupAdmin />} />
+              <Route path="NotificationSender" element={<NotificationSender />} />
+              <Route path="notification-sender" element={<NotificationSender />} />
+              <Route path="notification-settings" element={<AdminNotificationSettings />} />
+              <Route path="AdminNotificationSettings" element={<AdminNotificationSettings />} />
+              <Route path="admin-chat" element={<AdminChat />} />
+              <Route path="AdminChat" element={<AdminChat />} />
+              <Route path="how-to-play" element={<AdminHowToPlay />} />
+              <Route path="AdminHowToPlay" element={<AdminHowToPlay />} />
+              <Route path="contact-management" element={<ContactManagement />} />
+              <Route path="aviator" element={<Aviator />} />
+              <Route path="ContactManagement" element={<ContactManagement />} />
+              <Route path="contact" element={<ContactManagement />} />
+              <Route path="upi" element={<UpiSettings />} />
+              <Route path="upi-settings" element={<UpiSettings />} />
+              <Route path="AdminUpiSettings" element={<UpiSettings />} />
+              <Route path="reports" element={<ReportsPage />} />
+              <Route path="ReportsPage" element={<ReportsPage />} />
+              <Route path="reports-history" element={<ReportsPage />} />
+              <Route path="delete-requests" element={<AccountDeletionRequests />} />
+              <Route path="AccountDeletionRequests" element={<AccountDeletionRequests />} />
+              <Route path="tips-panel" element={<TipsAdmin />} />
+              <Route path="TipsAdmin" element={<TipsAdmin />} />
+              <Route path="WinnersHistory" element={<WinnersHistory />} />
+              <Route path="WinnersLosersHistory" element={<WinnersHistory />} />
+              <Route path="users" element={<UsersList />} />
+              <Route path="view-user/:id" element={<ViewUser />} />
+              <Route path="view-user" element={<Navigate to="/systum/users" replace />} />
+              <Route path="bonus" element={<BonusManagementPage />} />
+              <Route path="referal" element={<AdminReferralsPage />} />
+              <Route path="AdminReferralsPage" element={<AdminReferralsPage />} />
+              <Route path="commission" element={<CommissionManagement />} />
+              <Route path="admin-comission" element={<CommissionManagement />} />
+              <Route path="all-withdrawals" element={<WithdrawalManagement />} />
+              <Route path="allfw" element={<WithdrawalManagement />} />
+              <Route path="Payment" element={<DepositRequestsManagement />} />
+              <Route path="Withdraw" element={<WithdrawalRequestsPage />} />
+              <Route path="jackpot-gali-bids" element={<JackpotGaliBids />} />
+              <Route path="jackpotgali-bids" element={<JackpotGaliBids />} />
+              <Route path="jackpot-gali-results" element={<JackpotGaliResults />} />
+              <Route path="jackpotgaliResult" element={<JackpotGaliResults />} />
+              <Route path="starline" element={<StarLineAdmin />} />
+              <Route path="jackpotgali" element={<StarLineAdmin />} />
+              <Route path="jackpot-gali" element={<StarLineAdmin />} />
+              <Route path="GameRatesAdmin" element={<GameRatesAdmin />} />
+              <Route path="game-rates" element={<GameRatesAdmin />} />
+              <Route path="ResultAdmin" element={<ResultAdmin />} />
+              <Route path="results" element={<ResultAdmin />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>
