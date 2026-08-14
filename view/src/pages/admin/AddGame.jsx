@@ -1,25 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Settings, List, Plus, Trash2, Eye, Play, Square, Loader2 
+  Settings, List, Plus, Trash2, Edit3, X, Check, Clock, Calendar, RefreshCw
 } from 'lucide-react';
 import AxiosAdmin from '../../utils/axiosAdmin';
 import SummaryApi from '../../common/SummerAPI';
-import { fetchGame } from '../../utils/api';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/admin/ConfirmModal';
 
+const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 export const AddGame = () => {
-  // --- STATE ---
+  // --- ADD FORM STATE ---
   const [formData, setFormData] = useState({
     name: '',       
+    open_time: '', open_period: 'AM',
+    close_time: '', close_period: 'PM',
     open_result_time: '', open_result_period: 'AM',   
-    close_result_time: '', close_result_period: 'PM'          
+    close_result_time: '', close_result_period: 'PM',
+    off_days: []
   });
   
   const [gamesList, setGamesList] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Custom Modal States
+  // Edit Modal State
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editMarketData, setEditMarketData] = useState(null);
+
+  // Delete Confirm Modal State
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [targetDeleteId, setTargetDeleteId] = useState(null);
 
@@ -27,14 +35,16 @@ export const AddGame = () => {
   const loadAllGames = async () => {
     setLoading(true);
     try {
-      const response = await fetchGame(); 
-      if (response && response.data) {
-        setGamesList(response.data); 
-      } else if (Array.isArray(response)) {
-        setGamesList(response);
+      const response = await AxiosAdmin({
+        url: SummaryApi.getGame.url,
+        method: SummaryApi.getGame.method
+      });
+      if (response?.data?.data && Array.isArray(response.data.data)) {
+        setGamesList(response.data.data); 
       }
     } catch (error) {
       console.error("Error fetching games:", error);
+      toast.error("Failed to load markets list.");
     } finally {
       setLoading(false);
     }
@@ -50,6 +60,16 @@ export const AddGame = () => {
       ...prev,
       [id]: value
     }));
+  };
+
+  const handleDayToggle = (day) => {
+    setFormData((prev) => {
+      const currentDays = prev.off_days || [];
+      const updated = currentDays.includes(day)
+        ? currentDays.filter((d) => d !== day)
+        : [...currentDays, day];
+      return { ...prev, off_days: updated };
+    });
   };
 
   const formatHHMMInput = (rawValue) => {
@@ -82,7 +102,7 @@ export const AddGame = () => {
     setFormData((prev) => ({ ...prev, [id]: normalized }));
   };
 
-  const isValidTwelveHourTime = (timeValue) => /^(0[1-9]|1[0-2]):[0-5][0-9]$/.test(timeValue);
+  const isValidTwelveHourTime = (timeValue) => !timeValue || /^(0[1-9]|1[0-2]):[0-5][0-9]$/.test(timeValue);
 
   const formatTimeTo12Hour = (time24) => {
     if (!time24) return "";
@@ -93,21 +113,24 @@ export const AddGame = () => {
     return `${formattedHours}:${minutes}`;
   };
 
+  // ADD MARKET SUBMIT
   const handleSubmit = async () => {
-    if (!formData.name || !formData.open_result_time || !formData.close_result_time) {
-      toast.error("Please fill Game Name and timing fields!");
+    if (!formData.name || !formData.open_time || !formData.close_time) {
+      toast.error("Please fill Game Name, Open Time & Close Time!");
       return;
     }
     if (
-      !isValidTwelveHourTime(formData.open_result_time) ||
-      !isValidTwelveHourTime(formData.close_result_time)
+      !isValidTwelveHourTime(formData.open_time) ||
+      !isValidTwelveHourTime(formData.close_time)
     ) {
       toast.error("Please enter valid time in HH:MM format (e.g. 04:10).");
       return;
     }
 
-    const formattedOpenResultTime = `${formatTimeTo12Hour(formData.open_result_time)} ${formData.open_result_period}`;
-    const formattedCloseResultTime = `${formatTimeTo12Hour(formData.close_result_time)} ${formData.close_result_period}`;
+    const formattedOpenTime = `${formatTimeTo12Hour(formData.open_time)} ${formData.open_period}`;
+    const formattedCloseTime = `${formatTimeTo12Hour(formData.close_time)} ${formData.close_period}`;
+    const formattedOpenResultTime = formData.open_result_time ? `${formatTimeTo12Hour(formData.open_result_time)} ${formData.open_result_period}` : formattedOpenTime;
+    const formattedCloseResultTime = formData.close_result_time ? `${formatTimeTo12Hour(formData.close_result_time)} ${formData.close_result_period}` : formattedCloseTime;
 
     try {
       const response = await AxiosAdmin({
@@ -116,10 +139,11 @@ export const AddGame = () => {
         data: {
           market_name: formData.name, 
           name: formData.name,
-          open_time: formattedOpenResultTime, 
-          close_time: formattedCloseResultTime,
+          open_time: formattedOpenTime, 
+          close_time: formattedCloseTime,
           open_result_time: formattedOpenResultTime,
-          close_result_time: formattedCloseResultTime
+          close_result_time: formattedCloseResultTime,
+          off_days: formData.off_days
         }
       });
 
@@ -127,8 +151,11 @@ export const AddGame = () => {
       
       setFormData({ 
         name: '', 
+        open_time: '', open_period: 'AM',
+        close_time: '', close_period: 'PM',
         open_result_time: '', open_result_period: 'AM',
-        close_result_time: '', close_result_period: 'PM'
+        close_result_time: '', close_result_period: 'PM',
+        off_days: []
       });
       
       loadAllGames(); 
@@ -139,7 +166,53 @@ export const AddGame = () => {
     }
   };
 
-  // --- TOGGLE GAME STATUS LOGIC ---
+  // EDIT MARKET OPEN
+  const openEditModal = (game) => {
+    setEditMarketData({
+      id: game._id || game.id,
+      name: game.market_name || game.name || '',
+      open_time: game.open_time || '',
+      close_time: game.close_time || '',
+      open_result_time: game.open_result_time || game.open_time || '',
+      close_result_time: game.close_result_time || game.close_time || '',
+      off_days: Array.isArray(game.off_days) ? game.off_days : []
+    });
+    setEditModalOpen(true);
+  };
+
+  // EDIT MARKET SUBMIT
+  const handleEditSubmit = async () => {
+    if (!editMarketData.name || !editMarketData.open_time || !editMarketData.close_time) {
+      toast.error("Please fill Name, Open Time & Close Time!");
+      return;
+    }
+    try {
+      const response = await AxiosAdmin({
+        url: SummaryApi.updateMarket?.url || '/api/market/update-market',
+        method: SummaryApi.updateMarket?.method || 'post',
+        data: {
+          id: editMarketData.id,
+          marketId: editMarketData.id,
+          market_name: editMarketData.name,
+          name: editMarketData.name,
+          open_time: editMarketData.open_time,
+          close_time: editMarketData.close_time,
+          open_result_time: editMarketData.open_result_time,
+          close_result_time: editMarketData.close_result_time,
+          off_days: editMarketData.off_days
+        }
+      });
+      toast.success(response.data.message || "Market updated successfully! ✏️");
+      setEditModalOpen(false);
+      setEditMarketData(null);
+      loadAllGames();
+    } catch (error) {
+      console.error("Error updating market:", error);
+      toast.error("Failed to update market.");
+    }
+  };
+
+  // TOGGLE MARKET STATUS
   const handleToggleStatus = async (gameId, currentIsClosed) => {
     const targetClosedState = !currentIsClosed;
     try {
@@ -160,7 +233,7 @@ export const AddGame = () => {
     }
   };
 
-  // --- DELETE MARKET LOGIC ---
+  // DELETE MARKET LOGIC
   const triggerDeleteMarket = (gameId) => {
     setTargetDeleteId(gameId);
     setDeleteConfirmOpen(true);
@@ -188,62 +261,125 @@ export const AddGame = () => {
   return (
     <div className="min-h-screen bg-[#f3f4f6] p-4 md:p-6 font-sans text-gray-800 text-left select-none flex justify-center items-start">
       
-      <div className="w-full max-w-4xl space-y-6">
+      <div className="w-full max-w-5xl space-y-6">
 
-        {/* 1. Header Banner & Add Card (Combined) */}
-        <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white">
+        {/* 1. Header Banner & Add Card */}
+        <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-white">
           {/* Header Banner */}
-          <div className="bg-[#eff6ff] text-blue-900 border-b border-blue-100 p-6 flex items-start gap-4">
-            <div className="bg-white p-2.5 rounded-xl text-blue-600 shadow-3xs border border-blue-50">
-              <Settings className="w-6 h-6 stroke-[2.2] animate-spin-slow" />
+          <div className="bg-[#eff6ff] text-blue-900 border-b border-blue-100 p-6 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-white p-2.5 rounded-xl text-blue-600 shadow-3xs border border-blue-50">
+                <Settings className="w-6 h-6 stroke-[2.2] animate-spin-slow" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold tracking-tight">Main Markets Manager</h1>
+                <p className="text-xs text-gray-500 font-semibold mt-0.5">
+                  Add, edit, and control live Main Market timings & status
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight">Admin Game Manager</h1>
-              <p className="text-xs text-gray-500 font-semibold mt-1">
-                Manage your Games/Markets and their timings
-              </p>
-            </div>
+            <button
+              onClick={loadAllGames}
+              className="p-2.5 bg-white hover:bg-gray-50 text-blue-600 border border-blue-200 rounded-xl transition-all active:scale-95 shadow-xs cursor-pointer flex items-center gap-1 text-xs font-bold"
+              title="Refresh Markets List"
+            >
+              <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+              <span>Refresh</span>
+            </button>
           </div>
 
-          {/* Add Game form block */}
+          {/* Add Game Form Block */}
           <div className="p-6 space-y-4">
-            <h2 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
-              Add New Game
+            <h2 className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+              <Plus size={14} className="text-blue-600" />
+              <span>Add New Main Market</span>
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
               {/* Game Name */}
-              <div className="space-y-1 text-xs md:col-span-2">
-                <label className="block font-bold text-gray-500 uppercase tracking-wider">Game Name</label>
+              <div className="space-y-1 text-xs lg:col-span-4">
+                <label className="block font-bold text-gray-500 uppercase tracking-wider">Game / Market Name</label>
                 <input
                   type="text"
                   id="name"
-                  placeholder="e.g. SITA MORNING"
+                  placeholder="e.g. KALYAN MORNING"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-xs font-semibold outline-none focus:border-blue-500 shadow-3xs uppercase"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-xs font-semibold outline-none focus:border-blue-500 shadow-3xs uppercase"
                 />
               </div>
 
-              {/* Opening Time */}
+              {/* Open Bid Time */}
               <div className="space-y-1 text-xs">
-                <label className="block font-bold text-gray-500 uppercase tracking-wider">Opening Time</label>
-                <div className="flex shadow-3xs border border-gray-300 rounded-lg bg-white focus-within:border-blue-500 overflow-hidden">
+                <label className="block font-bold text-gray-500 uppercase tracking-wider">Open Bid Time</label>
+                <div className="flex shadow-3xs border border-gray-300 rounded-xl bg-white focus-within:border-blue-500 overflow-hidden">
+                  <input
+                    type="text"
+                    id="open_time"
+                    placeholder="11:00"
+                    maxLength={5}
+                    value={formData.open_time}
+                    onChange={handleTimeInputChange}
+                    onBlur={(e) => normalizeTimeOnBlur('open_time', e.target.value)}
+                    className="w-full px-3 py-2.5 bg-transparent text-xs font-semibold outline-none"
+                  />
+                  <select
+                    id="open_period"
+                    value={formData.open_period}
+                    onChange={handleChange}
+                    className="bg-gray-100 border-l border-gray-300 px-2 py-2 text-xs font-bold text-gray-700 outline-none cursor-pointer"
+                  >
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Close Bid Time */}
+              <div className="space-y-1 text-xs">
+                <label className="block font-bold text-gray-500 uppercase tracking-wider">Close Bid Time</label>
+                <div className="flex shadow-3xs border border-gray-300 rounded-xl bg-white focus-within:border-blue-500 overflow-hidden">
+                  <input
+                    type="text"
+                    id="close_time"
+                    placeholder="12:00"
+                    maxLength={5}
+                    value={formData.close_time}
+                    onChange={handleTimeInputChange}
+                    onBlur={(e) => normalizeTimeOnBlur('close_time', e.target.value)}
+                    className="w-full px-3 py-2.5 bg-transparent text-xs font-semibold outline-none"
+                  />
+                  <select
+                    id="close_period"
+                    value={formData.close_period}
+                    onChange={handleChange}
+                    className="bg-gray-100 border-l border-gray-300 px-2 py-2 text-xs font-bold text-gray-700 outline-none cursor-pointer"
+                  >
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Open Result Time */}
+              <div className="space-y-1 text-xs">
+                <label className="block font-bold text-gray-500 uppercase tracking-wider">Open Result Time</label>
+                <div className="flex shadow-3xs border border-gray-300 rounded-xl bg-white focus-within:border-blue-500 overflow-hidden">
                   <input
                     type="text"
                     id="open_result_time"
-                    placeholder="HH:MM"
+                    placeholder="11:05"
                     maxLength={5}
                     value={formData.open_result_time}
                     onChange={handleTimeInputChange}
                     onBlur={(e) => normalizeTimeOnBlur('open_result_time', e.target.value)}
-                    className="w-full px-4 py-2.5 bg-transparent text-xs font-semibold outline-none"
+                    className="w-full px-3 py-2.5 bg-transparent text-xs font-semibold outline-none"
                   />
                   <select
                     id="open_result_period"
                     value={formData.open_result_period}
                     onChange={handleChange}
-                    className="bg-gray-100 border-l border-gray-300 px-3 py-2 text-xs font-bold text-gray-700 outline-none cursor-pointer"
+                    className="bg-gray-100 border-l border-gray-300 px-2 py-2 text-xs font-bold text-gray-700 outline-none cursor-pointer"
                   >
                     <option value="AM">AM</option>
                     <option value="PM">PM</option>
@@ -251,25 +387,25 @@ export const AddGame = () => {
                 </div>
               </div>
 
-              {/* Closing Time */}
+              {/* Close Result Time */}
               <div className="space-y-1 text-xs">
-                <label className="block font-bold text-gray-500 uppercase tracking-wider">Closing Time</label>
-                <div className="flex shadow-3xs border border-gray-300 rounded-lg bg-white focus-within:border-blue-500 overflow-hidden">
+                <label className="block font-bold text-gray-500 uppercase tracking-wider">Close Result Time</label>
+                <div className="flex shadow-3xs border border-gray-300 rounded-xl bg-white focus-within:border-blue-500 overflow-hidden">
                   <input
                     type="text"
                     id="close_result_time"
-                    placeholder="HH:MM"
+                    placeholder="12:05"
                     maxLength={5}
                     value={formData.close_result_time}
                     onChange={handleTimeInputChange}
                     onBlur={(e) => normalizeTimeOnBlur('close_result_time', e.target.value)}
-                    className="w-full px-4 py-2.5 bg-transparent text-xs font-semibold outline-none"
+                    className="w-full px-3 py-2.5 bg-transparent text-xs font-semibold outline-none"
                   />
                   <select
                     id="close_result_period"
                     value={formData.close_result_period}
                     onChange={handleChange}
-                    className="bg-gray-100 border-l border-gray-300 px-3 py-2 text-xs font-bold text-gray-700 outline-none cursor-pointer"
+                    className="bg-gray-100 border-l border-gray-300 px-2 py-2 text-xs font-bold text-gray-700 outline-none cursor-pointer"
                   >
                     <option value="AM">AM</option>
                     <option value="PM">PM</option>
@@ -277,14 +413,38 @@ export const AddGame = () => {
                 </div>
               </div>
 
+              {/* Off Days Selection */}
+              <div className="space-y-1.5 text-xs lg:col-span-4 pt-1">
+                <label className="block font-bold text-gray-500 uppercase tracking-wider">Market Off Days (Optional)</label>
+                <div className="flex flex-wrap gap-2">
+                  {DAYS_OF_WEEK.map((day) => {
+                    const isSelected = (formData.off_days || []).includes(day);
+                    return (
+                      <button
+                        type="button"
+                        key={day}
+                        onClick={() => handleDayToggle(day)}
+                        className={`px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-red-500 text-white border-red-500 shadow-2xs'
+                            : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Submit button */}
-              <div className="md:col-span-2 flex justify-end pt-2">
+              <div className="lg:col-span-4 flex justify-end pt-2">
                 <button
                   onClick={handleSubmit}
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-5 py-2.5 rounded-lg transition-all shadow-sm active:scale-95 flex items-center gap-1 cursor-pointer"
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-6 py-3 rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-1.5 cursor-pointer"
                 >
-                  <span>Add Market</span>
-                  <Plus size={14} className="stroke-[2.5]" />
+                  <Plus size={16} className="stroke-[2.5]" />
+                  <span>Add Main Market</span>
                 </button>
               </div>
             </div>
@@ -292,81 +452,113 @@ export const AddGame = () => {
         </div>
 
         {/* 2. Games List Section */}
-        <div className="rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
-          <div className="bg-gray-800 p-4 border-b border-gray-700 flex items-center gap-3">
-            <List className="text-white w-5 h-5" />
-            <h3 className="font-bold text-xs text-white uppercase tracking-wider">All Active & Closed Games</h3>
+        <div className="rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-sm">
+          <div className="bg-gray-900 p-4 border-b border-gray-800 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <List className="text-blue-400 w-5 h-5" />
+              <h3 className="font-bold text-xs text-white uppercase tracking-wider">All Active & Closed Main Markets</h3>
+            </div>
+            <span className="bg-blue-500/20 text-blue-300 text-xs font-bold px-2.5 py-0.5 rounded-full border border-blue-500/30">
+              Total: {gamesList.length}
+            </span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-semibold text-gray-600 border-collapse">
               <thead className="bg-[#f8f9fc] border-b border-gray-200 text-[10px] font-bold uppercase tracking-wider text-gray-500">
                 <tr>
-                  <th className="px-5 py-4">Game Name</th>
+                  <th className="px-5 py-4">Market Name</th>
                   <th className="px-5 py-4">Bid Times (Open - Close)</th>
                   <th className="px-5 py-4">Result Times (Open - Close)</th>
+                  <th className="px-5 py-4">Off Days</th>
                   <th className="px-5 py-4 text-center">Status</th>
-                  <th className="px-5 py-4 text-center">Action</th>
+                  <th className="px-5 py-4 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-150">
                 {loading ? (
                   <tr>
-                    <td colSpan="5" className="text-center p-6 text-gray-400 font-bold">Loading markets...</td>
+                    <td colSpan="6" className="text-center p-8 text-gray-400 font-bold">Loading markets list...</td>
                   </tr>
                 ) : gamesList.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="text-center p-6 text-gray-400 font-bold">No markets added yet.</td>
+                    <td colSpan="6" className="text-center p-8 text-gray-400 font-bold">No markets added yet.</td>
                   </tr>
                 ) : (
                   gamesList.map((game) => {
                     const isClosed = game.is_closed ?? (game.status === 'Closed' || game.status === 'closed');
                     const marketName = game.market_name || game.name || 'UNNAMED MARKET';
                     const marketId = game._id || game.id;
+                    const offDaysList = Array.isArray(game.off_days) && game.off_days.length > 0 ? game.off_days.join(', ') : 'None';
 
                     return (
                       <tr key={marketId} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="px-5 py-4 font-bold text-gray-900 uppercase">{marketName}</td>
+                        <td className="px-5 py-4 font-extrabold text-gray-900 uppercase">
+                          {marketName}
+                          <div className="text-[10px] text-gray-400 font-mono mt-0.5 font-normal">
+                            Result: <span className="font-bold text-orange-600">{game.display_result || '***-**-***'}</span>
+                          </div>
+                        </td>
                         
                         {/* Bid Times */}
-                        <td className="px-5 py-4 font-semibold text-gray-500">
-                          <div className="text-emerald-600">O: {game.open_time}</div>
-                          <div className="text-red-500 mt-0.5">C: {game.close_time}</div>
+                        <td className="px-5 py-4 font-semibold text-gray-600">
+                          <div className="text-emerald-600 font-bold">O: {game.open_time}</div>
+                          <div className="text-red-500 font-bold mt-0.5">C: {game.close_time}</div>
                         </td>
 
                         {/* Result Times */}
-                        <td className="px-5 py-4 font-semibold text-gray-500">
-                          <div className="text-blue-600">O: {game.open_result_time || game.open_time || 'N/A'}</div>
-                          <div className="text-purple-600 mt-0.5">C: {game.close_result_time || game.close_time || 'N/A'}</div>
+                        <td className="px-5 py-4 font-semibold text-gray-600">
+                          <div className="text-blue-600 font-bold">O: {game.open_result_time || game.open_time}</div>
+                          <div className="text-purple-600 font-bold mt-0.5">C: {game.close_result_time || game.close_time}</div>
+                        </td>
+
+                        {/* Off Days */}
+                        <td className="px-5 py-4 text-xs font-medium text-gray-500">
+                          <span className={offDaysList !== 'None' ? 'text-red-500 font-bold' : 'text-gray-400'}>
+                            {offDaysList}
+                          </span>
                         </td>
 
                         {/* Status */}
                         <td className="px-5 py-4 text-center">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase shadow-3xs ${
-                            !isClosed ? 'bg-emerald-500' : 'bg-red-500'
+                          <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider shadow-3xs ${
+                            !isClosed ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
                           }`}>
                             {!isClosed ? 'Active' : 'Closed'}
                           </span>
                         </td>
 
                         {/* Actions */}
-                        <td className="px-5 py-4 text-center space-x-2">
+                        <td className="px-5 py-4 text-center space-x-1.5">
+                          {/* Edit button */}
+                          <button
+                            onClick={() => openEditModal(game)}
+                            className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 border border-blue-200 rounded-xl text-[10px] font-bold transition-all shadow-3xs cursor-pointer active:scale-95 inline-flex items-center gap-1"
+                            title="Edit Market Details"
+                          >
+                            <Edit3 size={11} />
+                            <span>Edit</span>
+                          </button>
+
+                          {/* Toggle Status button */}
                           <button 
                             onClick={() => handleToggleStatus(marketId, isClosed)}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold text-white transition-all shadow-3xs cursor-pointer active:scale-95 ${
+                            className={`px-2.5 py-1.5 rounded-xl text-[10px] font-bold text-white transition-all shadow-3xs cursor-pointer active:scale-95 ${
                               !isClosed 
-                                ? 'bg-red-500 hover:bg-red-600' 
+                                ? 'bg-amber-500 hover:bg-amber-600' 
                                 : 'bg-emerald-600 hover:bg-emerald-700'
                             }`}
                           >
-                            {!isClosed ? 'Stop Betting' : 'Start Betting'}
+                            {!isClosed ? 'Stop' : 'Start'}
                           </button>
                           
+                          {/* Delete button */}
                           <button 
                             onClick={() => triggerDeleteMarket(marketId)}
-                            className="px-3 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 border border-red-100 rounded-lg text-[10px] font-bold transition-all shadow-3xs cursor-pointer active:scale-95"
+                            className="px-2.5 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 border border-red-200 rounded-xl text-[10px] font-bold transition-all shadow-3xs cursor-pointer active:scale-95 inline-flex items-center gap-1"
                           >
-                            Delete
+                            <Trash2 size={11} />
+                            <span>Delete</span>
                           </button>
                         </td>
                       </tr>
@@ -379,6 +571,123 @@ export const AddGame = () => {
         </div>
 
       </div>
+
+      {/* EDIT MARKET MODAL */}
+      {editModalOpen && editMarketData && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in select-none">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                <Edit3 className="text-blue-600" size={18} />
+                <span>Edit Market Details</span>
+              </h3>
+              <button
+                onClick={() => setEditModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Market Name</label>
+                <input
+                  type="text"
+                  value={editMarketData.name}
+                  onChange={(e) => setEditMarketData({ ...editMarketData, name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl font-bold uppercase outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Open Bid Time</label>
+                  <input
+                    type="text"
+                    value={editMarketData.open_time}
+                    onChange={(e) => setEditMarketData({ ...editMarketData, open_time: e.target.value })}
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl font-semibold outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Close Bid Time</label>
+                  <input
+                    type="text"
+                    value={editMarketData.close_time}
+                    onChange={(e) => setEditMarketData({ ...editMarketData, close_time: e.target.value })}
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl font-semibold outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Open Result Time</label>
+                  <input
+                    type="text"
+                    value={editMarketData.open_result_time}
+                    onChange={(e) => setEditMarketData({ ...editMarketData, open_result_time: e.target.value })}
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl font-semibold outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Close Result Time</label>
+                  <input
+                    type="text"
+                    value={editMarketData.close_result_time}
+                    onChange={(e) => setEditMarketData({ ...editMarketData, close_result_time: e.target.value })}
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl font-semibold outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1.5">Off Days</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {DAYS_OF_WEEK.map((day) => {
+                    const isSelected = (editMarketData.off_days || []).includes(day);
+                    return (
+                      <button
+                        type="button"
+                        key={day}
+                        onClick={() => {
+                          const current = editMarketData.off_days || [];
+                          const updated = current.includes(day)
+                            ? current.filter((d) => d !== day)
+                            : [...current, day];
+                          setEditMarketData({ ...editMarketData, off_days: updated });
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                          isSelected ? 'bg-red-500 text-white border-red-500' : 'bg-gray-50 text-gray-600 border-gray-200'
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+              <button
+                onClick={() => setEditModalOpen(false)}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSubmit}
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold cursor-pointer flex items-center gap-1"
+              >
+                <Check size={14} />
+                <span>Save Changes</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation delete modal */}
       <ConfirmModal

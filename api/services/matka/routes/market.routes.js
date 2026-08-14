@@ -4,8 +4,10 @@ import {
   addMarket,
   deleteMarket,
   updateMarketStatus,
+  updateMarketDetails,
   declareResult,
 } from "../controllers/market.controller.js";
+
 import {
   getStarlineMarkets,
   declareStarlineResult
@@ -29,6 +31,7 @@ router.get("/get-all-markets", getAllMarkets);
 router.get("/get-all-results", getAllMarkets);
 router.get("/get-market-results", getAllMarkets);
 router.post("/add-market", verifyAdmin, addMarket);
+router.post("/update-market", verifyAdmin, updateMarketDetails);
 router.delete("/delete-market", verifyAdmin, deleteMarket);
 router.post("/update-market-status", verifyAdmin, updateMarketStatus);
 router.post("/declare-result", verifyAdmin, declareResult);

@@ -190,6 +190,10 @@ const SummaryApi = {
         url: baseURL + "/api/market/add-market",
         method: "post"
     },
+    updateMarket: {
+        url: baseURL + "/api/market/update-market",
+        method: "post"
+    },
     getGame: {
         url: baseURL + "/api/market/get-all-markets",
         method: "get"
