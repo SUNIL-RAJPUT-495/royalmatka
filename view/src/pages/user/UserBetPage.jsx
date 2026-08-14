@@ -17,6 +17,18 @@ import { JodiDigit } from '../../components/user/mainMarket/JodiDigit';
 import { JodiBulk } from '../../components/user/mainMarket/JodiBulk';
 import { SinglePana } from '../../components/user/mainMarket/SinglePana';
 import { SinglePanaBulk } from '../../components/user/mainMarket/SinglePanaBulk';
+import { DoublePana } from '../../components/user/mainMarket/DoublePana';
+import { DoublePanaBulk } from '../../components/user/mainMarket/DoublePanaBulk';
+import { TriplePana } from '../../components/user/mainMarket/TriplePana';
+import { TriplePanaBulk } from '../../components/user/mainMarket/TriplePanaBulk';
+import { SPMotor } from '../../components/user/mainMarket/SPMotor';
+import { DPMotor } from '../../components/user/mainMarket/DPMotor';
+import { OddEven } from '../../components/user/mainMarket/OddEven';
+import { TwoDigitPanel } from '../../components/user/mainMarket/TwoDigitPanel';
+import { SpDpTp } from '../../components/user/mainMarket/SpDpTp';
+import { HalfSangam } from '../../components/user/mainMarket/HalfSangam';
+import { DigitBased } from '../../components/user/mainMarket/DigitBased';
+import { RedBrackets } from '../../components/user/mainMarket/RedBrackets';
 
 export const UserBetPage = () => {
   const { currentTheme } = useTheme();
@@ -39,10 +51,105 @@ export const UserBetPage = () => {
         { id: 2, jodi: '45', points: 10 }
       ];
     }
+    if (gameMode === 'digit-based') {
+      return [
+        { id: 1, jodi: '50', points: 10 },
+        { id: 2, jodi: '51', points: 10 },
+        { id: 3, jodi: '52', points: 10 }
+      ];
+    }
+    if (gameMode === 'red-brackets') {
+      return [
+        { id: 1, jodi: '00', points: 10 },
+        { id: 2, jodi: '11', points: 10 },
+        { id: 3, jodi: '22', points: 10 }
+      ];
+    }
+    if (gameMode === 'half-sangam') {
+      return [
+        { id: 1, digit: '4', pana: '123', points: 10 }
+      ];
+    }
+    if (gameMode === 'sp-dp-tp') {
+      return [
+        { id: 1, session: 'Open', pana: '680', points: 10, type: 'SP' },
+        { id: 2, session: 'Open', pana: '789', points: 10, type: 'SP' },
+        { id: 3, session: 'Open', pana: '112', points: 10, type: 'DP' },
+        { id: 4, session: 'Open', pana: '220', points: 10, type: 'DP' },
+        { id: 5, session: 'Open', pana: '266', points: 10, type: 'DP' },
+        { id: 6, session: 'Open', pana: '338', points: 10, type: 'DP' },
+        { id: 7, session: 'Open', pana: '400', points: 10, type: 'DP' }
+      ];
+    }
+    if (gameMode === 'odd-even') {
+      return [
+        { id: 1, session: 'Open', digit: '0', points: 10, type: 'Even' },
+        { id: 2, session: 'Open', digit: '2', points: 10, type: 'Even' },
+        { id: 3, session: 'Open', digit: '4', points: 10, type: 'Even' },
+        { id: 4, session: 'Open', digit: '6', points: 10, type: 'Even' },
+        { id: 5, session: 'Open', digit: '8', points: 10, type: 'Even' }
+      ];
+    }
+    if (gameMode === 'two-digit-panel') {
+      return [
+        { id: 1, session: 'Open', pana: '147', points: 10, type: 'Single' },
+        { id: 2, session: 'Open', pana: '157', points: 10, type: 'Single' },
+        { id: 3, session: 'Open', pana: '167', points: 10, type: 'Single' },
+        { id: 4, session: 'Open', pana: '178', points: 10, type: 'Single' },
+        { id: 5, session: 'Open', pana: '179', points: 10, type: 'Single' },
+        { id: 6, session: 'Open', pana: '170', points: 10, type: 'Single' },
+        { id: 7, session: 'Open', pana: '117', points: 10, type: 'Double' },
+        { id: 8, session: 'Open', pana: '177', points: 10, type: 'Double' }
+      ];
+    }
     if (gameMode === 'single-pana') {
       return [
         { id: 1, session: 'Open', pana: '278', points: 10 },
         { id: 2, session: 'Close', pana: '478', points: 10 }
+      ];
+    }
+    if (gameMode === 'double-pana') {
+      return [
+        { id: 1, session: 'Open', pana: '100', points: 10 }
+      ];
+    }
+    if (gameMode === 'double-pana-bulk') {
+      return [
+        { id: 1, session: 'Open', pana: '100', points: 10 },
+        { id: 2, session: 'Open', pana: '119', points: 10 },
+        { id: 3, session: 'Open', pana: '155', points: 10 },
+        { id: 4, session: 'Open', pana: '227', points: 10 }
+      ];
+    }
+    if (gameMode === 'sp-motor') {
+      return [
+        { id: 1, session: 'Open', pana: '238', points: 10 }
+      ];
+    }
+    if (gameMode === 'dp-motor') {
+      return [
+        { id: 1, session: 'Open', pana: '223', points: 10 },
+        { id: 2, session: 'Open', pana: '227', points: 10 },
+        { id: 3, session: 'Open', pana: '233', points: 10 },
+        { id: 4, session: 'Open', pana: '277', points: 10 },
+        { id: 5, session: 'Open', pana: '337', points: 10 },
+        { id: 6, session: 'Open', pana: '377', points: 10 }
+      ];
+    }
+    if (gameMode === 'triple-pana') {
+      return [
+        { id: 1, session: 'Open', pana: '383', points: 10 },
+        { id: 2, session: 'Close', pana: '283', points: 10 }
+      ];
+    }
+    if (gameMode === 'triple-pana-bulk') {
+      return [
+        { id: 1, session: 'Open', pana: '000', points: 10 },
+        { id: 2, session: 'Open', pana: '222', points: 10 },
+        { id: 3, session: 'Open', pana: '333', points: 10 },
+        { id: 4, session: 'Open', pana: '999', points: 10 },
+        { id: 5, session: 'Open', pana: '888', points: 10 },
+        { id: 6, session: 'Open', pana: '777', points: 10 }
       ];
     }
     if (gameMode === 'single-pana-bulk') {
@@ -106,10 +213,18 @@ export const UserBetPage = () => {
       case 'jodi-bulk': return 'Jodi';
       case 'single-pana': return 'Single Pana';
       case 'single-pana-bulk': return 'Single Pana';
-      case 'double-pana': return 'Double Pana';
+      case 'double-pana': return 'Double Patti';
+      case 'double-pana-bulk': return 'Double Patti Bulk';
       case 'triple-pana': return 'Triple Pana';
+      case 'triple-pana-bulk': return 'Triple Pana';
       case 'sp-motor': return 'SP Motor';
       case 'dp-motor': return 'DP Motor';
+      case 'odd-even': return 'Odd / Even';
+      case 'two-digit-panel': return 'Two Digit';
+      case 'sp-dp-tp': return 'SP / DP / TP';
+      case 'half-sangam': return 'Half Sang';
+      case 'digit-based': return 'Digit Based';
+      case 'red-brackets': return 'Red Brackets';
       default: return 'Single Ank';
     }
   };
@@ -284,14 +399,140 @@ export const UserBetPage = () => {
           />
         )}
 
+        {gameMode === 'double-pana' && (
+          <DoublePana
+            session={session}
+            setSession={setSession}
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+            isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+          />
+        )}
+
+        {gameMode === 'double-pana-bulk' && (
+          <DoublePanaBulk
+            session={session}
+            setSession={setSession}
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+            isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+          />
+        )}
+
+        {gameMode === 'triple-pana' && (
+          <TriplePana
+            session={session}
+            setSession={setSession}
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+            isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+          />
+        )}
+
+        {gameMode === 'triple-pana-bulk' && (
+          <TriplePanaBulk
+            session={session}
+            setSession={setSession}
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+            isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+          />
+        )}
+
+        {gameMode === 'sp-motor' && (
+          <SPMotor
+            session={session}
+            setSession={setSession}
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+            isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+          />
+        )}
+
+        {gameMode === 'dp-motor' && (
+          <DPMotor
+            session={session}
+            setSession={setSession}
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+            isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+          />
+        )}
+
+        {gameMode === 'odd-even' && (
+          <OddEven
+            session={session}
+            setSession={setSession}
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+            isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+          />
+        )}
+
+        {gameMode === 'two-digit-panel' && (
+          <TwoDigitPanel
+            session={session}
+            setSession={setSession}
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+            isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+          />
+        )}
+
+        {gameMode === 'sp-dp-tp' && (
+          <SpDpTp
+            session={session}
+            setSession={setSession}
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+            isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+          />
+        )}
+
+        {gameMode === 'half-sangam' && (
+          <HalfSangam
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+          />
+        )}
+
+        {gameMode === 'digit-based' && (
+          <DigitBased
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+          />
+        )}
+
+        {gameMode === 'red-brackets' && (
+          <RedBrackets
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+          />
+        )}
+
         {/* 3. BIDS TABLE CARD */}
         <div className="bg-white rounded-xl border border-gray-200/80 shadow-3xs overflow-hidden">
           {/* Header Row */}
-          {(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk' || gameMode === 'single-pana-bulk') ? (
+          {(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk' || gameMode === 'single-pana-bulk' || gameMode === 'digit-based' || gameMode === 'red-brackets') ? (
             <div className="bg-[#f8f9fc] border-b border-gray-200/80 px-4 py-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
               <span className="w-1/3 text-center">{gameMode === 'single-pana-bulk' ? 'SINGLE PANA' : 'JODI'}</span>
               <span className="w-1/3 text-center">POINTS</span>
               <span className="w-1/3 text-center">ACTION</span>
+            </div>
+          ) : gameMode === 'half-sangam' ? (
+            <div className="bg-[#f8f9fc] border-b border-gray-200/80 px-4 py-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              <span className="w-1/4 text-center">DIGIT</span>
+              <span className="w-1/4 text-center">PANA</span>
+              <span className="w-1/4 text-center">POINTS</span>
+              <span className="w-1/4 text-center">ACTION</span>
+            </div>
+          ) : (gameMode === 'odd-even' || gameMode === 'two-digit-panel' || gameMode === 'sp-dp-tp') ? (
+            <div className="bg-[#f8f9fc] border-b border-gray-200/80 px-3 py-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              <span className="w-1/5 text-center">SESSION</span>
+              <span className="w-1/5 text-center">PANA/DIGIT</span>
+              <span className="w-1/5 text-center">POINTS</span>
+              <span className="w-1/5 text-center">TYPE</span>
+              <span className="w-1/5 text-center">ACTION</span>
             </div>
           ) : (
             <div className="bg-[#f8f9fc] border-b border-gray-200/80 px-4 py-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
@@ -312,12 +553,35 @@ export const UserBetPage = () => {
               bidsList.map((bid) => (
                 <div 
                   key={bid.id} 
-                  className="px-4 py-2 flex items-center justify-between text-xs font-bold text-gray-800 hover:bg-gray-50/50 transition-colors"
+                  className="px-3 py-2 flex items-center justify-between text-xs font-bold text-gray-800 hover:bg-gray-50/50 transition-colors"
                 >
-                  {(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk' || gameMode === 'single-pana-bulk') ? (
+                  {(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk' || gameMode === 'single-pana-bulk' || gameMode === 'digit-based' || gameMode === 'red-brackets') ? (
                     <>
                       <span className="w-1/3 text-center font-extrabold text-gray-900 text-sm">{bid.pana || bid.jodi}</span>
                       <span className="w-1/3 text-center font-extrabold text-gray-900 text-sm">₹{bid.points}</span>
+                    </>
+                  ) : gameMode === 'half-sangam' ? (
+                    <>
+                      <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.digit}</span>
+                      <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.pana}</span>
+                      <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.points}</span>
+                    </>
+                  ) : (gameMode === 'odd-even' || gameMode === 'two-digit-panel' || gameMode === 'sp-dp-tp') ? (
+                    <>
+                      <span className="w-1/5 text-center text-gray-700 font-semibold">{bid.session}</span>
+                      <span className="w-1/5 text-center font-extrabold text-gray-900 text-sm">{bid.pana || bid.digit}</span>
+                      <span className="w-1/5 text-center font-extrabold text-gray-900 text-sm">{bid.points}</span>
+                      <span className="w-1/5 flex justify-center">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shadow-3xs ${
+                          bid.type === 'Double' || bid.type === 'DP' 
+                            ? 'bg-emerald-50 text-emerald-600' 
+                            : bid.type === 'TP' 
+                            ? 'bg-amber-50 text-amber-600' 
+                            : 'bg-blue-50 text-blue-600'
+                        }`}>
+                          {bid.type}
+                        </span>
+                      </span>
                     </>
                   ) : (
                     <>
@@ -326,7 +590,7 @@ export const UserBetPage = () => {
                       <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.points}</span>
                     </>
                   )}
-                  <span className={(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk' || gameMode === 'single-pana-bulk') ? "w-1/3 flex justify-center" : "w-1/4 flex justify-center"}>
+                  <span className={(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk' || gameMode === 'single-pana-bulk' || gameMode === 'digit-based' || gameMode === 'red-brackets') ? "w-1/3 flex justify-center" : (gameMode === 'odd-even' || gameMode === 'two-digit-panel' || gameMode === 'sp-dp-tp') ? "w-1/5 flex justify-center" : "w-1/4 flex justify-center"}>
                     <button
                       type="button"
                       onClick={() => handleRemoveBid(bid.id)}
