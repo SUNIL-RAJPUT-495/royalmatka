@@ -29,6 +29,7 @@ import { SpDpTp } from '../../components/user/mainMarket/SpDpTp';
 import { HalfSangam } from '../../components/user/mainMarket/HalfSangam';
 import { DigitBased } from '../../components/user/mainMarket/DigitBased';
 import { RedBrackets } from '../../components/user/mainMarket/RedBrackets';
+import { FullSangam } from '../../components/user/mainMarket/FullSangam';
 
 export const UserBetPage = () => {
   const { currentTheme } = useTheme();
@@ -44,135 +45,7 @@ export const UserBetPage = () => {
   const [session, setSession] = useState('Open'); // 'Open' | 'Close'
   const [digit, setDigit] = useState('');
   const [points, setPoints] = useState('');
-  const [bidsList, setBidsList] = useState(() => {
-    if (gameMode === 'jodi-digit' || gameMode === 'jodi-bulk') {
-      return [
-        { id: 1, jodi: '10', points: 10 },
-        { id: 2, jodi: '45', points: 10 }
-      ];
-    }
-    if (gameMode === 'digit-based') {
-      return [
-        { id: 1, jodi: '50', points: 10 },
-        { id: 2, jodi: '51', points: 10 },
-        { id: 3, jodi: '52', points: 10 }
-      ];
-    }
-    if (gameMode === 'red-brackets') {
-      return [
-        { id: 1, jodi: '00', points: 10 },
-        { id: 2, jodi: '11', points: 10 },
-        { id: 3, jodi: '22', points: 10 }
-      ];
-    }
-    if (gameMode === 'half-sangam') {
-      return [
-        { id: 1, digit: '4', pana: '123', points: 10 }
-      ];
-    }
-    if (gameMode === 'sp-dp-tp') {
-      return [
-        { id: 1, session: 'Open', pana: '680', points: 10, type: 'SP' },
-        { id: 2, session: 'Open', pana: '789', points: 10, type: 'SP' },
-        { id: 3, session: 'Open', pana: '112', points: 10, type: 'DP' },
-        { id: 4, session: 'Open', pana: '220', points: 10, type: 'DP' },
-        { id: 5, session: 'Open', pana: '266', points: 10, type: 'DP' },
-        { id: 6, session: 'Open', pana: '338', points: 10, type: 'DP' },
-        { id: 7, session: 'Open', pana: '400', points: 10, type: 'DP' }
-      ];
-    }
-    if (gameMode === 'odd-even') {
-      return [
-        { id: 1, session: 'Open', digit: '0', points: 10, type: 'Even' },
-        { id: 2, session: 'Open', digit: '2', points: 10, type: 'Even' },
-        { id: 3, session: 'Open', digit: '4', points: 10, type: 'Even' },
-        { id: 4, session: 'Open', digit: '6', points: 10, type: 'Even' },
-        { id: 5, session: 'Open', digit: '8', points: 10, type: 'Even' }
-      ];
-    }
-    if (gameMode === 'two-digit-panel') {
-      return [
-        { id: 1, session: 'Open', pana: '147', points: 10, type: 'Single' },
-        { id: 2, session: 'Open', pana: '157', points: 10, type: 'Single' },
-        { id: 3, session: 'Open', pana: '167', points: 10, type: 'Single' },
-        { id: 4, session: 'Open', pana: '178', points: 10, type: 'Single' },
-        { id: 5, session: 'Open', pana: '179', points: 10, type: 'Single' },
-        { id: 6, session: 'Open', pana: '170', points: 10, type: 'Single' },
-        { id: 7, session: 'Open', pana: '117', points: 10, type: 'Double' },
-        { id: 8, session: 'Open', pana: '177', points: 10, type: 'Double' }
-      ];
-    }
-    if (gameMode === 'single-pana') {
-      return [
-        { id: 1, session: 'Open', pana: '278', points: 10 },
-        { id: 2, session: 'Close', pana: '478', points: 10 }
-      ];
-    }
-    if (gameMode === 'double-pana') {
-      return [
-        { id: 1, session: 'Open', pana: '100', points: 10 }
-      ];
-    }
-    if (gameMode === 'double-pana-bulk') {
-      return [
-        { id: 1, session: 'Open', pana: '100', points: 10 },
-        { id: 2, session: 'Open', pana: '119', points: 10 },
-        { id: 3, session: 'Open', pana: '155', points: 10 },
-        { id: 4, session: 'Open', pana: '227', points: 10 }
-      ];
-    }
-    if (gameMode === 'sp-motor') {
-      return [
-        { id: 1, session: 'Open', pana: '238', points: 10 }
-      ];
-    }
-    if (gameMode === 'dp-motor') {
-      return [
-        { id: 1, session: 'Open', pana: '223', points: 10 },
-        { id: 2, session: 'Open', pana: '227', points: 10 },
-        { id: 3, session: 'Open', pana: '233', points: 10 },
-        { id: 4, session: 'Open', pana: '277', points: 10 },
-        { id: 5, session: 'Open', pana: '337', points: 10 },
-        { id: 6, session: 'Open', pana: '377', points: 10 }
-      ];
-    }
-    if (gameMode === 'triple-pana') {
-      return [
-        { id: 1, session: 'Open', pana: '383', points: 10 },
-        { id: 2, session: 'Close', pana: '283', points: 10 }
-      ];
-    }
-    if (gameMode === 'triple-pana-bulk') {
-      return [
-        { id: 1, session: 'Open', pana: '000', points: 10 },
-        { id: 2, session: 'Open', pana: '222', points: 10 },
-        { id: 3, session: 'Open', pana: '333', points: 10 },
-        { id: 4, session: 'Open', pana: '999', points: 10 },
-        { id: 5, session: 'Open', pana: '888', points: 10 },
-        { id: 6, session: 'Open', pana: '777', points: 10 }
-      ];
-    }
-    if (gameMode === 'single-pana-bulk') {
-      return [
-        { id: 1, pana: '128', points: 10 },
-        { id: 2, pana: '137', points: 10 },
-        { id: 3, pana: '146', points: 10 },
-        { id: 4, pana: '236', points: 10 },
-        { id: 5, pana: '245', points: 10 },
-        { id: 6, pana: '290', points: 10 },
-        { id: 7, pana: '380', points: 10 },
-        { id: 8, pana: '470', points: 10 },
-        { id: 9, pana: '489', points: 10 },
-        { id: 10, pana: '560', points: 10 },
-        { id: 11, pana: '579', points: 10 },
-        { id: 12, pana: '678', points: 10 }
-      ];
-    }
-    return [
-      { id: 1, session: 'Close', digit: '1', points: 10 },
-      { id: 2, session: 'Open', digit: '7', points: 10 }
-    ];
-  });
+  const [bidsList, setBidsList] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [sessionStatus, setSessionStatus] = useState({
     isOpenSessionOpen: true,
@@ -223,6 +96,7 @@ export const UserBetPage = () => {
       case 'two-digit-panel': return 'Two Digit';
       case 'sp-dp-tp': return 'SP / DP / TP';
       case 'half-sangam': return 'Half Sang';
+      case 'full-sangam': return 'Full Sang';
       case 'digit-based': return 'Digit Based';
       case 'red-brackets': return 'Red Brackets';
       default: return 'Single Ank';
@@ -496,6 +370,13 @@ export const UserBetPage = () => {
           />
         )}
 
+        {gameMode === 'full-sangam' && (
+          <FullSangam
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+          />
+        )}
+
         {gameMode === 'digit-based' && (
           <DigitBased
             setBidsList={setBidsList}
@@ -523,6 +404,13 @@ export const UserBetPage = () => {
             <div className="bg-[#f8f9fc] border-b border-gray-200/80 px-4 py-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
               <span className="w-1/4 text-center">DIGIT</span>
               <span className="w-1/4 text-center">PANA</span>
+              <span className="w-1/4 text-center">POINTS</span>
+              <span className="w-1/4 text-center">ACTION</span>
+            </div>
+          ) : gameMode === 'full-sangam' ? (
+            <div className="bg-[#f8f9fc] border-b border-gray-200/80 px-4 py-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              <span className="w-1/4 text-center">OPEN PANA</span>
+              <span className="w-1/4 text-center">CLOSE PANA</span>
               <span className="w-1/4 text-center">POINTS</span>
               <span className="w-1/4 text-center">ACTION</span>
             </div>
@@ -564,6 +452,12 @@ export const UserBetPage = () => {
                     <>
                       <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.digit}</span>
                       <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.pana}</span>
+                      <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.points}</span>
+                    </>
+                  ) : gameMode === 'full-sangam' ? (
+                    <>
+                      <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.openPana}</span>
+                      <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.closePana}</span>
                       <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.points}</span>
                     </>
                   ) : (gameMode === 'odd-even' || gameMode === 'two-digit-panel' || gameMode === 'sp-dp-tp') ? (

@@ -57,6 +57,7 @@ export const UserGameModes = () => {
     { id: 'two-digit-panel', name: 'Two Digit Panel (CP,SR)', isOpenOnly: false, iconType: 'grid' },
     { id: 'sp-dp-tp', name: 'SP DP TP', isOpenOnly: false, iconType: 'two-blocks' },
     { id: 'half-sangam', name: 'Half Sangam', isOpenOnly: true, iconType: 'dots-cluster' },
+    { id: 'full-sangam', name: 'Full Sangam', isOpenOnly: true, iconType: 'dots-cluster' },
     { id: 'red-brackets', name: 'Red Brackets', isOpenOnly: true, iconType: 'brackets' },
     { id: 'digit-based', name: 'Digit Based', isOpenOnly: false, iconType: 'digit-symbol' }
   ];

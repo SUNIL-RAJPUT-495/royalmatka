@@ -1,19 +1,42 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 
-export const generateDigitBasedJodis = (digitStr) => {
-  const clean = digitStr.replace(/\D/g, '').slice(0, 1);
-  if (!clean) return { jodis: [], subtext: '' };
+export const generateDigitBasedJodis = (leftInput, rightInput) => {
+  const cleanLeft = leftInput.trim().replace(/\D/g, '').slice(0, 1);
+  const cleanRight = rightInput.trim().replace(/\D/g, '').slice(0, 1);
 
-  const jodis = [];
-  const targetDigit = clean;
-
-  // Generate 10 Jodis starting with targetDigit (e.g., 5 -> 50, 51, 52... 59)
-  for (let i = 0; i <= 9; i++) {
-    jodis.push(`${targetDigit}${i}`);
+  if (!cleanLeft && !cleanRight) {
+    return { jodis: [], subtext: '' };
   }
 
-  const subtext = `Digit: ${targetDigit} — ${jodis.length} jodis found`;
+  const jodisSet = new Set();
+
+  if (cleanLeft && !cleanRight) {
+    for (let i = 0; i <= 9; i++) {
+      jodisSet.add(`${cleanLeft}${i}`);
+    }
+    const subtext = `Starting with ${cleanLeft} — ${jodisSet.size} jodis found`;
+    return { jodis: Array.from(jodisSet), subtext };
+  }
+
+  if (!cleanLeft && cleanRight) {
+    for (let i = 0; i <= 9; i++) {
+      jodisSet.add(`${i}${cleanRight}`);
+    }
+    const subtext = `Ending with ${cleanRight} — ${jodisSet.size} jodis found`;
+    return { jodis: Array.from(jodisSet), subtext };
+  }
+
+  // Both Left and Right entered
+  for (let i = 0; i <= 9; i++) {
+    jodisSet.add(`${cleanLeft}${i}`);
+  }
+  for (let i = 0; i <= 9; i++) {
+    jodisSet.add(`${i}${cleanRight}`);
+  }
+
+  const jodis = Array.from(jodisSet);
+  const subtext = `${cleanLeft}X then X${cleanRight} — ${jodis.length} jodis found`;
   return { jodis, subtext };
 };
 
@@ -21,22 +44,25 @@ export const DigitBased = ({
   setBidsList, 
   themeColor 
 }) => {
-  const [digitInput, setDigitInput] = useState('');
+  const [leftDigit, setLeftDigit] = useState('');
+  const [rightDigit, setRightDigit] = useState('');
   const [points, setPoints] = useState('');
   const [errorBannerMsg, setErrorBannerMsg] = useState('');
+  const [successBannerMsg, setSuccessBannerMsg] = useState('');
 
-  const { jodis, subtext } = generateDigitBasedJodis(digitInput);
+  const { jodis, subtext } = generateDigitBasedJodis(leftDigit, rightDigit);
 
   const handleAddMoreDigitBased = () => {
     setErrorBannerMsg('');
-    const cleanDigit = digitInput.trim().replace(/\D/g, '');
+    setSuccessBannerMsg('');
 
-    if (!cleanDigit) {
-      const msg = 'Please enter a valid single digit (0-9)!';
+    if (jodis.length === 0) {
+      const msg = 'Please enter Left Digit or Right Digit (0-9)!';
       setErrorBannerMsg(msg);
       toast.error(msg);
       return;
     }
+
     if (!points || parseInt(points, 10) <= 0) {
       const msg = 'Please enter valid points!';
       setErrorBannerMsg(msg);
@@ -52,15 +78,24 @@ export const DigitBased = ({
     }));
 
     setBidsList(prev => [...prev, ...newBids]);
-    setDigitInput('');
+    setLeftDigit('');
+    setRightDigit('');
     setPoints('');
     setErrorBannerMsg('');
-    toast.success(`${newBids.length} Digit Based Jodis added to list! ➕`);
+    setSuccessBannerMsg(`${newBids.length} jodis added successfully!`);
+    toast.success(`${newBids.length} jodis added successfully!`);
   };
 
   return (
     <div className="space-y-3">
       
+      {/* Green Success Banner */}
+      {successBannerMsg && (
+        <div className="bg-[#dcfce7] text-[#16a34a] border border-[#bbf7d0] rounded-xl px-4 py-2.5 text-xs font-bold shadow-3xs animate-in fade-in duration-200">
+          {successBannerMsg}
+        </div>
+      )}
+
       {/* Red Error Banner */}
       {errorBannerMsg && (
         <div className="bg-[#fee2e2] text-[#ef4444] border border-[#fca5a5] rounded-xl px-4 py-2.5 text-xs font-bold shadow-3xs animate-in fade-in duration-200">
@@ -71,30 +106,49 @@ export const DigitBased = ({
       {/* TOP INPUT CARD */}
       <div className="bg-white rounded-xl p-4 border border-gray-200/80 shadow-3xs space-y-3.5">
         
-        {/* Row 1: Enter Digit Input */}
+        {/* Row 1: Left Digit & Right Digit side-by-side */}
         <div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">Select Digit (0–9)</span>
-            <div className="w-44">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <span className="block text-xs font-medium text-gray-500 mb-1">Left Digit</span>
               <input
                 type="text"
                 maxLength={1}
-                placeholder="e.g. 5"
-                value={digitInput}
+                placeholder="0-9"
+                value={leftDigit}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '').slice(0, 1);
-                  setDigitInput(val);
+                  setLeftDigit(val);
                   if (errorBannerMsg) setErrorBannerMsg('');
+                  if (successBannerMsg) setSuccessBannerMsg('');
                 }}
                 style={{ borderColor: themeColor }}
-                className="w-full h-9 px-3 border-2 rounded-xl text-center font-bold text-xs outline-none bg-white focus:ring-0 shadow-3xs text-gray-800 placeholder-gray-400"
+                className="w-full h-9 px-3 border-2 rounded-xl text-center font-bold text-sm outline-none bg-white focus:ring-0 shadow-3xs text-gray-800 placeholder-gray-400"
+              />
+            </div>
+
+            <div>
+              <span className="block text-xs font-medium text-gray-500 mb-1">Right Digit</span>
+              <input
+                type="text"
+                maxLength={1}
+                placeholder="0-9"
+                value={rightDigit}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 1);
+                  setRightDigit(val);
+                  if (errorBannerMsg) setErrorBannerMsg('');
+                  if (successBannerMsg) setSuccessBannerMsg('');
+                }}
+                style={{ borderColor: themeColor }}
+                className="w-full h-9 px-3 border-2 rounded-xl text-center font-bold text-sm outline-none bg-white focus:ring-0 shadow-3xs text-gray-800 placeholder-gray-400"
               />
             </div>
           </div>
 
           {/* Dynamic Subtext */}
           {subtext && (
-            <div className="text-[10px] font-medium text-gray-400 text-right mt-1.5 px-0.5">
+            <div className="text-[10px] font-medium text-gray-400 text-center mt-2 px-0.5">
               {subtext}
             </div>
           )}
@@ -103,7 +157,7 @@ export const DigitBased = ({
         {/* Row 2: Points Input */}
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-gray-500">Points</span>
-          <div className="w-44">
+          <div className="w-52">
             <input
               type="text"
               placeholder="0"
@@ -112,6 +166,7 @@ export const DigitBased = ({
                 const val = e.target.value.replace(/\D/g, '');
                 setPoints(val);
                 if (errorBannerMsg) setErrorBannerMsg('');
+                if (successBannerMsg) setSuccessBannerMsg('');
               }}
               style={{ borderColor: themeColor }}
               className="w-full h-9 px-3 border-2 rounded-xl text-center font-bold text-sm outline-none bg-white focus:ring-0 shadow-3xs text-gray-800 placeholder-gray-400"
