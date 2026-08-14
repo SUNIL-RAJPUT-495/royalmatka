@@ -28,8 +28,8 @@ export const UserBids = () => {
   const [filterTab, setFilterTab] = useState('pending');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Filter Drawer State
-  const [isFilterOpen, setIsFilterOpen] = useState(true);
+  // Filter Drawer State (Closed by default)
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [dateRange, setDateRange] = useState('all'); // 'all' | 'today' | 'yesterday' | 'custom'
   const [customDate, setCustomDate] = useState('2026-08-12');
   const [sortOrder, setSortOrder] = useState('oldest'); // 'newest' | 'oldest'
