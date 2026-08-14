@@ -393,8 +393,9 @@ export const AdminAccessManager = () => {
                             <span>Revoke</span>
                           </button>
                         </td>
-                      </tr>
-                    ))}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
