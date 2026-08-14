@@ -182,10 +182,14 @@ function App() {
               <Route path="AdminReferralsPage" element={<AdminReferralsPage />} />
               <Route path="commission" element={<CommissionManagement />} />
               <Route path="admin-comission" element={<CommissionManagement />} />
-              <Route path="all-withdrawals" element={<WithdrawalManagement />} />
-              <Route path="allfw" element={<WithdrawalManagement />} />
+              <Route path="all-withdrawals" element={<WithdrawalRequestsPage />} />
+              <Route path="allfw" element={<WithdrawalRequestsPage />} />
               <Route path="Payment" element={<DepositRequestsManagement />} />
+              <Route path="payment" element={<DepositRequestsManagement />} />
+              <Route path="deposit-requests" element={<DepositRequestsManagement />} />
               <Route path="Withdraw" element={<WithdrawalRequestsPage />} />
+              <Route path="withdraw" element={<WithdrawalRequestsPage />} />
+              <Route path="withdrawal-requests" element={<WithdrawalRequestsPage />} />
               <Route path="jackpot-gali-bids" element={<JackpotGaliBids />} />
               <Route path="jackpotgali-bids" element={<JackpotGaliBids />} />
               <Route path="jackpot-gali-results" element={<JackpotGaliResults />} />

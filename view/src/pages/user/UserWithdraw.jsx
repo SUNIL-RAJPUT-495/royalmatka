@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import Axios from '../../utils/axios';
+import SummaryApi from '../../common/SummerAPI';
 import {
   FaArrowLeft,
   FaCheckCircle,
@@ -40,6 +42,8 @@ export const UserWithdraw = () => {
     return primaryUpi || '';
   });
   const [showRules, setShowRules] = useState(false);
+  const [showExposureModal, setShowExposureModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const localBankStr = localStorage.getItem('bank_details');
   let localBank = null;
@@ -57,7 +61,13 @@ export const UserWithdraw = () => {
   const isValidMethod = method === 'bank' ? hasBankDetails : Boolean(upiId && upiId.trim().length >= 3);
   const isValidAmount = numAmount > 0 && isValidMethod;
 
-  const handleProceed = () => {
+  const exposureAmount = Number(user.wallet?.exposureAmount !== undefined ? user.wallet.exposureAmount : (user.exposureAmount || 0));
+
+  const handleProceed = async () => {
+    if (exposureAmount > 0) {
+      setShowExposureModal(true);
+      return;
+    }
     if (numAmount < 100) {
       toast.error('Minimum withdrawal amount is ₹100');
       return;
@@ -76,10 +86,42 @@ export const UserWithdraw = () => {
       return;
     }
 
-    toast.success('Withdrawal request submitted successfully! 🎉');
-    setTimeout(() => {
-      navigate('/passbook');
-    }, 1000);
+    const accountDetailsStr = method === 'bank'
+      ? `${primaryBank?.bankName || 'Bank'} - A/C: ${primaryBank?.accountNumber || ''} (IFSC: ${primaryBank?.ifscCode || ''})`
+      : `UPI: ${upiId.trim()}`;
+
+    setSubmitting(true);
+    try {
+      const response = await Axios({
+        url: SummaryApi.requestWithdrawal?.url || '/api/payment/request-withdrawal',
+        method: SummaryApi.requestWithdrawal?.method || 'post',
+        data: {
+          userId: user._id || user.id || '',
+          mobile: user.mobile || '',
+          amount: numAmount,
+          method: method === 'bank' ? 'Bank Transfer' : 'UPI',
+          accountDetails: accountDetailsStr
+        }
+      });
+
+      if (response.data?.success) {
+        toast.success('Withdrawal request submitted successfully! 🎉');
+        setTimeout(() => {
+          navigate('/passbook');
+        }, 1000);
+      } else {
+        toast.error(response.data?.message || 'Failed to submit withdrawal request');
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to submit withdrawal request';
+      if (err.response?.data?.isExposureLocked) {
+        setShowExposureModal(true);
+      } else {
+        toast.error(msg);
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -328,6 +370,47 @@ export const UserWithdraw = () => {
           </button>
         </div>
       </div>
+
+      {/* EXPOSURE LOCK POPUP MODAL */}
+      {showExposureModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200">
+            <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto shadow-xs">
+              <span className="text-3xl">🔒</span>
+            </div>
+
+            <div>
+              <h3 className="text-base font-bold text-gray-900">Withdrawal Locked</h3>
+              <p className="text-xs text-gray-700 font-semibold mt-2 leading-relaxed">
+                You have a remaining exposure requirement of <span className="font-bold text-amber-700">₹{exposureAmount.toFixed(2)}</span>.
+              </p>
+              <p className="text-[11px] text-gray-500 font-normal mt-1.5 leading-normal">
+                You must place bets worth <span className="font-bold text-gray-900">₹{exposureAmount.toFixed(2)}</span> more to unlock your withdrawal.
+              </p>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowExposureModal(false);
+                  navigate('/home');
+                }}
+                className="w-full bg-[#f97316] hover:bg-orange-600 active:scale-95 text-white font-bold py-3 rounded-2xl shadow-xs transition-all cursor-pointer text-xs flex items-center justify-center gap-1.5"
+              >
+                <span>🎮 Play Games & Unlock</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowExposureModal(false)}
+                className="w-full bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-700 font-bold py-2.5 rounded-2xl transition-all cursor-pointer text-xs"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

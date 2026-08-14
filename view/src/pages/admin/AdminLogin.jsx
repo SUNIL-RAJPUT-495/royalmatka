@@ -44,6 +44,7 @@ export const AdminLogin = () => {
         localStorage.setItem('admin_token', token || 'master_token_1008');
         localStorage.setItem('admin_name', admin?.name || 'Super Admin');
         localStorage.setItem('admin_role', admin?.role || 'Administrator');
+        localStorage.setItem('admin_permissions', JSON.stringify(admin?.permissions || []));
         localStorage.setItem('is_admin_logged_in', 'true');
 
         toast.success(response.data.message || 'Login Successful! Redirecting...');

@@ -9,4 +9,7 @@ const gameRateSchema = new mongoose.Schema({
   active: { type: Boolean, default: true }
 }, { timestamps: true });
 
+gameRateSchema.index({ active: 1, category: 1 });
+gameRateSchema.index({ active: 1 });
+
 export default mongoose.model("GameRate", gameRateSchema);

@@ -8,7 +8,7 @@ const paymentTransactionSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["Deposit", "Withdrawal"],
+    enum: ["Deposit", "Withdrawal", "Game", "Win", "Bonus"],
     default: "Deposit"
   },
   amount: {
@@ -34,14 +34,14 @@ const paymentTransactionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["Pending", "Approved", "Rejected"],
+    enum: ["Pending", "Approved", "Rejected", "Confirmed"],
     default: "Pending"
   },
-  remark: {
-    type: String,
-    default: ""
-  }
 }, { timestamps: true });
+
+paymentTransactionSchema.index({ type: 1, createdAt: -1 });
+paymentTransactionSchema.index({ status: 1, type: 1 });
+paymentTransactionSchema.index({ userId: 1, type: 1 });
 
 export const PaymentTransaction = mongoose.model("PaymentTransaction", paymentTransactionSchema);
 export default PaymentTransaction;

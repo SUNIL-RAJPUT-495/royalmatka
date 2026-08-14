@@ -5,44 +5,63 @@ import {
 } from 'react-icons/fa';
 import { IoClose } from 'react-icons/io5';
 import toast from 'react-hot-toast';
+import AxiosAdmin from '../../utils/axiosAdmin';
+import SummaryApi from '../../common/SummerAPI';
 
 export const WelcomePopupAdmin = () => {
-  // Load initial settings or use default values matching screenshot
-  const [config, setConfig] = useState(() => {
-    const saved = localStorage.getItem('welcome_popup_config');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed.highlights) && Array.isArray(parsed.notes) && Array.isArray(parsed.statCards)) {
-          return parsed;
-        }
-      } catch (e) {
-        console.warn(e);
+  const defaultConfig = {
+    enabled: true,
+    eliteLabel: 'Elite Experience',
+    headingLine: 'WELCOME TO',
+    brandName: 'Royal 1008',
+    trustBadgeText: "INDIA'S #1 TRUSTED APP",
+    ratesHeading: 'Live Payout Rates',
+    ratesSubLabel: '10 Ka Rate',
+    ctaButtonText: 'Start Playing Now',
+    footerLine1: 'Authorized Gaming Environment',
+    footerLine2: 'Target your success with Royal Matka 🎯',
+    heroDescription: 'Play safely with trusted rates and transparent payout rules.',
+    ratesDescription: 'Below rates are for quick reference. Please verify before placing bids.',
+    highlights: ['Fast support', 'Secure wallet', 'Instant updates'],
+    notes: ['KYC required for withdrawals.', 'Play responsibly.'],
+    statCards: [
+      { label: 'MIN DEPOSIT', value: '₹100', color: 'emerald' },
+      { label: 'MIN WITHDRAW', value: '₹1000', color: 'blue' },
+      { label: 'MIN BID POINT', value: '₹10', color: 'amber' },
+      { label: 'WITHDRAWAL', value: '6AM - 5PM', color: 'rose' }
+    ]
+  };
+
+  const [config, setConfig] = useState(defaultConfig);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Fetch config from API on mount
+  useEffect(() => {
+    fetchConfig();
+  }, []);
+
+  const fetchConfig = async () => {
+    setLoading(true);
+    try {
+      const res = await AxiosAdmin({
+        url: SummaryApi.getWelcomePopup.url,
+        method: SummaryApi.getWelcomePopup.method
+      });
+      if (res.data.success && res.data.config) {
+        setConfig(res.data.config);
+        localStorage.setItem('welcome_popup_config', JSON.stringify(res.data.config));
       }
+    } catch (err) {
+      console.warn('API error, falling back to local storage', err);
+      const saved = localStorage.getItem('welcome_popup_config');
+      if (saved) {
+        try { setConfig(JSON.parse(saved)); } catch (e) {}
+      }
+    } finally {
+      setLoading(false);
     }
-    return {
-      enabled: true,
-      eliteLabel: 'Elite Experience',
-      headingLine: 'WELCOME TO',
-      brandName: 'Royal 1008',
-      trustBadgeText: "INDIA'S #1 TRUSTED APP",
-      ratesHeading: 'Live Payout Rates',
-      ratesSubLabel: '10 Ka Rate',
-      ctaButtonText: 'Start Playing Now',
-      footerLine1: 'Authorized Gaming Environment',
-      footerLine2: 'Target your success with Royal Matka 🎯',
-      heroDescription: 'Play safely with trusted rates and transparent payout rules.',
-      ratesDescription: 'Below rates are for quick reference. Please verify before placing bids.',
-      highlights: ['Fast support', 'Secure wallet', 'Instant updates'],
-      notes: ['KYC required for withdrawals.', 'Play responsibly.'],
-      statCards: [
-        { label: 'MIN DEPOSIT', value: '₹100', color: 'emerald' },
-        { label: 'MIN WITHDRAW', value: '₹1000', color: 'blue' },
-        { label: 'MIN BID POINT', value: '₹10', color: 'amber' },
-        { label: 'WITHDRAWAL', value: '6AM - 5PM', color: 'rose' }
-      ]
-    };
-  });
+  };
 
   const handleChange = (field, val) => {
     setConfig((prev) => ({
@@ -53,63 +72,97 @@ export const WelcomePopupAdmin = () => {
 
   // Highlights handlers
   const handleAddHighlight = () => {
-    handleChange('highlights', [...config.highlights, '']);
+    handleChange('highlights', [...(config.highlights || []), '']);
   };
 
   const handleHighlightChange = (index, value) => {
-    const list = [...config.highlights];
+    const list = [...(config.highlights || [])];
     list[index] = value;
     handleChange('highlights', list);
   };
 
   const handleRemoveHighlight = (index) => {
-    const list = config.highlights.filter((_, i) => i !== index);
+    const list = (config.highlights || []).filter((_, i) => i !== index);
     handleChange('highlights', list);
   };
 
   // Notes handlers
   const handleAddNote = () => {
-    handleChange('notes', [...config.notes, '']);
+    handleChange('notes', [...(config.notes || []), '']);
   };
 
   const handleNoteChange = (index, value) => {
-    const list = [...config.notes];
+    const list = [...(config.notes || [])];
     list[index] = value;
     handleChange('notes', list);
   };
 
   const handleRemoveNote = (index) => {
-    const list = config.notes.filter((_, i) => i !== index);
+    const list = (config.notes || []).filter((_, i) => i !== index);
     handleChange('notes', list);
   };
 
   // Stat Cards handlers
   const handleAddStatCard = () => {
     handleChange('statCards', [
-      ...config.statCards,
+      ...(config.statCards || []),
       { label: 'NEW CARD', value: '₹0', color: 'emerald' }
     ]);
   };
 
   const handleStatCardChange = (index, key, value) => {
-    const list = [...config.statCards];
+    const list = [...(config.statCards || [])];
     list[index] = { ...list[index], [key]: value };
     handleChange('statCards', list);
   };
 
   const handleRemoveStatCard = (index) => {
-    const list = config.statCards.filter((_, i) => i !== index);
+    const list = (config.statCards || []).filter((_, i) => i !== index);
     handleChange('statCards', list);
   };
 
-  const handleSave = () => {
-    localStorage.setItem('welcome_popup_config', JSON.stringify(config));
-    window.dispatchEvent(new Event('storage'));
-    toast.success('Welcome Popup Settings saved successfully!');
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await AxiosAdmin({
+        url: SummaryApi.updateWelcomePopup.url,
+        method: SummaryApi.updateWelcomePopup.method,
+        data: config
+      });
+      if (res.data.success) {
+        localStorage.setItem('welcome_popup_config', JSON.stringify(res.data.config || config));
+        window.dispatchEvent(new Event('storage'));
+        toast.success(res.data.message || 'Welcome Popup settings saved to Database! 🎉');
+      } else {
+        toast.error(res.data.message || 'Failed to save settings');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleRefresh = () => {
-    toast.success('Settings reloaded');
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      const res = await AxiosAdmin({
+        url: SummaryApi.getWelcomePopup.url,
+        method: SummaryApi.getWelcomePopup.method,
+        params: { _t: Date.now() }
+      });
+      if (res.data.success && res.data.config) {
+        setConfig(res.data.config);
+        localStorage.setItem('welcome_popup_config', JSON.stringify(res.data.config));
+        toast.success('Welcome Popup settings refreshed from Database! 🔄');
+      } else {
+        toast.success('Settings reloaded 🔄');
+      }
+    } catch (err) {
+      toast.error('Failed to refresh settings from server');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -129,10 +182,11 @@ export const WelcomePopupAdmin = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={handleRefresh}
-            className="border border-gray-300 rounded-xl px-4 py-2 text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 flex items-center gap-2 cursor-pointer shadow-2xs active:scale-95 transition-all"
+            disabled={loading}
+            className="border border-gray-300 rounded-xl px-4 py-2 text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 flex items-center gap-2 cursor-pointer shadow-2xs active:scale-95 transition-all disabled:opacity-50"
           >
-            <FaRedo size={10} />
-            <span>Refresh</span>
+            <FaRedo size={10} className={loading ? 'animate-spin' : ''} />
+            <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
           </button>
           
           <button

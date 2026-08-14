@@ -9,7 +9,9 @@ export const UsersList = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [visiblePasswords, setVisiblePasswords] = useState({});
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -63,6 +65,30 @@ export const UsersList = () => {
     }
   };
 
+  const [toggleLoading, setToggleLoading] = useState(null);
+
+  const handleToggleStatus = async (userId, currentStatus) => {
+    setToggleLoading(userId);
+    const newStatus = currentStatus === 'Blocked' ? 'Active' : 'Blocked';
+    try {
+      const res = await AxiosAdmin({
+        url: SummaryApi.toggleUserStatus?.url || '/api/user/toggle-status',
+        method: SummaryApi.toggleUserStatus?.method || 'post',
+        data: { userId, status: newStatus }
+      });
+      if (res.data.success) {
+        toast.success(res.data.message || `User is now ${newStatus}`);
+        setUsers(prev => prev.map(u => u._id === userId ? { ...u, status: newStatus } : u));
+      } else {
+        toast.error(res.data.message || 'Failed to update user status');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update status');
+    } finally {
+      setToggleLoading(null);
+    }
+  };
+
   // Filter users by search term
   const filteredUsers = users.filter((u) => {
     const term = searchTerm.toLowerCase();
@@ -85,14 +111,14 @@ export const UsersList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f8f8] p-6 font-sans text-left text-gray-800 select-none">
+    <div className="min-h-screen bg-[#f8f9fc] p-4 md:p-6 font-sans text-left text-gray-800 select-none">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6 border-b border-gray-200 pb-4">
         <div>
-          <h1 className="text-xl font-bold text-[#4b4b4b] uppercase tracking-wide">USER LIST</h1>
-          <div className="text-xs text-[#6e6b7b] mt-1 font-semibold">
-            User Management <span className="mx-1.5">/</span> User List
+          <h1 className="text-lg font-extrabold text-gray-900 uppercase tracking-tight leading-none">USER LIST MANAGEMENT</h1>
+          <div className="text-xs text-gray-500 mt-1 font-semibold">
+            User Management <span className="mx-1">/</span> Registered Users
           </div>
         </div>
 
@@ -100,17 +126,17 @@ export const UsersList = () => {
           onClick={fetchUsersList}
           className="border border-gray-300 rounded-xl px-4 py-2 text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 flex items-center gap-2 cursor-pointer shadow-2xs active:scale-95 transition-all w-fit"
         >
-          <RefreshCw size={11} />
+          <RefreshCw size={12} />
           <span>Refresh</span>
         </button>
       </div>
 
       {/* Main Table Card */}
-      <div className="bg-white rounded shadow-[0_0_5px_rgba(0,0,0,0.05)] p-5 border border-gray-100">
+      <div className="bg-white rounded-3xl shadow-sm p-5 border border-gray-200">
         
         {/* Filter Controls Row */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
-          <div className="flex items-center text-sm text-[#6e6b7b] font-semibold">
+          <div className="flex items-center text-xs text-gray-600 font-semibold">
             <span>Show</span>
             <select 
               value={entriesPerPage}
@@ -118,7 +144,7 @@ export const UsersList = () => {
                 setEntriesPerPage(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="mx-2 border border-[#d8d6de] rounded-lg px-2.5 py-1.5 outline-none focus:border-blue-400 bg-white font-semibold cursor-pointer text-xs"
+              className="mx-2 border border-gray-300 rounded-xl px-2.5 py-1.5 outline-none focus:border-blue-500 bg-white font-semibold cursor-pointer text-xs shadow-2xs"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -127,7 +153,7 @@ export const UsersList = () => {
             <span>entries</span>
           </div>
 
-          <div className="flex items-center text-sm text-[#6e6b7b] relative w-full sm:w-60">
+          <div className="flex items-center text-xs text-gray-600 relative w-full sm:w-64">
             <span className="mr-2 font-semibold">Search:</span>
             <div className="relative flex-1">
               <input 
@@ -138,18 +164,18 @@ export const UsersList = () => {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full border border-[#d8d6de] rounded-lg pl-8 pr-3 py-1.5 outline-none focus:border-blue-400 text-xs font-semibold"
+                className="w-full border border-gray-300 rounded-xl pl-8 pr-3 py-1.5 outline-none focus:border-blue-500 text-xs font-semibold shadow-2xs"
               />
-              <Search className="absolute left-2.5 top-2 text-gray-400" size={12} />
+              <Search className="absolute left-2.5 top-2 text-gray-400" size={13} />
             </div>
           </div>
         </div>
 
         {/* Table Container */}
-        <div className="overflow-x-auto border border-[#ebe9f1] rounded-lg">
+        <div className="overflow-x-auto border border-gray-150 rounded-2xl">
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
-              <tr className="bg-[#f3f2f7] border-b border-[#ebe9f1] text-[11px] font-bold text-[#6e6b7b] uppercase tracking-wider">
+              <tr className="bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                 <th className="p-3.5 pl-4">#</th>
                 <th className="p-3.5">User</th>
                 <th className="p-3.5">Mobile No</th>
@@ -159,65 +185,80 @@ export const UsersList = () => {
                 <th className="p-3.5 text-right pr-4">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#ebe9f1]">
+            <tbody className="divide-y divide-gray-150">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="p-10 text-center text-[#6e6b7b] text-sm font-semibold bg-[#fafbfc]">
+                  <td colSpan={7} className="p-10 text-center text-gray-400 text-xs font-semibold bg-gray-50/50">
                     Loading user entries...
                   </td>
                 </tr>
               ) : currentRows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-10 text-center text-[#6e6b7b] text-sm font-semibold bg-[#fafbfc]">
+                  <td colSpan={7} className="p-10 text-center text-gray-400 text-xs font-semibold bg-gray-50/50">
                     No users found matching search criteria.
                   </td>
                 </tr>
               ) : (
                 currentRows.map((user, idx) => {
-                  const balance = (user.wallet?.realBalance || 0) + (user.wallet?.bonusBalance || 0);
+                  const balance = Number(user.balance !== undefined ? user.balance : (user.wallet?.withdrowalable || 0) + (user.wallet?.bonusBalance || 0));
                   const isBlocked = user.status === 'Blocked' || user.status === 'Inactive';
                   
                   return (
-                    <tr key={user._id} className="hover:bg-gray-50/50 transition-colors text-xs font-semibold text-[#6e6b7b]">
+                    <tr key={user._id} className="hover:bg-gray-50/80 transition-colors text-xs font-semibold text-gray-700">
                       <td className="p-3.5 pl-4 font-bold text-gray-400">
                         {indexOfFirstRow + idx + 1}
                       </td>
                       <td className="p-3.5">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center font-bold text-blue-600 text-xs shadow-3xs">
+                          <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center font-bold text-indigo-600 text-xs shadow-3xs">
                             {user.name?.charAt(0) || 'U'}
                           </div>
                           <span className="text-gray-900 font-bold">{user.name || 'N/A'}</span>
                         </div>
                       </td>
-                      <td className="p-3.5">
+                      <td className="p-3.5 font-mono">
                         <div className="flex items-center gap-1">
-                          <Phone size={10} className="text-gray-400" />
+                          <Phone size={11} className="text-gray-400" />
                           <span>{user.mobile || 'N/A'}</span>
                         </div>
                       </td>
-                      <td className="p-3.5 font-bold text-gray-800">
-                        ₹{balance.toLocaleString('en-IN')}
+                      <td className="p-3.5 font-bold text-gray-900">
+                        ₹{balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </td>
                       <td className="p-3.5">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white uppercase tracking-wider ${
-                          isBlocked ? 'bg-[#ff6b6b]' : 'bg-[#28c76f]'
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          isBlocked ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                         }`}>
                           {user.status || 'Active'}
                         </span>
                       </td>
-                      <td className="p-3.5 uppercase text-[10px] font-bold">
+                      <td className="p-3.5 uppercase text-[10px] font-bold text-gray-500">
                         {user.role || 'User'}
                       </td>
                       <td className="p-3.5 text-right pr-4">
-                        <button
-                          onClick={() => navigate(`/systum/view-user/${user._id}`)}
-                          className="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-150 rounded-xl transition-all cursor-pointer active:scale-95 inline-flex items-center gap-1 text-[10px] font-bold uppercase"
-                          title="View Details"
-                        >
-                          <Eye size={11} />
-                          <span>View</span>
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => navigate(`/systum/view-user/${user._id}`)}
+                            className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 rounded-xl transition-all cursor-pointer active:scale-95 inline-flex items-center gap-1 text-[10px] font-bold uppercase shadow-3xs"
+                            title="View Details"
+                          >
+                            <Eye size={11} />
+                            <span>View</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleToggleStatus(user._id, user.status)}
+                            disabled={toggleLoading === user._id}
+                            className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer active:scale-95 inline-flex items-center gap-1 text-[10px] font-bold uppercase shadow-3xs ${
+                              isBlocked
+                                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200'
+                                : 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200'
+                            }`}
+                            title={isBlocked ? "Unblock User" : "Block User"}
+                          >
+                            <span>{isBlocked ? '🟢 Unblock' : '🚫 Block'}</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -229,36 +270,38 @@ export const UsersList = () => {
 
         {/* Pagination Row */}
         {totalPages > 0 && (
-          <div className="flex justify-between items-center mt-5 text-xs text-[#6e6b7b] font-semibold">
+          <div className="flex flex-col sm:flex-row justify-between items-center mt-5 pt-4 border-t border-gray-200 gap-3 text-xs text-gray-600 font-semibold">
             <div>
-              Showing {indexOfFirstRow + 1} to {Math.min(indexOfLastRow, totalEntries)} of {totalEntries} entries
+              Showing {totalEntries > 0 ? indexOfFirstRow + 1 : 0} to {Math.min(indexOfLastRow, totalEntries)} of {totalEntries} entries
             </div>
             
-            <div className="flex rounded overflow-hidden border border-[#d8d6de]">
+            <div className="flex items-center gap-1">
               <button 
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className={`px-3.5 py-2 text-xs font-bold border-r border-[#d8d6de] ${
-                  currentPage === 1 
-                    ? 'bg-[#f3f2f7] text-[#b9b9c3] cursor-not-allowed' 
-                    : 'bg-white text-[#6e6b7b] hover:bg-gray-50 cursor-pointer'
-                }`}
+                className="px-3.5 py-1.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold transition-all shadow-3xs cursor-pointer"
               >
                 Previous
               </button>
 
-              <span className="px-4.5 py-2 bg-[#4b46e5] text-white font-bold flex items-center justify-center">
-                {currentPage}
-              </span>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-3xs ${
+                    currentPage === page
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
 
               <button 
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className={`px-3.5 py-2 text-xs font-bold ${
-                  currentPage === totalPages 
-                    ? 'bg-[#f3f2f7] text-[#b9b9c3] cursor-not-allowed' 
-                    : 'bg-white text-[#6e6b7b] hover:bg-gray-50 cursor-pointer'
-                }`}
+                className="px-3.5 py-1.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold transition-all shadow-3xs cursor-pointer"
               >
                 Next
               </button>

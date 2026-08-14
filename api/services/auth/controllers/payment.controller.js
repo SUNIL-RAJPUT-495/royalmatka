@@ -146,13 +146,7 @@ export const verifyPayment = async (req, res) => {
             transaction.status = "Approved";
             await transaction.save();
 
-            const user = await User.findById(transaction.userId);
-            if (user) {
-              if (!user.wallet) user.wallet = { withdrowalable: 0, bonusBalance: 0 };
-              user.wallet.withdrowalable = (user.wallet.withdrowalable || 0) + transaction.amount;
-              user.balance = (user.wallet.withdrowalable || 0) + (user.wallet.bonusBalance || 0);
-              await user.save();
-            }
+            await creditUserDepositWithExposure(transaction.userId, transaction.amount);
 
             return res.status(200).json({
               success: true,
@@ -198,13 +192,7 @@ export const imbWebhook = async (req, res) => {
         transaction.status = "Approved";
         await transaction.save();
 
-        const user = await User.findById(transaction.userId);
-        if (user) {
-          if (!user.wallet) user.wallet = { withdrowalable: 0, bonusBalance: 0 };
-          user.wallet.withdrowalable = (user.wallet.withdrowalable || 0) + transaction.amount;
-          user.balance = (user.wallet.withdrowalable || 0) + (user.wallet.bonusBalance || 0);
-          await user.save();
-        }
+        await creditUserDepositWithExposure(transaction.userId, transaction.amount);
         console.log(`✅ Transaction ${transactionId} marked as APPROVED via Webhook!`);
       } else if (data.status === "FAILED" && transaction.status !== "Approved") {
         transaction.status = "Rejected";
@@ -388,6 +376,310 @@ export const getUserTransactions = async (req, res) => {
 
     return res.status(200).json({ success: true, transactions: [] });
   } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ==========================================
+// 7. ADMIN: GET ALL TRANSACTIONS
+// ==========================================
+export const getAllTransactionsAdmin = async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const transactions = await PaymentTransaction.find({ type: "Deposit" })
+        .populate("userId", "name mobile email wallet balance")
+        .sort({ createdAt: -1 });
+
+      const allUsers = await User.find({}).lean();
+      const userMap = new Map();
+      allUsers.forEach(u => {
+        userMap.set(u._id.toString(), u);
+        if (u.mobile) userMap.set(u.mobile.toString(), u);
+      });
+
+      const formatted = transactions.map(tx => {
+        const doc = tx.toObject();
+
+        let userObj = doc.userId;
+        if (!userObj || typeof userObj === 'string' || !userObj.name) {
+          const rawId = typeof doc.userId === 'string' ? doc.userId : doc.userId?._id?.toString();
+          if (rawId && userMap.has(rawId.toString())) {
+            const matched = userMap.get(rawId.toString());
+            userObj = {
+              _id: matched._id,
+              name: matched.name || matched.mobile || 'User',
+              mobile: matched.mobile || 'N/A',
+              email: matched.email || 'N/A',
+              wallet: matched.wallet || { withdrowalable: matched.balance || 0 },
+              balance: matched.balance || 0
+            };
+          } else {
+            userObj = {
+              name: userObj?.name || 'User',
+              mobile: userObj?.mobile || 'N/A',
+              email: userObj?.email || 'N/A',
+              wallet: userObj?.wallet || { withdrowalable: 0 },
+              balance: userObj?.balance || 0
+            };
+          }
+        }
+
+        let paymentSource = "Manual QR / UPI";
+        const m = (doc.method || "").toLowerCase();
+        if (m.includes("imb") || m.includes("gateway") || m.includes("online") || m.includes("auto")) {
+          paymentSource = "Auto Gateway (IMB)";
+        } else if (m.includes("payfromupi")) {
+          paymentSource = "PayFromUPI Gateway";
+        } else if (m.includes("manual")) {
+          paymentSource = "Manual QR / UTR Upload";
+        }
+
+        return {
+          ...doc,
+          userId: userObj,
+          paymentSource
+        };
+      });
+
+      return res.status(200).json({ success: true, transactions: formatted });
+    }
+
+    return res.status(200).json({ success: true, transactions: [] });
+  } catch (error) {
+    console.error("getAllTransactionsAdmin Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const creditUserDepositWithExposure = async (userIdStr, amount) => {
+  if (!userIdStr) return null;
+  let user = null;
+  if (mongoose.Types.ObjectId.isValid(userIdStr)) {
+    user = await User.findById(userIdStr);
+  }
+  if (!user) {
+    user = await User.findOne({
+      $or: [{ _id: userIdStr }, { mobile: userIdStr }]
+    });
+  }
+  if (!user) return null;
+
+  if (!user.wallet) {
+    user.wallet = { withdrowalable: 0, bonusBalance: 0, exposureAmount: 0 };
+  }
+
+  const amt = Number(amount) || 0;
+  user.wallet.withdrowalable = (user.wallet.withdrowalable || 0) + amt;
+  user.wallet.exposureAmount = (user.wallet.exposureAmount || 0) + amt;
+  user.balance = (user.wallet.withdrowalable || 0) + (user.wallet.bonusBalance || 0);
+
+  await user.save();
+  return user;
+};
+
+// ==========================================
+// 8. ADMIN: UPDATE TRANSACTION STATUS (APPROVE / REJECT)
+// ==========================================
+export const updateTransactionStatusAdmin = async (req, res) => {
+  try {
+    const { transactionId, status } = req.body;
+
+    if (!transactionId || !status) {
+      return res.status(400).json({ success: false, message: "transactionId and status are required" });
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      const tx = await PaymentTransaction.findById(transactionId);
+      if (!tx) {
+        return res.status(404).json({ success: false, message: "Transaction not found" });
+      }
+
+      // If approving a deposit that was pending, credit user wallet & exposure amount
+      if (status === "Approved" && tx.status !== "Approved" && tx.type === "Deposit") {
+        await creditUserDepositWithExposure(tx.userId, tx.amount);
+      }
+
+      tx.status = status;
+      await tx.save();
+
+      return res.status(200).json({
+        success: true,
+        message: `Transaction ${status} successfully!`,
+        transaction: tx
+      });
+    }
+
+    return res.status(200).json({ success: true, message: `Status updated to ${status}` });
+  } catch (error) {
+    console.error("updateTransactionStatusAdmin Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ==========================================
+// 9. USER: REQUEST WITHDRAWAL
+// ==========================================
+export const requestWithdrawal = async (req, res) => {
+  try {
+    const { userId, mobile, amount, method, accountDetails } = req.body;
+    const amt = Number(amount);
+
+    if (!amt || amt < 100) {
+      return res.status(400).json({ success: false, message: "Minimum withdrawal amount is ₹100." });
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      let query = {};
+      if (userId && mongoose.Types.ObjectId.isValid(userId)) query._id = userId;
+      else if (mobile) query.mobile = mobile;
+      else query = { role: { $ne: "Admin" } };
+
+      const user = await User.findOne(query);
+      if (!user) return res.status(404).json({ success: false, message: "User account not found." });
+
+      const exposure = Number(user.wallet?.exposureAmount || 0);
+      if (exposure > 0) {
+        return res.status(400).json({
+          success: false,
+          isExposureLocked: true,
+          exposureAmount: exposure,
+          message: `Withdrawal Locked! You have a remaining exposure requirement of ₹${exposure.toFixed(2)}.`
+        });
+      }
+
+      const available = Number(user.wallet?.withdrowalable !== undefined ? user.wallet.withdrowalable : user.balance || 0);
+      if (available < amt) {
+        return res.status(400).json({ success: false, message: `Insufficient withdrawable balance (Available: ₹${available.toFixed(2)}).` });
+      }
+
+      // Deduct from wallet balance (held for pending withdrawal)
+      if (!user.wallet) user.wallet = { withdrowalable: 0, bonusBalance: 0 };
+      user.wallet.withdrowalable = Math.max(0, (user.wallet.withdrowalable || 0) - amt);
+      user.balance = (user.wallet.withdrowalable || 0) + (user.wallet.bonusBalance || 0);
+      await user.save();
+
+      const transactionId = "WDR" + Date.now() + Math.floor(Math.random() * 1000);
+      const tx = await PaymentTransaction.create({
+        userId: user._id,
+        type: "Withdrawal",
+        amount: amt,
+        method: method || "Bank",
+        accountDetails: accountDetails || "N/A",
+        transactionId: transactionId,
+        status: "Pending"
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: "Withdrawal request submitted successfully! 🎉 Admin will process shortly.",
+        transaction: tx
+      });
+    }
+
+    return res.status(201).json({ success: true, message: "Withdrawal request submitted successfully! 🎉" });
+  } catch (error) {
+    console.error("requestWithdrawal Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ==========================================
+// 10. ADMIN: GET ALL WITHDRAWAL REQUESTS
+// ==========================================
+export const getAllWithdrawalsAdmin = async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const transactions = await PaymentTransaction.find({ type: "Withdrawal" })
+        .populate("userId", "name mobile email wallet balance")
+        .sort({ createdAt: -1 });
+
+      const allUsers = await User.find({}).lean();
+      const userMap = new Map();
+      allUsers.forEach(u => {
+        userMap.set(u._id.toString(), u);
+        if (u.mobile) userMap.set(u.mobile.toString(), u);
+      });
+
+      const formatted = transactions.map(tx => {
+        const doc = tx.toObject();
+
+        let userObj = doc.userId;
+        if (!userObj || typeof userObj === 'string' || !userObj.name) {
+          const rawId = typeof doc.userId === 'string' ? doc.userId : doc.userId?._id?.toString();
+          if (rawId && userMap.has(rawId.toString())) {
+            const matched = userMap.get(rawId.toString());
+            userObj = {
+              _id: matched._id,
+              name: matched.name || matched.mobile || 'User',
+              mobile: matched.mobile || 'N/A',
+              email: matched.email || 'N/A'
+            };
+          } else {
+            userObj = {
+              name: userObj?.name || 'User',
+              mobile: userObj?.mobile || 'N/A',
+              email: userObj?.email || 'N/A'
+            };
+          }
+        }
+
+        return {
+          ...doc,
+          userId: userObj
+        };
+      });
+
+      return res.status(200).json(formatted);
+    }
+
+    return res.status(200).json([]);
+  } catch (error) {
+    console.error("getAllWithdrawalsAdmin Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ==========================================
+// 11. ADMIN: UPDATE WITHDRAWAL STATUS (APPROVE / REJECT)
+// ==========================================
+export const updateWithdrawalStatusAdmin = async (req, res) => {
+  try {
+    const { transactionId, status } = req.body;
+
+    if (!transactionId || !status) {
+      return res.status(400).json({ success: false, message: "transactionId and status are required" });
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      const tx = await PaymentTransaction.findById(transactionId);
+      if (!tx) {
+        return res.status(404).json({ success: false, message: "Withdrawal transaction not found" });
+      }
+
+      // If rejected, refund the amount back to user's wallet
+      if (status === "Rejected" && tx.status === "Pending") {
+        const user = await User.findById(tx.userId);
+        if (user) {
+          if (!user.wallet) user.wallet = { withdrowalable: 0, bonusBalance: 0 };
+          user.wallet.withdrowalable = (user.wallet.withdrowalable || 0) + tx.amount;
+          user.balance = (user.wallet.withdrowalable || 0) + (user.wallet.bonusBalance || 0);
+          await user.save();
+        }
+      }
+
+      tx.status = status;
+      await tx.save();
+
+      return res.status(200).json({
+        success: true,
+        message: `Withdrawal request ${status} successfully!`,
+        transaction: tx
+      });
+    }
+
+    return res.status(200).json({ success: true, message: `Withdrawal status updated to ${status}` });
+  } catch (error) {
+    console.error("updateWithdrawalStatusAdmin Error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };

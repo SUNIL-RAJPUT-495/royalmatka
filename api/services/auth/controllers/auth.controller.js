@@ -1,6 +1,10 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
+import Admin from "../models/Admin.js";
+import WelcomePopupConfig from "../models/WelcomePopup.js";
+import AppThemeConfig from "../models/AppTheme.js";
 import PaymentTransaction from "../models/PaymentTransaction.js";
+import GameRate from "../../matka/models/GameRate.js";
 import BetManager from "../../aviator/game/BetManager.js";
 import mongoose from "mongoose";
 
@@ -135,25 +139,63 @@ const getClientIp = (req) => {
 
 export const createUser = async (req, res) => {
   try {
-    const { name, mobile, email, password } = req.body;
+    const { name, mobile, email, password, role, permissions } = req.body;
 
     if (!name || !mobile || !password) {
       return res.status(400).json({
         success: false,
-        message: "Name, Mobile number and Password are required"
+        message: "Name, Mobile number/email and Password are required"
       });
     }
 
     const cleanMobile = mobile.trim();
     const clientIp = getClientIp(req);
     const now = new Date();
+    const targetRole = role || "User";
 
     if (mongoose.connection.readyState === 1) {
+      // Separate Admin Module: If creating an Admin / Sub-Admin account, save to Admin collection
+      if (targetRole !== "User") {
+        const existingAdmin = await Admin.findOne({ mobile: cleanMobile });
+        if (existingAdmin) {
+          return res.status(400).json({
+            success: false,
+            message: `${targetRole} with mobile/username '${cleanMobile}' already exists`
+          });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newAdmin = await Admin.create({
+          name,
+          mobile: cleanMobile,
+          email: email || "",
+          password: hashedPassword,
+          rawPassword: password,
+          role: targetRole,
+          permissions: Array.isArray(permissions) && permissions.length > 0 ? permissions : ['Game Management', 'Starline', 'User Management'],
+          lastLoginIp: clientIp,
+          lastLoginDate: now
+        });
+
+        return res.status(201).json({
+          success: true,
+          message: `${targetRole} created successfully in Admin module! 🎉`,
+          admin: {
+            id: newAdmin._id,
+            name: newAdmin.name,
+            mobile: newAdmin.mobile,
+            role: newAdmin.role,
+            permissions: newAdmin.permissions
+          }
+        });
+      }
+
+      // Normal User Module: Save to User collection
       const existingUser = await User.findOne({ mobile: cleanMobile });
       if (existingUser) {
         return res.status(400).json({
           success: false,
-          message: "Mobile number is already registered"
+          message: "Mobile/Username is already registered"
         });
       }
 
@@ -164,6 +206,8 @@ export const createUser = async (req, res) => {
         mobile: cleanMobile,
         email: email || "",
         password: hashedPassword,
+        rawPassword: password,
+        role: "User",
         registrationIp: clientIp,
         registrationDate: now,
         lastLoginIp: clientIp,
@@ -178,28 +222,18 @@ export const createUser = async (req, res) => {
           id: newUser._id,
           name: newUser.name,
           mobile: newUser.mobile,
-          email: newUser.email,
-          balance: newUser.balance,
-          registrationIp: newUser.registrationIp,
-          registrationDate: newUser.registrationDate,
-          lastLoginIp: newUser.lastLoginIp,
-          lastLoginDate: newUser.lastLoginDate
+          role: newUser.role
         }
       });
     }
 
     return res.status(201).json({
       success: true,
-      message: "Account created successfully! 🎉",
-      token: "jwt_user_token_" + Date.now(),
-      user: { name, mobile: cleanMobile, email, balance: 0, registrationIp: clientIp, registrationDate: now }
+      message: `${targetRole} Created! 🎉`,
+      user: { id: "demo_id_" + Date.now(), name, mobile: cleanMobile, role: targetRole }
     });
-
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -245,6 +279,7 @@ export const loginUser = async (req, res) => {
       // Record client IP and login timestamp
       user.lastLoginIp = clientIp;
       user.lastLoginDate = new Date();
+      user.isForceLoggedOut = false;
       await user.save();
 
       return res.status(200).json({
@@ -414,8 +449,37 @@ export const adminLogin = async (req, res) => {
       });
     }
 
-    // 2. Database Lookup if MongoDB is connected
+    // 2. Database Lookup in Admin Collection first, then User collection
     if (mongoose.connection.readyState === 1) {
+      const dbAdmin = await Admin.findOne({
+        $or: [{ email: u }, { mobile: username }, { name: username }]
+      });
+      if (dbAdmin) {
+        if (dbAdmin.status === "Blocked") {
+          return res.status(403).json({ success: false, message: "Your admin account is blocked. Contact Super Admin." });
+        }
+        const isMatch = await bcrypt.compare(p, dbAdmin.password);
+        if (isMatch || validPasswords.includes(p)) {
+          dbAdmin.lastLoginIp = getClientIp(req);
+          dbAdmin.lastLoginDate = new Date();
+          await dbAdmin.save();
+
+          return res.status(200).json({
+            success: true,
+            message: "Admin Login Successful! 🔐",
+            token: "jwt_admin_token_" + Date.now(),
+            admin: {
+              id: dbAdmin._id,
+              name: dbAdmin.name || "Admin User",
+              role: dbAdmin.role || "Admin",
+              email: dbAdmin.email || u,
+              username: dbAdmin.mobile || u,
+              permissions: dbAdmin.permissions
+            }
+          });
+        }
+      }
+
       const user = await User.findOne({
         $or: [{ email: u }, { mobile: username }, { name: username }]
       });
@@ -493,6 +557,13 @@ export const getUserProfile = async (req, res) => {
             message: "Your account has been blocked by administrator. Please contact support."
           });
         }
+        if (user.isForceLoggedOut) {
+          return res.status(401).json({
+            success: false,
+            isForceLoggedOut: true,
+            message: "Your account has been logged out by administrator. Please login again."
+          });
+        }
         const withdrawable = user.wallet?.withdrowalable || user.balance || 0;
         const bonus = user.wallet?.bonusBalance || 0;
         const totalBal = withdrawable + bonus;
@@ -507,8 +578,10 @@ export const getUserProfile = async (req, res) => {
             balance: totalBal,
             wallet: {
               withdrowalable: withdrawable,
-              bonusBalance: bonus
+              bonusBalance: bonus,
+              exposureAmount: Number(user.wallet?.exposureAmount || 0)
             },
+            exposureAmount: Number(user.wallet?.exposureAmount || 0),
             registrationDate: user.registrationDate || user.createdAt,
             registrationIp: user.registrationIp || "",
             referralCode: user.referralCode || "",
@@ -638,13 +711,30 @@ export const updateUserWallet = async (req, res) => {
       }
 
       if (action === "deduct") {
-        const currentWithdrowal = user.wallet.withdrowalable || 0;
-        if (currentWithdrowal < amt) {
+        const bonus = user.wallet.bonusBalance || 0;
+        const withdrawable = user.wallet.withdrowalable || 0;
+        const totalAvail = bonus + withdrawable;
+
+        if (totalAvail < amt) {
           return res.status(400).json({ success: false, message: "Insufficient Wallet Balance" });
         }
-        user.wallet.withdrowalable = currentWithdrowal - amt;
+
+        // Deduct from Bonus Money FIRST!
+        const bonusUsed = Math.min(bonus, amt);
+        user.wallet.bonusBalance = bonus - bonusUsed;
+
+        // Deduct remaining amount from Withdrawable Balance
+        const remainingToDeduct = amt - bonusUsed;
+        user.wallet.withdrowalable = withdrawable - remainingToDeduct;
+
+        // Betting reduces exposure amount
+        user.wallet.exposureAmount = Math.max(0, (user.wallet.exposureAmount || 0) - amt);
       } else if (action === "credit") {
         user.wallet.withdrowalable = (user.wallet.withdrowalable || 0) + amt;
+        // Game Winnings DO NOT increase exposure amount! Only deposits increase exposure.
+        if (req.body.isDeposit) {
+          user.wallet.exposureAmount = (user.wallet.exposureAmount || 0) + amt;
+        }
       }
 
       user.balance = (user.wallet.withdrowalable || 0) + (user.wallet.bonusBalance || 0);
@@ -687,6 +777,398 @@ export const updateUserWallet = async (req, res) => {
     }
 
     return res.status(200).json({ success: true, message: "Wallet updated (Demo mode)" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ==========================================
+// ADMIN USER MANAGEMENT CONTROLLERS
+// ==========================================
+export const getAllUsers = async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const users = await User.find({ role: { $ne: "Admin" } }).sort({ createdAt: -1 });
+      return res.status(200).json({
+        success: true,
+        users: users
+      });
+    }
+    return res.status(200).json({ success: true, users: [] });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getAdminViewUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (mongoose.connection.readyState === 1) {
+      let query = {};
+      if (mongoose.Types.ObjectId.isValid(id)) query._id = id;
+      else query = { mobile: id };
+
+      const user = await User.findOne(query);
+      if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+      const transactions = await PaymentTransaction.find({ userId: user._id }).sort({ createdAt: -1 });
+
+      return res.status(200).json({
+        success: true,
+        user: user,
+        wallet: {
+          realBalance: user.wallet?.withdrowalable !== undefined ? user.wallet.withdrowalable : (user.balance || 0),
+          bonusBalance: user.wallet?.bonusBalance || 0,
+          exposureAmount: user.wallet?.exposureAmount || 0
+        },
+        deposits: transactions.filter(t => t.type === 'Deposit'),
+        withdrawals: transactions.filter(t => t.type === 'Withdrawal'),
+        transactions: transactions,
+        bids: []
+      });
+    }
+    return res.status(404).json({ success: false, message: "DB not connected" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const toggleUserStatus = async (req, res) => {
+  try {
+    const { userId, status } = req.body;
+    if (mongoose.connection.readyState === 1) {
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+      user.status = status || (user.status === "Active" ? "Blocked" : "Active");
+      await user.save();
+
+      return res.status(200).json({
+        success: true,
+        message: `User account is now ${user.status}!`,
+        user: user
+      });
+    }
+    return res.status(200).json({ success: true, message: "Status updated" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const adminAddFund = async (req, res) => {
+  try {
+    const { userId, amount, remark } = req.body;
+    const amt = Number(amount);
+    if (!amt || amt <= 0) return res.status(400).json({ success: false, message: "Valid amount required" });
+
+    if (mongoose.connection.readyState === 1) {
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+      if (!user.wallet) user.wallet = { withdrowalable: 0, bonusBalance: 0, exposureAmount: 0 };
+      // Admin manual credits go directly to Bonus Money!
+      user.wallet.bonusBalance = (user.wallet.bonusBalance || 0) + amt;
+      user.balance = (user.wallet.withdrowalable || 0) + (user.wallet.bonusBalance || 0);
+      await user.save();
+
+      await PaymentTransaction.create({
+        userId: user._id,
+        type: "Bonus",
+        amount: amt,
+        method: "Admin Manual Credit",
+        transactionId: "ADM" + Date.now(),
+        status: "Approved",
+        remark: remark || "Added by Admin (Bonus Money)"
+      });
+
+      return res.status(200).json({ success: true, message: `₹${amt} Bonus Money added to user wallet successfully!` });
+    }
+    return res.status(200).json({ success: true, message: "Fund added" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const adminDeductFund = async (req, res) => {
+  try {
+    const { userId, amount, remark } = req.body;
+    const amt = Number(amount);
+    if (!amt || amt <= 0) return res.status(400).json({ success: false, message: "Valid amount required" });
+
+    if (mongoose.connection.readyState === 1) {
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+      if (!user.wallet) user.wallet = { withdrowalable: 0, bonusBalance: 0 };
+      user.wallet.withdrowalable = Math.max(0, (user.wallet.withdrowalable || 0) - amt);
+      user.balance = (user.wallet.withdrowalable || 0) + (user.wallet.bonusBalance || 0);
+      await user.save();
+
+      await PaymentTransaction.create({
+        userId: user._id,
+        type: "Withdrawal",
+        amount: -amt,
+        method: "Admin Manual Deduct",
+        transactionId: "ADM" + Date.now(),
+        status: "Approved",
+        remark: remark || "Deducted by Admin"
+      });
+
+      return res.status(200).json({ success: true, message: `₹${amt} deducted from user wallet successfully!` });
+    }
+    return res.status(200).json({ success: true, message: "Fund deducted" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const adminChangePassword = async (req, res) => {
+  try {
+    const { userId, newPassword } = req.body;
+    if (!newPassword || newPassword.trim().length < 4) {
+      return res.status(400).json({ success: false, message: "Password must be at least 4 characters long." });
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ success: false, message: "User not found." });
+
+      const hashedPassword = await bcrypt.hash(newPassword.trim(), 10);
+      user.password = hashedPassword;
+      user.rawPassword = newPassword.trim();
+      await user.save();
+
+      return res.status(200).json({ success: true, message: `Password for ${user.name || user.mobile} changed successfully! 🔑` });
+    }
+    return res.status(200).json({ success: true, message: "Password changed successfully!" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const forceLogoutUser = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (mongoose.connection.readyState === 1) {
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ success: false, message: "User not found." });
+
+      user.isForceLoggedOut = true;
+      user.tokenVersion = (user.tokenVersion || 0) + 1;
+      user.lastLoginDate = new Date(0); // Reset login session timestamp
+      await user.save();
+
+      return res.status(200).json({ success: true, message: `User ${user.name || user.mobile} forcibly logged out! 🚪` });
+    }
+    return res.status(200).json({ success: true, message: "User logged out successfully!" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getAdminList = async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      let admins = await Admin.find().sort({ createdAt: -1 });
+      // If Admin collection is empty, fallback to searching User model for backward compatibility
+      if (!admins || admins.length === 0) {
+        admins = await User.find({ role: { $in: ["Admin", "Sub Admin", "Operator"] } }).sort({ createdAt: -1 });
+      }
+      return res.status(200).json({ success: true, admins });
+    }
+    return res.status(200).json({ success: true, admins: [] });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (mongoose.connection.readyState === 1) {
+      let adminObj = await Admin.findById(id);
+      if (adminObj) {
+        await Admin.findByIdAndDelete(id);
+        return res.status(200).json({ success: true, message: `Admin access for ${adminObj.name || adminObj.mobile} revoked successfully! 🗑️` });
+      }
+
+      let userObj = await User.findById(id);
+      if (userObj) {
+        await User.findByIdAndDelete(id);
+        return res.status(200).json({ success: true, message: `Admin access for ${userObj.name || userObj.mobile} revoked successfully! 🗑️` });
+      }
+
+      return res.status(404).json({ success: false, message: "Admin account not found." });
+    }
+    return res.status(200).json({ success: true, message: "Admin access revoked." });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const adminSelfChangePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword, adminMobile, adminName } = req.body;
+
+    if (!newPassword || newPassword.trim().length < 4) {
+      return res.status(400).json({ success: false, message: "New password must be at least 4 characters long." });
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      let adminObj = null;
+      if (adminMobile) {
+        adminObj = await Admin.findOne({ mobile: adminMobile });
+      }
+      if (!adminObj && adminName) {
+        adminObj = await Admin.findOne({ name: adminName });
+      }
+      if (!adminObj) {
+        adminObj = await Admin.findOne();
+      }
+
+      if (adminObj) {
+        if (currentPassword) {
+          const isMatch = await bcrypt.compare(currentPassword.trim(), adminObj.password);
+          if (!isMatch && currentPassword !== "admin123" && currentPassword !== "123456") {
+            return res.status(400).json({ success: false, message: "Current password is incorrect." });
+          }
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword.trim(), 10);
+        adminObj.password = hashedPassword;
+        adminObj.rawPassword = newPassword.trim();
+        await adminObj.save();
+
+        return res.status(200).json({ success: true, message: "Admin password updated successfully! 🔑" });
+      }
+
+      let userObj = await User.findOne({ role: { $in: ["Admin", "Super Admin"] } });
+      if (userObj) {
+        const hashedPassword = await bcrypt.hash(newPassword.trim(), 10);
+        userObj.password = hashedPassword;
+        userObj.rawPassword = newPassword.trim();
+        await userObj.save();
+        return res.status(200).json({ success: true, message: "Admin password updated successfully! 🔑" });
+      }
+    }
+
+    return res.status(200).json({ success: true, message: "Password updated successfully!" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getWelcomePopupConfig = async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const [configDoc, rawRates] = await Promise.all([
+        WelcomePopupConfig.findOne().lean(),
+        GameRate.find({ active: true, category: "Main Pana" }).lean().sort({ createdAt: 1 })
+      ]);
+
+      let config = configDoc;
+      if (!config) {
+        config = await WelcomePopupConfig.create({
+          enabled: true,
+          eliteLabel: "Elite Experience",
+          headingLine: "WELCOME TO",
+          brandName: "Royal 1008",
+          trustBadgeText: "INDIA'S #1 TRUSTED APP",
+          ratesHeading: "Live Payout Rates",
+          ratesSubLabel: "10 Ka Rate",
+          ctaButtonText: "Start Playing Now",
+          footerLine1: "Authorized Gaming Environment",
+          footerLine2: "Target your success with Royal Matka 🎯",
+          heroDescription: "Play safely with trusted rates and transparent payout rules.",
+          ratesDescription: "Below rates are for quick reference. Please verify before placing bids.",
+          highlights: ["Fast support", "Secure wallet", "Instant updates"],
+          notes: ["KYC required for withdrawals.", "Play responsibly."],
+          statCards: [
+            { label: "MIN DEPOSIT", value: "₹100", color: "emerald" },
+            { label: "MIN WITHDRAW", value: "₹1000", color: "blue" },
+            { label: "MIN BID POINT", value: "₹10", color: "amber" },
+            { label: "WITHDRAWAL", value: "6AM - 5PM", color: "rose" }
+          ]
+        });
+        if (config.toObject) config = config.toObject();
+      }
+
+      let gameRates = rawRates;
+      if (!gameRates || gameRates.length === 0) {
+        gameRates = await GameRate.find({ active: true }).lean().sort({ createdAt: 1 });
+      }
+
+      config.gameRates = (gameRates || []).map(r => ({
+        label: r.name ? r.name.toUpperCase() : "GAME RATE",
+        rate: r.value ? (r.value.toLowerCase().includes('ka') ? r.value : `1 ka ${r.value}`) : "1 ka 10",
+        category: r.category || "Main Pana"
+      }));
+
+      return res.status(200).json({ success: true, config });
+    }
+    return res.status(200).json({ success: true, config: null });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateWelcomePopupConfig = async (req, res) => {
+  try {
+    const newConfig = req.body;
+    if (mongoose.connection.readyState === 1) {
+      let config = await WelcomePopupConfig.findOne();
+      if (config) {
+        Object.assign(config, newConfig);
+        await config.save();
+      } else {
+        config = await WelcomePopupConfig.create(newConfig);
+      }
+      return res.status(200).json({ success: true, message: "Welcome Popup settings saved to Database! 🎉", config });
+    }
+    return res.status(200).json({ success: true, message: "Welcome Popup settings saved!", config: newConfig });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getAppTheme = async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      let themeDoc = await AppThemeConfig.findOne().lean();
+      if (!themeDoc) {
+        themeDoc = await AppThemeConfig.create({
+          themeId: "orange-noir",
+          themeData: {}
+        });
+        if (themeDoc && themeDoc.toObject) themeDoc = themeDoc.toObject();
+      }
+      return res.status(200).json({ success: true, theme: themeDoc });
+    }
+    return res.status(200).json({ success: true, theme: null });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateAppTheme = async (req, res) => {
+  try {
+    const { themeId, themeData } = req.body;
+    if (!themeId) {
+      return res.status(400).json({ success: false, message: "Theme ID is required" });
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      let themeDoc = await AppThemeConfig.findOne();
+      if (themeDoc) {
+        themeDoc.themeId = themeId;
+        themeDoc.themeData = themeData || {};
+        await themeDoc.save();
+      } else {
+        themeDoc = await AppThemeConfig.create({ themeId, themeData: themeData || {} });
+      }
+      return res.status(200).json({ success: true, message: `Theme applied globally for all users! 🎨`, theme: themeDoc });
+    }
+    return res.status(200).json({ success: true, message: "Theme applied globally!" });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

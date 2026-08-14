@@ -1,5 +1,30 @@
 import express from "express";
-import { createUser, adminLogin, sendOtp, verifyOtp, loginUser, loginOtp, getUserProfile, addBankAccount, addUpiId, updateUserWallet } from "../controllers/auth.controller.js";
+import {
+  createUser,
+  adminLogin,
+  sendOtp,
+  verifyOtp,
+  loginUser,
+  loginOtp,
+  getUserProfile,
+  addBankAccount,
+  addUpiId,
+  updateUserWallet,
+  getAllUsers,
+  getAdminViewUser,
+  toggleUserStatus,
+  adminAddFund,
+  adminDeductFund,
+  adminChangePassword,
+  forceLogoutUser,
+  getAdminList,
+  deleteAdmin,
+  adminSelfChangePassword,
+  getWelcomePopupConfig,
+  updateWelcomePopupConfig,
+  getAppTheme,
+  updateAppTheme
+} from "../controllers/auth.controller.js";
 
 const router = express.Router();
 
@@ -13,5 +38,26 @@ router.get("/get-user-profile", getUserProfile);
 router.post("/add-bank-account", addBankAccount);
 router.post("/add-upi-id", addUpiId);
 router.post("/update-wallet", updateUserWallet);
+
+// Admin User Management Routes
+router.get("/get-all-users", getAllUsers);
+router.get("/get-admin-list", getAdminList);
+router.get("/get-user/:id", getAdminViewUser);
+router.get("/get-user", getAllUsers);
+router.post("/toggle-status", toggleUserStatus);
+router.post("/admin-add-fund", adminAddFund);
+router.post("/admin-deduct-fund", adminDeductFund);
+router.post("/admin-change-password", adminChangePassword);
+router.post("/admin-self-change-password", adminSelfChangePassword);
+router.post("/force-logout", forceLogoutUser);
+router.delete("/delete-admin/:id", deleteAdmin);
+
+// Welcome Popup Config Routes
+router.get("/get-welcome-popup", getWelcomePopupConfig);
+router.post("/update-welcome-popup", updateWelcomePopupConfig);
+
+// App Theme Settings Routes
+router.get("/get-app-theme", getAppTheme);
+router.post("/update-app-theme", updateAppTheme);
 
 export default router;

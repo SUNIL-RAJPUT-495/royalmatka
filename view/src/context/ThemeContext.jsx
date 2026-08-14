@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import AxiosAdmin from '../utils/axiosAdmin';
+import SummaryApi from '../common/SummerAPI';
 
 // The 7 official theme definitions
 export const APP_THEMES = [
@@ -132,6 +134,28 @@ export const ThemeProvider = ({ children }) => {
     const matched = APP_THEMES.find((t) => t.id === savedId);
     return matched || APP_THEMES[2];
   });
+
+  // Fetch active global theme from backend MongoDB API on mount
+  useEffect(() => {
+    const fetchGlobalTheme = async () => {
+      try {
+        const res = await AxiosAdmin({
+          url: SummaryApi.getAppTheme?.url || '/api/user/get-app-theme',
+          method: SummaryApi.getAppTheme?.method || 'get'
+        });
+        if (res.data.success && res.data.theme && res.data.theme.themeId) {
+          const matched = APP_THEMES.find((t) => t.id === res.data.theme.themeId);
+          if (matched) {
+            setCurrentTheme(matched);
+            localStorage.setItem('app_live_theme_id', matched.id);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch global theme:', err);
+      }
+    };
+    fetchGlobalTheme();
+  }, []);
 
   // Apply CSS Variables to :root on theme changes
   useEffect(() => {

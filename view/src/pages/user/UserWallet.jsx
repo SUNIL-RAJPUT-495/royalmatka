@@ -155,7 +155,7 @@ export const UserWallet = () => {
     }
   ];
 
-  const filterTabs = ['All', 'Deposits', 'Withdrawals', 'Games', 'Bonuses'];
+  const filterTabs = ['All', 'Deposits', 'Withdrawals', 'Games'];
 
   const filteredTransactions = activeFilter === 'All'
     ? transactions
@@ -205,21 +205,7 @@ export const UserWallet = () => {
             </div>
           </div>
 
-          {/* 2-Balance Breakdown: Withdrawable & Bonus */}
-          <div className="grid grid-cols-2 gap-2 mt-2 mb-3">
-            <div className="bg-white/15 rounded-xl p-2.5 border border-white/20">
-              <span className="text-[9px] font-bold text-white/90 uppercase tracking-wider block">Withdrawable</span>
-              <span className="text-sm font-bold text-white block mt-0.5">
-                ₹{Number(currentUser.wallet?.withdrowalable !== undefined ? currentUser.wallet.withdrowalable : (currentUser.balance || 0)).toFixed(2)}
-              </span>
-            </div>
-            <div className="bg-white/15 rounded-xl p-2.5 border border-white/20">
-              <span className="text-[9px] font-bold text-yellow-200 uppercase tracking-wider block">Bonus Money</span>
-              <span className="text-sm font-bold text-yellow-300 block mt-0.5">
-                ₹{Number(currentUser.wallet?.bonusBalance || 0).toFixed(2)}
-              </span>
-            </div>
-          </div>
+          <div className="mb-2"></div>
 
           <div className="flex items-center justify-between text-xs pt-2 border-t border-white/15">
             <div className="text-[11px] text-white/80 font-normal leading-tight">

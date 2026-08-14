@@ -18,9 +18,50 @@ import { RiCoupon3Line, RiAdminLine } from "react-icons/ri";
 
 export const AdminSideBar = ({ closeSidebar }) => {
     // Dynamic Admin Name / Username
-    const adminName = localStorage.getItem("admin_name") || "Mr. Matka";
-    const adminRole = localStorage.getItem("admin_role") || "Pavan";
-    const avatarLetter = (adminName || "M").charAt(0).toUpperCase();
+    const adminName = localStorage.getItem("admin_name") || "Admin User";
+    const adminRole = localStorage.getItem("admin_role") || "Super Admin";
+    const avatarLetter = (adminName || "A").charAt(0).toUpperCase();
+
+    let adminPermissions = [];
+    try {
+        adminPermissions = JSON.parse(localStorage.getItem("admin_permissions") || "[]");
+    } catch (e) {
+        adminPermissions = [];
+    }
+
+    // Full access if Super Admin / Administrator role or All Access permission
+    const isFullAccessAdmin = 
+        adminRole === "Super Admin" || 
+        adminRole === "Administrator" || 
+        adminRole === "Pavan" ||
+        adminPermissions.includes("All Access");
+
+    // Strict Permission Filter Helper
+    const isSectionAllowed = (heading) => {
+        if (isFullAccessAdmin) return true;
+        if (heading === "Main Menu") return true;
+
+        if (heading === "Game Management" || heading === "Jackpot Gali") {
+            return adminPermissions.includes("Game Management") || adminPermissions.includes("Starline") || adminPermissions.includes("Jackpot");
+        }
+        if (heading === "Financial Management") {
+            return adminPermissions.includes("Financial");
+        }
+        if (heading === "User Management" || heading === "Reports & History") {
+            return adminPermissions.includes("User Management");
+        }
+        if (heading === "Communication") {
+            return adminPermissions.includes("Communication");
+        }
+        if (heading === "Settings & Configuration") {
+            return adminPermissions.includes("Settings");
+        }
+        if (heading === "Access Control") {
+            return adminPermissions.includes("Manage Admins");
+        }
+
+        return false;
+    };
 
     const menuSections = [
         {
@@ -139,7 +180,7 @@ export const AdminSideBar = ({ closeSidebar }) => {
 
             {/* Menu Items Section */}
             <div className='flex-1 overflow-y-auto py-4 px-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]'>
-                {menuSections.map((section, sectionIndex) => (
+                {menuSections.filter(section => isSectionAllowed(section.heading)).map((section, sectionIndex) => (
                     <div key={sectionIndex} className="mb-6">
                         {/* Section Heading */}
                         <h3 className="px-4 mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left">

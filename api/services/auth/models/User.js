@@ -22,6 +22,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  rawPassword: {
+    type: String,
+    default: ""
+  },
   balance: {
     type: Number,
     default: 0
@@ -36,17 +40,35 @@ const userSchema = new mongoose.Schema({
       type: Number,
       default: 0,
       description: "Bonus money from referrals or signup"
+    },
+    exposureAmount: {
+      type: Number,
+      default: 0,
+      description: "Required bet amount remaining before withdrawal is unlocked"
     }
   },
   role: {
     type: String,
-    enum: ["User", "Admin"],
+    enum: ["User", "Admin", "Sub Admin", "Operator"],
     default: "User"
   },
+  permissions: [
+    {
+      type: String
+    }
+  ],
   status: {
     type: String,
     enum: ["Active", "Blocked"],
     default: "Active"
+  },
+  isForceLoggedOut: {
+    type: Boolean,
+    default: false
+  },
+  tokenVersion: {
+    type: Number,
+    default: 0
   },
   registrationIp: {
     type: String,
@@ -102,6 +124,9 @@ const userSchema = new mongoose.Schema({
     }
   ]
 }, { timestamps: true });
+
+userSchema.index({ role: 1, createdAt: -1 });
+userSchema.index({ status: 1 });
 
 export const User = mongoose.model("User", userSchema);
 export default User;

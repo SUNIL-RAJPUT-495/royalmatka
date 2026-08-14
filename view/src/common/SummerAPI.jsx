@@ -1,6 +1,4 @@
 //export const baseURL = "http://localhost:5010";
-
-
 export const baseURL = "https://royalmatkaapi.growva.tech";
 
 const SummaryApi = {
@@ -96,6 +94,26 @@ const SummaryApi = {
         url: baseURL + "/api/payment/user-transactions",
         method: "get"
     },
+    allTransactions: {
+        url: baseURL + "/api/payment/all-transactions",
+        method: "get"
+    },
+    updateStatusAdmin: {
+        url: baseURL + "/api/payment/update-status",
+        method: "post"
+    },
+    requestWithdrawal: {
+        url: baseURL + "/api/payment/request-withdrawal",
+        method: "post"
+    },
+    getAllWithdrawals: {
+        url: baseURL + "/api/payment/all-withdrawals",
+        method: "get"
+    },
+    updateWithdrawalStatus: {
+        url: baseURL + "/api/payment/update-withdrawal-status",
+        method: "post"
+    },
 
     // Admin Auth & User Management
     adminLogin: {
@@ -117,6 +135,54 @@ const SummaryApi = {
     getReferralStats: {
         url: baseURL + "/api/user/get-referral-stats",
         method: "get"
+    },
+    adminAddFund: {
+        url: baseURL + "/api/user/admin-add-fund",
+        method: "post"
+    },
+    adminDeductFund: {
+        url: baseURL + "/api/user/admin-deduct-fund",
+        method: "post"
+    },
+    toggleUserStatus: {
+        url: baseURL + "/api/user/toggle-status",
+        method: "post"
+    },
+    adminChangePassword: {
+        url: baseURL + "/api/user/admin-change-password",
+        method: "post"
+    },
+    forceLogoutUser: {
+        url: baseURL + "/api/user/force-logout",
+        method: "post"
+    },
+    getAdminList: {
+        url: baseURL + "/api/user/get-admin-list",
+        method: "get"
+    },
+    deleteAdmin: {
+        url: baseURL + "/api/user/delete-admin",
+        method: "delete"
+    },
+    adminSelfChangePassword: {
+        url: baseURL + "/api/user/admin-self-change-password",
+        method: "post"
+    },
+    getWelcomePopup: {
+        url: baseURL + "/api/user/get-welcome-popup",
+        method: "get"
+    },
+    updateWelcomePopup: {
+        url: baseURL + "/api/user/update-welcome-popup",
+        method: "post"
+    },
+    getAppTheme: {
+        url: baseURL + "/api/user/get-app-theme",
+        method: "get"
+    },
+    updateAppTheme: {
+        url: baseURL + "/api/user/update-app-theme",
+        method: "post"
     },
 
     // Markets & Games

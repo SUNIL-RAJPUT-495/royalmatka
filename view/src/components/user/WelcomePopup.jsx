@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { IoClose } from 'react-icons/io5';
 import { FaShieldAlt } from 'react-icons/fa';
+import AxiosAdmin from '../../utils/axiosAdmin';
+import SummaryApi from '../../common/SummerAPI';
 
 export const WelcomePopup = () => {
   const { currentTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Load welcome popup configuration from local storage
+  // Load welcome popup configuration
   const [config, setConfig] = useState(() => {
     const saved = localStorage.getItem('welcome_popup_config');
     if (saved) {
@@ -43,6 +45,25 @@ export const WelcomePopup = () => {
 
   const isGreenTheme = currentTheme?.id?.includes('green') || currentTheme?.headerBgColor === '#447668';
   const themeColor = currentTheme?.headerBgColor || (isGreenTheme ? '#447668' : '#f95e07');
+
+  // Fetch dynamic config from backend API on mount
+  useEffect(() => {
+    const fetchDynamicConfig = async () => {
+      try {
+        const res = await AxiosAdmin({
+          url: SummaryApi.getWelcomePopup?.url || '/api/user/get-welcome-popup',
+          method: SummaryApi.getWelcomePopup?.method || 'get'
+        });
+        if (res.data.success && res.data.config) {
+          setConfig(res.data.config);
+          localStorage.setItem('welcome_popup_config', JSON.stringify(res.data.config));
+        }
+      } catch (err) {
+        console.warn('Welcome popup fetch error:', err);
+      }
+    };
+    fetchDynamicConfig();
+  }, []);
 
   useEffect(() => {
     // Listen for storage events (if admin changes config on another page)
@@ -180,17 +201,17 @@ export const WelcomePopup = () => {
             </span>
           </div>
 
-          {/* Rates List */}
+          {/* Rates List (Dynamically loaded from Game Rates Database) */}
           <div className="space-y-2">
-            {[
-              { label: 'SINGLE ANK', rate: '₹1 ka 10' },
-              { label: 'JODI', rate: '₹1 ka 100' },
-              { label: 'SINGLE PANNA', rate: '₹1 ka 160' },
-              { label: 'DOUBLE PANNA', rate: '₹1 ka 320' },
-              { label: 'TRIPLE PANNA', rate: '₹1 ka 700' },
-              { label: 'HALF SANGAM', rate: '₹1 ka 1000' },
-              { label: 'FULL SANGAM', rate: '₹1 ka 10000' },
-            ].map((item, idx) => (
+            {(config.gameRates && config.gameRates.length > 0 ? config.gameRates : [
+              { label: 'SINGLE ANK', rate: '1 ka 10' },
+              { label: 'JODI', rate: '1 ka 100' },
+              { label: 'SINGLE PANNA', rate: '1 ka 160' },
+              { label: 'DOUBLE PANNA', rate: '1 ka 320' },
+              { label: 'TRIPLE PANNA', rate: '1 ka 800' },
+              { label: 'HALF SANGAM', rate: '1 ka 1000' },
+              { label: 'FULL SANGAM', rate: '1 ka 10000' }
+            ]).map((item, idx) => (
               <div 
                 key={idx} 
                 className={`bg-white rounded-xl border border-gray-100/80 p-2.5 flex items-center justify-between shadow-2xs transition-all duration-350 cursor-pointer ${
@@ -200,10 +221,10 @@ export const WelcomePopup = () => {
                 }`}
               >
                 <span className="font-extrabold text-[9px] text-gray-700 tracking-wide uppercase">
-                  {item.label}
+                  {item.label || item.name}
                 </span>
-                <span className="font-extrabold text-xs text-emerald-600">
-                  {item.rate}
+                <span className="font-extrabold text-xs text-emerald-600 font-mono">
+                  {item.rate || item.value}
                 </span>
               </div>
             ))}

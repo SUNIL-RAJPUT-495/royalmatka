@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { ThemeCard } from '../../components/admin/ThemeCard';
 import { useTheme } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
+import AxiosAdmin from '../../utils/axiosAdmin';
+import SummaryApi from '../../common/SummerAPI';
 
 export const ThemeSettings = () => {
   const { themes, currentTheme, applyTheme } = useTheme();
@@ -14,13 +16,29 @@ export const ThemeSettings = () => {
     setSelectedTheme(theme);
   };
 
-  const handleApplyTheme = () => {
+  const handleApplyTheme = async () => {
+    if (!selectedTheme) return;
     setIsApplying(true);
-    setTimeout(() => {
-      applyTheme(selectedTheme);
+    try {
+      const res = await AxiosAdmin({
+        url: SummaryApi.updateAppTheme.url,
+        method: SummaryApi.updateAppTheme.method,
+        data: {
+          themeId: selectedTheme.id,
+          themeData: selectedTheme
+        }
+      });
+      if (res.data.success) {
+        applyTheme(selectedTheme);
+        toast.success(res.data.message || `Theme "${selectedTheme.name}" applied globally for all users! 🎨`);
+      } else {
+        toast.error(res.data.message || 'Failed to update theme');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update theme in database');
+    } finally {
       setIsApplying(false);
-      toast.success(`Theme "${selectedTheme.name}" applied for all users!`);
-    }, 400);
+    }
   };
 
   return (

@@ -57,7 +57,17 @@ export const UserLayout = () => {
           localStorage.setItem('user_data', JSON.stringify(res.data.user));
         }
       } catch (err) {
-        if (err.response?.data?.isBlocked === true || err.response?.data?.isDeleted === true) {
+        if (err.response?.data?.isForceLoggedOut === true || err.response?.status === 401) {
+          toast.error(err.response?.data?.message || 'Your account has been logged out by administrator.');
+          localStorage.removeItem('royal_matka_user');
+          localStorage.removeItem('user_token');
+          localStorage.removeItem('token');
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('user_data');
+          setTimeout(() => {
+            window.location.href = '/user-login';
+          }, 800);
+        } else if (err.response?.data?.isBlocked === true || err.response?.data?.isDeleted === true) {
           const msg = err.response?.data?.message || 'Your account has been blocked or deleted by administrator.';
           setBlockedMessage(msg);
           setIsBlockedModalOpen(true);
