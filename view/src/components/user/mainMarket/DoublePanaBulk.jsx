@@ -3,15 +3,15 @@ import toast from 'react-hot-toast';
 
 export const DOUBLE_PANA_MAP = {
   '1': ['100', '119', '155', '227', '335', '344', '399', '588', '669'],
-  '2': ['110', '200', '228', '255', '336', '499', '660', '688', '778'],
-  '3': ['166', '229', '300', '337', '355', '445', '599', '779', '788'],
-  '4': ['112', '220', '266', '338', '400', '446', '455', '699', '770'],
-  '5': ['113', '122', '177', '233', '366', '447', '500', '799', '889'],
-  '6': ['114', '277', '330', '466', '556', '600', '668', '799', '880'],
-  '7': ['115', '133', '188', '223', '377', '449', '557', '700', '899'],
-  '8': ['116', '224', '288', '332', '440', '477', '558', '800', '882'],
-  '9': ['117', '144', '199', '225', '388', '559', '667', '775', '900'],
-  '0': ['118', '226', '244', '299', '334', '488', '550', '668', '776']
+  '2': ['110', '200', '228', '255', '336', '444', '499', '660', '677'],
+  '3': ['111', '166', '229', '300', '337', '355', '445', '599', '779'],
+  '4': ['112', '144', '177', '220', '266', '338', '400', '446', '559'],
+  '5': ['113', '122', '155', '188', '233', '277', '339', '447', '500'],
+  '6': ['114', '222', '288', '330', '366', '448', '455', '556', '600'],
+  '7': ['115', '133', '223', '299', '344', '377', '449', '557', '665'],
+  '8': ['116', '144', '224', '233', '332', '388', '440', '558', '666'],
+  '9': ['117', '155', '225', '244', '333', '399', '441', '559', '667'],
+  '0': ['118', '166', '226', '255', '334', '355', '442', '550', '668']
 };
 
 export const DoublePanaBulk = ({ 
@@ -21,7 +21,7 @@ export const DoublePanaBulk = ({
   themeColor,
   isOpenSessionOpen = true
 }) => {
-  const [selectedDigits, setSelectedDigits] = useState([]); // Selected digit buttons, e.g. ['1', '2', '3']
+  const [selectedDigits, setSelectedDigits] = useState([]); // Selected digit buttons, e.g. ['1']
   const [points, setPoints] = useState('');
   const [successBannerMsg, setSuccessBannerMsg] = useState('');
 
@@ -34,7 +34,6 @@ export const DoublePanaBulk = ({
 
   // Add 9 Double Panas for each selected digit
   const handleAddMoreDoublePanaBulk = () => {
-    setSuccessBannerMsg('');
     if (selectedDigits.length === 0) {
       toast.error('Please select at least one digit (0-9)!');
       return;
@@ -82,16 +81,16 @@ export const DoublePanaBulk = ({
       {/* TOP INPUT CARD matching Screenshot 1 & 3 */}
       <div className="bg-white rounded-xl p-4 border border-gray-200/80 shadow-3xs space-y-4">
         
-        {/* Row 1: Session Selector */}
+        {/* Row 1: Taller Session Selector */}
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-gray-500">Session</span>
-          <div className="bg-[#f0f2f5] rounded-lg p-0.5 flex items-center w-52">
+          <div className="bg-[#f0f2f5] rounded-xl p-1 flex items-center w-56 h-10">
             <button
               type="button"
               disabled={!isOpenSessionOpen}
               onClick={() => isOpenSessionOpen && setSession('Open')}
               style={{ backgroundColor: session === 'Open' && isOpenSessionOpen ? themeColor : 'transparent' }}
-              className={`flex-1 py-1 rounded-md text-xs font-bold text-center transition-all ${
+              className={`flex-1 py-1.5 h-8 rounded-lg text-xs font-extrabold text-center transition-all flex items-center justify-center ${
                 !isOpenSessionOpen
                   ? 'text-gray-400 cursor-not-allowed opacity-60'
                   : session === 'Open'
@@ -105,7 +104,7 @@ export const DoublePanaBulk = ({
               type="button"
               onClick={() => setSession('Close')}
               style={{ backgroundColor: session === 'Close' ? themeColor : 'transparent' }}
-              className={`flex-1 py-1 rounded-md text-xs font-bold text-center transition-all cursor-pointer ${
+              className={`flex-1 py-1.5 h-8 rounded-lg text-xs font-extrabold text-center transition-all cursor-pointer flex items-center justify-center ${
                 session === 'Close' ? 'text-white shadow-3xs' : 'text-gray-600 font-semibold'
               }`}
             >
@@ -114,7 +113,7 @@ export const DoublePanaBulk = ({
           </div>
         </div>
 
-        {/* Row 2: Select Digits (0–9) Grid matching Screenshot 1 & 3 with (9) Badges */}
+        {/* Row 2: Select Digits (0–9) Grid matching Screenshot 1 */}
         <div className="space-y-2">
           <label className="block text-xs font-medium text-gray-500">
             Select Digits (0–9)
@@ -144,10 +143,10 @@ export const DoublePanaBulk = ({
           </div>
         </div>
 
-        {/* Row 3: Points Input */}
-        <div className="flex items-center justify-between pt-1">
+        {/* Row 3: Points Input matching Screenshot 1 */}
+        <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-gray-500">Points</span>
-          <div className="w-40">
+          <div className="w-44">
             <input
               type="text"
               placeholder="0"
@@ -162,13 +161,13 @@ export const DoublePanaBulk = ({
           </div>
         </div>
 
-        {/* Row 4: + Add More Button */}
+        {/* Row 4: Taller + Add More Button */}
         <div className="flex justify-end pt-1">
           <button
             type="button"
             onClick={handleAddMoreDoublePanaBulk}
             style={{ backgroundColor: themeColor }}
-            className="px-8 py-2.5 text-white font-bold text-xs rounded-xl shadow-3xs hover:opacity-95 active:scale-95 transition-all cursor-pointer"
+            className="px-9 py-2.5 h-10 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-2xs hover:opacity-95 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
           >
             + Add More
           </button>

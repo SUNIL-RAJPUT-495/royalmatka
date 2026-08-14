@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 
+export const TRIPLE_PANAS = ['000', '111', '222', '333', '444', '555', '666', '777', '888', '999'];
+
 export const TriplePana = ({ 
   session, 
   setSession, 
@@ -10,73 +12,81 @@ export const TriplePana = ({
 }) => {
   const [pana, setPana] = useState('');
   const [points, setPoints] = useState('');
-  const [errorBanner, setErrorBanner] = useState('');
-  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
-
-  const validTriplePanas = ['000', '111', '222', '333', '444', '555', '666', '777', '888', '999'];
+  const [errorBannerMsg, setErrorBannerMsg] = useState('');
+  const [successBannerMsg, setSuccessBannerMsg] = useState('');
 
   const handleAddMoreTriplePana = () => {
-    setErrorBanner('');
-    setShowSuccessBanner(false);
-    const cleanedPana = pana.trim();
+    setErrorBannerMsg('');
+    setSuccessBannerMsg('');
 
-    if (!cleanedPana || !validTriplePanas.includes(cleanedPana)) {
-      setErrorBanner('Invalid Triple Pana. Must be 000, 111, ..., 999');
-      toast.error('Please enter a valid Triple Pana (000-999)!');
+    const cleanPana = pana.trim().replace(/\D/g, '');
+
+    if (!cleanPana || cleanPana.length !== 3) {
+      const msg = 'Please enter a valid 3-digit Triple Pana (e.g. 000, 111)!';
+      setErrorBannerMsg(msg);
+      toast.error(msg);
       return;
     }
+
+    if (!TRIPLE_PANAS.includes(cleanPana)) {
+      const msg = 'Invalid Triple Pana! Must be 000, 111, 222... 999';
+      setErrorBannerMsg(msg);
+      toast.error(msg);
+      return;
+    }
+
     if (!points || parseInt(points, 10) <= 0) {
-      setErrorBanner('Please enter valid Points!');
-      toast.error('Please enter valid Points!');
+      const msg = 'Please enter valid points!';
+      setErrorBannerMsg(msg);
+      toast.error(msg);
       return;
     }
 
     const newBid = {
       id: Date.now() + Math.random(),
       session,
-      pana: cleanedPana,
+      pana: cleanPana,
       points: parseInt(points, 10)
     };
 
     setBidsList(prev => [...prev, newBid]);
     setPana('');
     setPoints('');
-    setErrorBanner('');
-    setShowSuccessBanner(true);
-    setTimeout(() => setShowSuccessBanner(false), 3000);
+    setErrorBannerMsg('');
+    setSuccessBannerMsg('Pana added successfully!');
     toast.success('Pana added successfully!');
   };
 
   return (
     <div className="space-y-3">
       
+      {/* Green Success Banner */}
+      {successBannerMsg && (
+        <div className="bg-[#dcfce7] text-[#16a34a] border border-[#bbf7d0] rounded-xl px-4 py-2.5 text-xs font-bold shadow-3xs animate-in fade-in duration-200">
+          {successBannerMsg}
+        </div>
+      )}
+
       {/* Red Error Banner */}
-      {errorBanner && (
+      {errorBannerMsg && (
         <div className="bg-[#fee2e2] text-[#ef4444] border border-[#fca5a5] rounded-xl px-4 py-2.5 text-xs font-bold shadow-3xs animate-in fade-in duration-200">
-          {errorBanner}
+          {errorBannerMsg}
         </div>
       )}
 
-      {/* Green Banner Notification matching Screenshot 1 */}
-      {showSuccessBanner && (
-        <div className="bg-[#e6f9ed] text-[#16a34a] border border-[#bbf7d0] rounded-xl px-4 py-2.5 text-xs font-bold shadow-3xs animate-in fade-in duration-200">
-          Pana added successfully!
-        </div>
-      )}
-
-      {/* TOP INPUT CARD matching Screenshot 1 */}
-      <div className="bg-white rounded-xl p-4 border border-gray-200/80 shadow-3xs space-y-3.5">
+      {/* TOP INPUT CARD */}
+      <div className="bg-white rounded-xl p-4 border border-gray-200/80 shadow-3xs space-y-4">
         
-        {/* Row 1: Session Selector */}
+        {/* Row 1: Taller Session Selector */}
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-gray-500">Session</span>
-          <div className="bg-[#f0f2f5] rounded-lg p-0.5 flex items-center w-52">
+          <div className="bg-[#f0f2f5] rounded-xl p-1 flex items-center w-56 h-10">
             <button
               type="button"
               disabled={!isOpenSessionOpen}
               onClick={() => isOpenSessionOpen && setSession('Open')}
               style={{ backgroundColor: session === 'Open' && isOpenSessionOpen ? themeColor : 'transparent' }}
-              className={`flex-1 py-1 rounded-md text-xs font-bold text-center transition-all ${
+              className={`flex-1 py-1.5 h-8 rounded-lg text-xs font-extrabold text-center transition-all flex items-center justify-center ${
                 !isOpenSessionOpen
                   ? 'text-gray-400 cursor-not-allowed opacity-60'
                   : session === 'Open'
@@ -90,7 +100,7 @@ export const TriplePana = ({
               type="button"
               onClick={() => setSession('Close')}
               style={{ backgroundColor: session === 'Close' ? themeColor : 'transparent' }}
-              className={`flex-1 py-1 rounded-md text-xs font-bold text-center transition-all cursor-pointer ${
+              className={`flex-1 py-1.5 h-8 rounded-lg text-xs font-extrabold text-center transition-all cursor-pointer flex items-center justify-center ${
                 session === 'Close' ? 'text-white shadow-3xs' : 'text-gray-600 font-semibold'
               }`}
             >
@@ -99,22 +109,23 @@ export const TriplePana = ({
           </div>
         </div>
 
-        {/* Row 2: Select Triple Pana Input */}
+        {/* Row 2: Enter Pana Input */}
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-gray-500">Select Triple Pana</span>
+          <span className="text-xs font-medium text-gray-500">Triple Pana</span>
           <div className="w-44">
             <input
               type="text"
               maxLength={3}
-              placeholder="000"
+              placeholder="e.g. 000"
               value={pana}
               onChange={(e) => {
                 const val = e.target.value.replace(/\D/g, '').slice(0, 3);
                 setPana(val);
-                if (errorBanner) setErrorBanner('');
+                if (errorBannerMsg) setErrorBannerMsg('');
+                if (successBannerMsg) setSuccessBannerMsg('');
               }}
               style={{ borderColor: themeColor }}
-              className="w-full h-9 px-3 border-2 rounded-xl text-center font-bold text-xs outline-none bg-white focus:ring-0 shadow-3xs text-gray-800 placeholder-gray-400"
+              className="w-full h-9 px-3 border-2 rounded-xl text-center font-bold text-sm outline-none bg-white focus:ring-0 shadow-3xs text-gray-800 placeholder-gray-400"
             />
           </div>
         </div>
@@ -130,7 +141,8 @@ export const TriplePana = ({
               onChange={(e) => {
                 const val = e.target.value.replace(/\D/g, '');
                 setPoints(val);
-                if (errorBanner) setErrorBanner('');
+                if (errorBannerMsg) setErrorBannerMsg('');
+                if (successBannerMsg) setSuccessBannerMsg('');
               }}
               style={{ borderColor: themeColor }}
               className="w-full h-9 px-3 border-2 rounded-xl text-center font-bold text-sm outline-none bg-white focus:ring-0 shadow-3xs text-gray-800 placeholder-gray-400"
@@ -138,13 +150,13 @@ export const TriplePana = ({
           </div>
         </div>
 
-        {/* Row 4: + Add More Button */}
+        {/* Row 4: Taller + Add More Button */}
         <div className="flex justify-end pt-1">
           <button
             type="button"
             onClick={handleAddMoreTriplePana}
             style={{ backgroundColor: themeColor }}
-            className="px-8 py-2.5 text-white font-bold text-xs rounded-xl shadow-3xs hover:opacity-95 active:scale-95 transition-all cursor-pointer"
+            className="px-9 py-2.5 h-10 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-2xs hover:opacity-95 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
           >
             + Add More
           </button>

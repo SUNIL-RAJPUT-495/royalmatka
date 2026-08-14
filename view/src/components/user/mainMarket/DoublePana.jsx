@@ -1,6 +1,19 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 
+export const DOUBLE_PANA_MAP = {
+  '1': ['100', '119', '155', '227', '335', '344', '399', '588', '669', '777'],
+  '2': ['110', '200', '228', '255', '336', '444', '499', '660', '677', '788'],
+  '3': ['111', '166', '229', '300', '337', '355', '445', '599', '779', '888'],
+  '4': ['112', '144', '177', '220', '266', '338', '400', '446', '559', '889'],
+  '5': ['113', '122', '155', '188', '233', '277', '339', '447', '500', '999'],
+  '6': ['114', '222', '288', '330', '366', '448', '455', '556', '600', '990'],
+  '7': ['115', '133', '223', '299', '344', '377', '449', '557', '665', '700'],
+  '8': ['116', '144', '224', '233', '332', '388', '440', '558', '666', '800'],
+  '9': ['117', '155', '225', '244', '333', '399', '441', '559', '667', '900'],
+  '0': ['118', '166', '226', '255', '334', '355', '442', '550', '668', '000']
+};
+
 export const DoublePana = ({ 
   session, 
   setSession, 
@@ -11,35 +24,29 @@ export const DoublePana = ({
   const [pana, setPana] = useState('');
   const [points, setPoints] = useState('');
   const [errorBanner, setErrorBanner] = useState('');
-  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
-
-  // Helper to validate Double Pana (Must be 3 digits with at least 2 identical digits, e.g. 100, 119, 155, 227)
-  const isValidDoublePana = (val) => {
-    if (!val || val.length !== 3) return false;
-    const d1 = val[0], d2 = val[1], d3 = val[2];
-    return d1 === d2 || d2 === d3 || d1 === d3;
-  };
 
   const handleAddMoreDoublePana = () => {
     setErrorBanner('');
-    setShowSuccessBanner(false);
-    const cleanedPana = pana.trim();
+    const cleanPana = pana.trim().replace(/\D/g, '');
 
-    if (!cleanedPana || cleanedPana.length !== 3 || !isValidDoublePana(cleanedPana)) {
-      setErrorBanner('Invalid pana. Please select from the list.');
-      toast.error('Invalid pana. Please enter a valid Double Pana!');
+    if (!cleanPana || cleanPana.length !== 3) {
+      const msg = 'Please enter a valid 3-digit Double Pana!';
+      setErrorBanner(msg);
+      toast.error(msg);
       return;
     }
+
     if (!points || parseInt(points, 10) <= 0) {
-      setErrorBanner('Please enter valid Points!');
-      toast.error('Please enter valid Points!');
+      const msg = 'Please enter valid points!';
+      setErrorBanner(msg);
+      toast.error(msg);
       return;
     }
 
     const newBid = {
       id: Date.now() + Math.random(),
       session,
-      pana: cleanedPana,
+      pana: cleanPana,
       points: parseInt(points, 10)
     };
 
@@ -47,41 +54,32 @@ export const DoublePana = ({
     setPana('');
     setPoints('');
     setErrorBanner('');
-    setShowSuccessBanner(true);
-    setTimeout(() => setShowSuccessBanner(false), 3000);
-    toast.success('Pana added successfully!');
+    toast.success('Double Pana bid added to list! ➕');
   };
 
   return (
     <div className="space-y-3">
       
-      {/* Red Validation Error Banner matching Screenshot 4 */}
+      {/* Red Error Banner */}
       {errorBanner && (
         <div className="bg-[#fee2e2] text-[#ef4444] border border-[#fca5a5] rounded-xl px-4 py-2.5 text-xs font-bold shadow-3xs animate-in fade-in duration-200">
           {errorBanner}
         </div>
       )}
 
-      {/* Green Banner Notification matching Screenshot 2 */}
-      {showSuccessBanner && (
-        <div className="bg-[#e6f9ed] text-[#16a34a] border border-[#bbf7d0] rounded-xl px-4 py-2.5 text-xs font-bold shadow-3xs animate-in fade-in duration-200">
-          Pana added successfully!
-        </div>
-      )}
-
-      {/* TOP INPUT CARD (Exact Match with Screenshot 2) */}
-      <div className="bg-white rounded-xl p-4 border border-gray-200/80 shadow-3xs space-y-3.5">
+      {/* TOP INPUT CARD */}
+      <div className="bg-white rounded-xl p-4 border border-gray-200/80 shadow-3xs space-y-4">
         
-        {/* Row 1: Session Selector */}
+        {/* Row 1: Taller Session Selector */}
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-gray-500">Session</span>
-          <div className="bg-[#f0f2f5] rounded-lg p-0.5 flex items-center w-52">
+          <div className="bg-[#f0f2f5] rounded-xl p-1 flex items-center w-56 h-10">
             <button
               type="button"
               disabled={!isOpenSessionOpen}
               onClick={() => isOpenSessionOpen && setSession('Open')}
               style={{ backgroundColor: session === 'Open' && isOpenSessionOpen ? themeColor : 'transparent' }}
-              className={`flex-1 py-1 rounded-md text-xs font-bold text-center transition-all ${
+              className={`flex-1 py-1.5 h-8 rounded-lg text-xs font-extrabold text-center transition-all flex items-center justify-center ${
                 !isOpenSessionOpen
                   ? 'text-gray-400 cursor-not-allowed opacity-60'
                   : session === 'Open'
@@ -95,7 +93,7 @@ export const DoublePana = ({
               type="button"
               onClick={() => setSession('Close')}
               style={{ backgroundColor: session === 'Close' ? themeColor : 'transparent' }}
-              className={`flex-1 py-1 rounded-md text-xs font-bold text-center transition-all cursor-pointer ${
+              className={`flex-1 py-1.5 h-8 rounded-lg text-xs font-extrabold text-center transition-all cursor-pointer flex items-center justify-center ${
                 session === 'Close' ? 'text-white shadow-3xs' : 'text-gray-600 font-semibold'
               }`}
             >
@@ -104,14 +102,14 @@ export const DoublePana = ({
           </div>
         </div>
 
-        {/* Row 2: Double Pana Input */}
+        {/* Row 2: Enter Pana Input */}
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-gray-500">Double Pana</span>
           <div className="w-44">
             <input
               type="text"
               maxLength={3}
-              placeholder="000"
+              placeholder="e.g. 100"
               value={pana}
               onChange={(e) => {
                 const val = e.target.value.replace(/\D/g, '').slice(0, 3);
@@ -119,7 +117,7 @@ export const DoublePana = ({
                 if (errorBanner) setErrorBanner('');
               }}
               style={{ borderColor: themeColor }}
-              className="w-full h-9 px-3 border-2 rounded-xl text-center font-bold text-xs outline-none bg-white focus:ring-0 shadow-3xs text-gray-800 placeholder-gray-400"
+              className="w-full h-9 px-3 border-2 rounded-xl text-center font-bold text-sm outline-none bg-white focus:ring-0 shadow-3xs text-gray-800 placeholder-gray-400"
             />
           </div>
         </div>
@@ -143,13 +141,13 @@ export const DoublePana = ({
           </div>
         </div>
 
-        {/* Row 4: + Add More Button */}
+        {/* Row 4: Taller + Add More Button */}
         <div className="flex justify-end pt-1">
           <button
             type="button"
             onClick={handleAddMoreDoublePana}
             style={{ backgroundColor: themeColor }}
-            className="px-8 py-2.5 text-white font-bold text-xs rounded-xl shadow-3xs hover:opacity-95 active:scale-95 transition-all cursor-pointer"
+            className="px-9 py-2.5 h-10 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-2xs hover:opacity-95 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
           >
             + Add More
           </button>

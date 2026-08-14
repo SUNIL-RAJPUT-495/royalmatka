@@ -103,27 +103,42 @@ export const UserBetPage = () => {
     }
   };
 
-  // Fetch Wallet Balance
+  // Fetch Real User Wallet Balance on Mount & Profile Sync
   useEffect(() => {
     const fetchUserBalance = async () => {
+      // 1. Try local storage user data first
+      try {
+        const localUserStr = localStorage.getItem("user_data") || localStorage.getItem("user");
+        if (localUserStr) {
+          const parsed = JSON.parse(localUserStr);
+          const val = parsed.balance !== undefined ? parsed.balance : (parsed.walletBalance !== undefined ? parsed.walletBalance : null);
+          if (val !== null && !isNaN(val)) {
+            setWalletBalance(Number(val));
+          }
+        }
+      } catch (e) {}
+
+      // 2. Fetch live profile balance from API
       try {
         const response = await Axios({
-          url: SummaryApi.userProfile?.url || '/api/user/profile',
-          method: 'get'
+          url: SummaryApi.getUserProfile?.url || '/api/user/profile',
+          method: SummaryApi.getUserProfile?.method || 'get'
         });
-        if (response?.data?.data?.wallet_balance !== undefined) {
-          setWalletBalance(response.data.data.wallet_balance);
-        } else if (response?.data?.wallet_balance !== undefined) {
-          setWalletBalance(response.data.wallet_balance);
+        const profileData = response?.data?.data || response?.data;
+        if (profileData) {
+          const liveBal = profileData.balance !== undefined ? profileData.balance : (profileData.wallet_balance !== undefined ? profileData.wallet_balance : profileData.walletBalance);
+          if (liveBal !== undefined && liveBal !== null && !isNaN(liveBal)) {
+            setWalletBalance(Number(liveBal));
+          }
         }
       } catch (err) {
-        console.warn('Using cached wallet balance');
+        console.warn('Using cached wallet balance for UserBetPage');
       }
     };
     fetchUserBalance();
   }, []);
 
-  // Handle Add More Bid
+  // Handle Add More Bid (Single Digit)
   const handleAddMore = () => {
     if (!digit.trim()) {
       toast.error('Please enter Single Digit!');
@@ -164,7 +179,7 @@ export const UserBetPage = () => {
     }
 
     if (totalPointsSum > walletBalance) {
-      toast.error('Insufficient wallet balance! Please add funds.');
+      toast.error(`Insufficient wallet balance! Available: ₹${walletBalance.toFixed(1)}`);
       return;
     }
 
@@ -172,7 +187,7 @@ export const UserBetPage = () => {
     try {
       await new Promise(res => setTimeout(res, 600));
       toast.success('Bids submitted successfully! 🎉');
-      setWalletBalance(prev => prev - totalPointsSum);
+      setWalletBalance(prev => Math.max(0, prev - totalPointsSum));
       setBidsList([]);
     } catch (error) {
       console.error('Error submitting bids:', error);
@@ -185,27 +200,27 @@ export const UserBetPage = () => {
   return (
     <div className="min-h-screen bg-[#f4f5f8] font-sans pb-24 select-none max-w-md mx-auto relative">
       
-      {/* 1. TOP NAVBAR HEADER MATCHING SCREENSHOT */}
+      {/* 1. TOP NAVBAR HEADER MATCHING SCREENSHOT WITH TALLER HEIGHT */}
       <div 
         style={{ backgroundColor: themeColor }}
-        className="px-4 py-3 flex items-center justify-between text-white shadow-3xs sticky top-0 z-20"
+        className="px-4 py-3.5 h-14 flex items-center justify-between text-white shadow-sm sticky top-0 z-20"
       >
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <button 
             onClick={() => navigate(-1)}
-            className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-white/10 active:scale-95 transition-all cursor-pointer text-white"
+            className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/10 active:scale-95 transition-all cursor-pointer text-white"
           >
-            <FaArrowLeft size={13} />
+            <FaArrowLeft size={14} />
           </button>
-          <h1 className="text-xs font-bold tracking-wide">
+          <h1 className="text-xs sm:text-sm font-bold tracking-wide">
             {decodeURIComponent(marketName).toUpperCase()} — {getModeTitle(gameMode)}
           </h1>
         </div>
 
-        {/* WALLET BADGE MATCHING SCREENSHOT */}
-        <div className="bg-white px-2.5 py-1 rounded-full flex items-center gap-1 shadow-3xs">
-          <IoWalletOutline size={13} className="text-gray-700" />
-          <span className="text-[11px] font-bold text-gray-800 font-mono">
+        {/* WALLET BADGE WITH REAL USER BALANCE */}
+        <div className="bg-white px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+          <IoWalletOutline size={14} className="text-gray-700" />
+          <span className="text-xs font-extrabold text-gray-800 font-mono">
             {walletBalance.toFixed(1)}
           </span>
         </div>

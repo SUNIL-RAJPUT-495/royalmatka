@@ -83,7 +83,7 @@ export const RedBrackets = ({
       )}
 
       {/* TOP INPUT CARD */}
-      <div className="bg-white rounded-xl p-4 border border-gray-200/80 shadow-3xs space-y-3.5">
+      <div className="bg-white rounded-xl p-4 border border-gray-200/80 shadow-3xs space-y-4">
         
         {/* Row 1: Digit (0-9) Input */}
         <div>
@@ -146,13 +146,13 @@ export const RedBrackets = ({
           </div>
         </div>
 
-        {/* Row 3: + Add More Button */}
+        {/* Row 3: Taller + Add More Button */}
         <div className="flex justify-end pt-1">
           <button
             type="button"
             onClick={handleAddMoreRedBrackets}
             style={{ backgroundColor: themeColor }}
-            className="px-8 py-2.5 text-white font-bold text-xs rounded-xl shadow-3xs hover:opacity-95 active:scale-95 transition-all cursor-pointer"
+            className="px-9 py-2.5 h-10 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-2xs hover:opacity-95 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
           >
             + Add More
           </button>
