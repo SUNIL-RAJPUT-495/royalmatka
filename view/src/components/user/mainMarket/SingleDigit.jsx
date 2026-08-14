@@ -8,23 +8,29 @@ export const SingleDigit = ({
   points, 
   setPoints, 
   handleAddMore, 
-  themeColor 
+  themeColor,
+  isOpenSessionOpen = true
 }) => {
   return (
     <div className="bg-white rounded-xl p-4 border border-gray-200/80 shadow-3xs space-y-3.5">
       {/* Row 1: Session Selector */}
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-gray-500">Session</span>
-        <div className="bg-[#f0f2f5] rounded-lg p-0.5 flex items-center w-48">
+        <div className="bg-[#f0f2f5] rounded-lg p-0.5 flex items-center w-52">
           <button
             type="button"
-            onClick={() => setSession('Open')}
-            style={{ backgroundColor: session === 'Open' ? themeColor : 'transparent' }}
-            className={`flex-1 py-1 rounded-md text-xs font-bold text-center transition-all cursor-pointer ${
-              session === 'Open' ? 'text-white shadow-3xs' : 'text-gray-600 font-semibold'
+            disabled={!isOpenSessionOpen}
+            onClick={() => isOpenSessionOpen && setSession('Open')}
+            style={{ backgroundColor: session === 'Open' && isOpenSessionOpen ? themeColor : 'transparent' }}
+            className={`flex-1 py-1 rounded-md text-xs font-bold text-center transition-all ${
+              !isOpenSessionOpen
+                ? 'text-gray-400 cursor-not-allowed opacity-60'
+                : session === 'Open'
+                ? 'text-white shadow-3xs cursor-pointer'
+                : 'text-gray-600 font-semibold cursor-pointer'
             }`}
           >
-            Open
+            {isOpenSessionOpen ? 'Open' : 'Open (Closed)'}
           </button>
           <button
             type="button"

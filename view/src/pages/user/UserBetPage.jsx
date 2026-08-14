@@ -7,13 +7,20 @@ import Axios from '../../utils/axios';
 import SummaryApi from '../../common/SummerAPI';
 import toast from 'react-hot-toast';
 
+import { fetchGame } from '../../utils/api';
+import { getMarketSessionStatus } from '../../utils/marketTiming';
+
 // Modular Main Market Components
 import { SingleDigit } from '../../components/user/mainMarket/SingleDigit';
+import { SingleDigitBulk } from '../../components/user/mainMarket/SingleDigitBulk';
+import { JodiDigit } from '../../components/user/mainMarket/JodiDigit';
+import { JodiBulk } from '../../components/user/mainMarket/JodiBulk';
 
 export const UserBetPage = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
   const { marketName = 'MILAN DAY', gameMode = 'single-digit' } = useParams();
+  const decodedMarketName = decodeURIComponent(marketName).toUpperCase();
 
   // Theme Accent Color (#f97316 orange matching screenshot)
   const themeColor = currentTheme?.headerBgColor || currentTheme?.playBtnBg || '#f97316';
@@ -23,19 +30,56 @@ export const UserBetPage = () => {
   const [session, setSession] = useState('Open'); // 'Open' | 'Close'
   const [digit, setDigit] = useState('');
   const [points, setPoints] = useState('');
-  const [bidsList, setBidsList] = useState([
-    { id: 1, session: 'Close', digit: '1', points: 10 },
-    { id: 2, session: 'Open', digit: '7', points: 10 }
-  ]);
+  const [bidsList, setBidsList] = useState(() => {
+    if (gameMode === 'jodi-digit' || gameMode === 'jodi-bulk') {
+      return [
+        { id: 1, jodi: '10', points: 10 },
+        { id: 2, jodi: '45', points: 10 }
+      ];
+    }
+    return [
+      { id: 1, session: 'Close', digit: '1', points: 10 },
+      { id: 2, session: 'Open', digit: '7', points: 10 }
+    ];
+  });
   const [submitting, setSubmitting] = useState(false);
+  const [sessionStatus, setSessionStatus] = useState({
+    isOpenSessionOpen: true,
+    isCloseSessionOpen: true,
+    isMarketClosed: false
+  });
+
+  // Fetch Market Timing & Session Status
+  useEffect(() => {
+    const loadMarketInfo = async () => {
+      try {
+        const gamesList = await fetchGame();
+        if (Array.isArray(gamesList)) {
+          const match = gamesList.find(
+            (g) => (g.market_name || g.name || '').toUpperCase() === decodedMarketName
+          );
+          if (match) {
+            const status = getMarketSessionStatus(match);
+            setSessionStatus(status);
+            if (!status.isOpenSessionOpen && status.isCloseSessionOpen) {
+              setSession('Close'); // Auto switch session to Close if Open result time passed
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Error fetching market timing in bet page:', err);
+      }
+    };
+    loadMarketInfo();
+  }, [decodedMarketName]);
 
   // Map mode ID to title string
   const getModeTitle = (mode) => {
     switch (mode) {
       case 'single-digit': return 'Single Ank';
       case 'single-digit-bulk': return 'Single Digit Bulk';
-      case 'jodi-digit': return 'Jodi Digit';
-      case 'jodi-bulk': return 'Jodi Bulk';
+      case 'jodi-digit': return 'Jodi';
+      case 'jodi-bulk': return 'Jodi';
       case 'single-pana': return 'Single Pana';
       case 'double-pana': return 'Double Pana';
       case 'triple-pana': return 'Triple Pana';
@@ -167,18 +211,51 @@ export const UserBetPage = () => {
             setPoints={setPoints}
             handleAddMore={handleAddMore}
             themeColor={themeColor}
+            isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
           />
         )}
 
-        {/* 3. BIDS TABLE CARD (Compact Padding & Subtle Radius) */}
+        {gameMode === 'single-digit-bulk' && (
+          <SingleDigitBulk
+            session={session}
+            setSession={setSession}
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+            isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+          />
+        )}
+
+        {gameMode === 'jodi-digit' && (
+          <JodiDigit
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+          />
+        )}
+
+        {gameMode === 'jodi-bulk' && (
+          <JodiBulk
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+          />
+        )}
+
+        {/* 3. BIDS TABLE CARD */}
         <div className="bg-white rounded-xl border border-gray-200/80 shadow-3xs overflow-hidden">
           {/* Header Row */}
-          <div className="bg-[#f8f9fc] border-b border-gray-200/80 px-4 py-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
-            <span className="w-1/4 text-center">SESSION</span>
-            <span className="w-1/4 text-center">DIGIT</span>
-            <span className="w-1/4 text-center">POINTS</span>
-            <span className="w-1/4 text-center">ACTION</span>
-          </div>
+          {(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk') ? (
+            <div className="bg-[#f8f9fc] border-b border-gray-200/80 px-4 py-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              <span className="w-1/3 text-center">JODI</span>
+              <span className="w-1/3 text-center">POINTS</span>
+              <span className="w-1/3 text-center">ACTION</span>
+            </div>
+          ) : (
+            <div className="bg-[#f8f9fc] border-b border-gray-200/80 px-4 py-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              <span className="w-1/4 text-center">SESSION</span>
+              <span className="w-1/4 text-center">DIGIT</span>
+              <span className="w-1/4 text-center">POINTS</span>
+              <span className="w-1/4 text-center">ACTION</span>
+            </div>
+          )}
 
           {/* Table Data Rows */}
           <div className="divide-y divide-gray-100">
@@ -192,10 +269,19 @@ export const UserBetPage = () => {
                   key={bid.id} 
                   className="px-4 py-2 flex items-center justify-between text-xs font-bold text-gray-800 hover:bg-gray-50/50 transition-colors"
                 >
-                  <span className="w-1/4 text-center text-gray-700 font-semibold">{bid.session}</span>
-                  <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.digit}</span>
-                  <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.points}</span>
-                  <span className="w-1/4 flex justify-center">
+                  {(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk') ? (
+                    <>
+                      <span className="w-1/3 text-center font-extrabold text-gray-900 text-sm">{bid.jodi}</span>
+                      <span className="w-1/3 text-center font-extrabold text-gray-900 text-sm">{bid.points}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-1/4 text-center text-gray-700 font-semibold">{bid.session}</span>
+                      <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.digit}</span>
+                      <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.points}</span>
+                    </>
+                  )}
+                  <span className={(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk') ? "w-1/3 flex justify-center" : "w-1/4 flex justify-center"}>
                     <button
                       type="button"
                       onClick={() => handleRemoveBid(bid.id)}

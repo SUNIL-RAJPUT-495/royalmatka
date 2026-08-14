@@ -1,33 +1,80 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { FaArrowLeft } from 'react-icons/fa';
+import { fetchGame } from '../../utils/api';
+import { getMarketSessionStatus } from '../../utils/marketTiming';
 
 export const UserGameModes = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
   const { marketName = 'SRIDEVI NIGHT' } = useParams();
+  const decodedMarketName = decodeURIComponent(marketName).toUpperCase();
 
-  const gameTypes = [
-    { id: 'single-digit', name: 'Single Digit', isClosed: false, iconType: 'single-dot-concentric' },
-    { id: 'single-digit-bulk', name: 'Single Digit Bulk', isClosed: false, iconType: 'single-dot-arc' },
-    { id: 'jodi-digit', name: 'Jodi Digit', isClosed: true, iconType: 'two-dots-concentric' },
-    { id: 'jodi-bulk', name: 'Jodi Bulk', isClosed: true, iconType: 'two-dots-arc' },
-    { id: 'single-pana', name: 'Single Pana', isClosed: false, iconType: 'card-concentric' },
-    { id: 'single-pana-bulk', name: 'Single Pana Bulk', isClosed: false, iconType: 'card-arc' },
-    { id: 'double-pana', name: 'Double Pana', isClosed: false, iconType: 'two-cards-concentric' },
-    { id: 'double-pana-bulk', name: 'Double Pana Bulk', isClosed: false, iconType: 'two-cards-arc' },
-    { id: 'triple-pana', name: 'Triple Pana', isClosed: false, iconType: 'three-cards-concentric' },
-    { id: 'triple-pana-bulk', name: 'Triple Pana Bulk', isClosed: false, iconType: 'three-cards-arc' },
-    { id: 'sp-motor', name: 'SP Motor', isClosed: false, iconType: 'star-concentric' },
-    { id: 'dp-motor', name: 'DP Motor', isClosed: false, iconType: 'star-arc' },
-    { id: 'odd-even', name: 'Odd Even', isClosed: false, iconType: 'pentagon' },
-    { id: 'two-digit-panel', name: 'Two Digit Panel (CP,SR)', isClosed: false, iconType: 'grid' },
-    { id: 'sp-dp-tp', name: 'SP DP TP', isClosed: false, iconType: 'two-blocks' },
-    { id: 'half-sangam', name: 'Half Sangam', isClosed: true, iconType: 'dots-cluster' },
-    { id: 'red-brackets', name: 'Red Brackets', isClosed: false, iconType: 'brackets' },
-    { id: 'digit-based', name: 'Digit Based', isClosed: false, iconType: 'digit-symbol' }
+  const [marketDetails, setMarketDetails] = useState(null);
+  const [sessionStatus, setSessionStatus] = useState({
+    isOpenSessionOpen: true,
+    isCloseSessionOpen: true,
+    isMarketClosed: false
+  });
+
+  useEffect(() => {
+    const loadMarketInfo = async () => {
+      try {
+        const gamesList = await fetchGame();
+        if (Array.isArray(gamesList)) {
+          const match = gamesList.find(
+            (g) =>
+              (g.market_name || g.name || '').toUpperCase() === decodedMarketName
+          );
+          if (match) {
+            setMarketDetails(match);
+            const status = getMarketSessionStatus(match);
+            setSessionStatus(status);
+          }
+        }
+      } catch (err) {
+        console.warn('Error fetching market details:', err);
+      }
+    };
+    loadMarketInfo();
+  }, [decodedMarketName]);
+
+  const baseGameTypes = [
+    { id: 'single-digit', name: 'Single Digit', isOpenOnly: false, iconType: 'single-dot-concentric' },
+    { id: 'single-digit-bulk', name: 'Single Digit Bulk', isOpenOnly: false, iconType: 'single-dot-arc' },
+    { id: 'jodi-digit', name: 'Jodi Digit', isOpenOnly: true, iconType: 'two-dots-concentric' },
+    { id: 'jodi-bulk', name: 'Jodi Bulk', isOpenOnly: true, iconType: 'two-dots-arc' },
+    { id: 'single-pana', name: 'Single Pana', isOpenOnly: false, iconType: 'card-concentric' },
+    { id: 'single-pana-bulk', name: 'Single Pana Bulk', isOpenOnly: false, iconType: 'card-arc' },
+    { id: 'double-pana', name: 'Double Pana', isOpenOnly: false, iconType: 'two-cards-concentric' },
+    { id: 'double-pana-bulk', name: 'Double Pana Bulk', isOpenOnly: false, iconType: 'two-cards-arc' },
+    { id: 'triple-pana', name: 'Triple Pana', isOpenOnly: false, iconType: 'three-cards-concentric' },
+    { id: 'triple-pana-bulk', name: 'Triple Pana Bulk', isOpenOnly: false, iconType: 'three-cards-arc' },
+    { id: 'sp-motor', name: 'SP Motor', isOpenOnly: false, iconType: 'star-concentric' },
+    { id: 'dp-motor', name: 'DP Motor', isOpenOnly: false, iconType: 'star-arc' },
+    { id: 'odd-even', name: 'Odd Even', isOpenOnly: false, iconType: 'pentagon' },
+    { id: 'two-digit-panel', name: 'Two Digit Panel (CP,SR)', isOpenOnly: false, iconType: 'grid' },
+    { id: 'sp-dp-tp', name: 'SP DP TP', isOpenOnly: false, iconType: 'two-blocks' },
+    { id: 'half-sangam', name: 'Half Sangam', isOpenOnly: true, iconType: 'dots-cluster' },
+    { id: 'red-brackets', name: 'Red Brackets', isOpenOnly: true, iconType: 'brackets' },
+    { id: 'digit-based', name: 'Digit Based', isOpenOnly: false, iconType: 'digit-symbol' }
   ];
+
+  // Dynamically calculate isClosed for every game mode
+  const gameTypes = baseGameTypes.map(game => {
+    let isClosed = false;
+    if (sessionStatus.isMarketClosed) {
+      isClosed = true;
+    } else if (game.isOpenOnly) {
+      // Open-only games (Jodi, Sangam, Brackets) close as soon as Open Result Time passes
+      isClosed = !sessionStatus.isOpenSessionOpen;
+    } else {
+      // General games close when both Open & Close sessions end
+      isClosed = !sessionStatus.isOpenSessionOpen && !sessionStatus.isCloseSessionOpen;
+    }
+    return { ...game, isClosed };
+  });
 
   const themeColor = currentTheme?.headerBgColor || currentTheme?.playBtnBg || '#ea580c';
 
@@ -64,7 +111,7 @@ export const UserGameModes = () => {
       case 'two-dots-arc':
         return (
           <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
-            <circle cx="25" cy="25" r="20" stroke={arcColor} strokeWidth="2.5" strokeDasharray="70 60" />
+            <circle cx="25" cy="25" r="20" stroke={arcColor} strokeWidth="2.5" strokeDasharray="60 40" />
             <circle cx="20" cy="25" r="2.5" fill={dotColor} />
             <circle cx="30" cy="25" r="2.5" fill={dotColor} />
           </svg>
@@ -73,105 +120,106 @@ export const UserGameModes = () => {
         return (
           <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
             <circle cx="25" cy="25" r="22" stroke={strokeColor} strokeWidth="2" strokeDasharray="100 40" />
-            <rect x="18" y="15" width="14" height="20" rx="3" stroke={strokeColor} strokeWidth="1.5" />
-            <path d="M23 23a2 2 0 0 1 4 0c0 2-2 3-2 3s-2-1-2-3z" fill={dotColor} />
+            <circle cx="25" cy="25" r="16" stroke={strokeColor} strokeWidth="1.5" />
+            <rect x="18" y="16" width="14" height="18" rx="2" stroke={strokeColor} strokeWidth="1.5" fill="none" />
           </svg>
         );
       case 'card-arc':
         return (
           <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
-            <circle cx="25" cy="25" r="20" stroke={arcColor} strokeWidth="2.5" strokeDasharray="70 60" />
-            <rect x="18" y="15" width="14" height="20" rx="3" stroke={strokeColor} strokeWidth="1.5" />
-            <path d="M23 23a2 2 0 0 1 4 0c0 2-2 3-2 3s-2-1-2-3z" fill={dotColor} />
+            <circle cx="25" cy="25" r="20" stroke={arcColor} strokeWidth="2.5" strokeDasharray="80 50" />
+            <rect x="18" y="16" width="14" height="18" rx="2" stroke={strokeColor} strokeWidth="1.5" fill="none" />
           </svg>
         );
       case 'two-cards-concentric':
         return (
           <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
             <circle cx="25" cy="25" r="22" stroke={strokeColor} strokeWidth="2" strokeDasharray="100 40" />
-            <rect x="16" y="17" width="12" height="17" rx="2" stroke={strokeColor} strokeWidth="1.2" />
-            <rect x="21" y="14" width="12" height="17" rx="2" stroke={strokeColor} strokeWidth="1.2" />
+            <circle cx="25" cy="25" r="16" stroke={strokeColor} strokeWidth="1.5" />
+            <rect x="16" y="18" width="12" height="15" rx="2" stroke={strokeColor} strokeWidth="1.2" fill="none" />
+            <rect x="22" y="15" width="12" height="15" rx="2" stroke={strokeColor} strokeWidth="1.2" fill="none" />
           </svg>
         );
       case 'two-cards-arc':
         return (
           <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
-            <circle cx="25" cy="25" r="20" stroke={arcColor} strokeWidth="2.5" strokeDasharray="70 60" />
-            <rect x="16" y="17" width="12" height="17" rx="2" stroke={strokeColor} strokeWidth="1.2" />
-            <rect x="21" y="14" width="12" height="17" rx="2" stroke={strokeColor} strokeWidth="1.2" />
+            <circle cx="25" cy="25" r="20" stroke={arcColor} strokeWidth="2.5" strokeDasharray="70 40" />
+            <rect x="16" y="18" width="12" height="15" rx="2" stroke={strokeColor} strokeWidth="1.2" fill="none" />
+            <rect x="22" y="15" width="12" height="15" rx="2" stroke={strokeColor} strokeWidth="1.2" fill="none" />
           </svg>
         );
       case 'three-cards-concentric':
+        return (
+          <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
+            <circle cx="25" cy="25" r="22" stroke={strokeColor} strokeWidth="2" strokeDasharray="100 40" />
+            <circle cx="25" cy="25" r="16" stroke={strokeColor} strokeWidth="1.5" />
+            <rect x="14" y="19" width="10" height="13" rx="1.5" stroke={strokeColor} strokeWidth="1" fill="none" />
+            <rect x="20" y="16" width="10" height="13" rx="1.5" stroke={strokeColor} strokeWidth="1" fill="none" />
+            <rect x="26" y="13" width="10" height="13" rx="1.5" stroke={strokeColor} strokeWidth="1" fill="none" />
+          </svg>
+        );
       case 'three-cards-arc':
         return (
           <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
-            <circle cx="25" cy="25" r="22" stroke={strokeColor} strokeWidth="2" strokeDasharray="100 40" />
-            <rect x="15" y="18" width="11" height="15" rx="2" stroke={strokeColor} strokeWidth="1.2" />
-            <rect x="19" y="15" width="11" height="15" rx="2" stroke={strokeColor} strokeWidth="1.2" />
-            <rect x="23" y="12" width="11" height="15" rx="2" stroke={strokeColor} strokeWidth="1.2" />
+            <circle cx="25" cy="25" r="20" stroke={arcColor} strokeWidth="2.5" strokeDasharray="80 40" />
+            <rect x="14" y="19" width="10" height="13" rx="1.5" stroke={strokeColor} strokeWidth="1" fill="none" />
+            <rect x="20" y="16" width="10" height="13" rx="1.5" stroke={strokeColor} strokeWidth="1" fill="none" />
+            <rect x="26" y="13" width="10" height="13" rx="1.5" stroke={strokeColor} strokeWidth="1" fill="none" />
           </svg>
         );
       case 'star-concentric':
-      case 'star-arc':
         return (
           <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
             <circle cx="25" cy="25" r="22" stroke={strokeColor} strokeWidth="2" strokeDasharray="100 40" />
-            <circle cx="25" cy="25" r="16" stroke={strokeColor} strokeWidth="1.2" />
-            <path
-              d="M25 18l2 4 4.5.5-3.5 3 1 4.5-4-2.5-4 2.5 1-4.5-3.5-3 4.5-.5z"
-              stroke={strokeColor}
-              strokeWidth="1.2"
-              fill="none"
-            />
+            <circle cx="25" cy="25" r="16" stroke={strokeColor} strokeWidth="1.5" />
+            <path d="M25 15l2.5 5 5.5.8-4 3.9 1 5.5-5-2.6-5 2.6 1-5.5-4-3.9 5.5-.8z" stroke={strokeColor} strokeWidth="1.2" fill="none" />
+          </svg>
+        );
+      case 'star-arc':
+        return (
+          <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
+            <circle cx="25" cy="25" r="20" stroke={arcColor} strokeWidth="2.5" strokeDasharray="75 50" />
+            <path d="M25 15l2.5 5 5.5.8-4 3.9 1 5.5-5-2.6-5 2.6 1-5.5-4-3.9 5.5-.8z" stroke={strokeColor} strokeWidth="1.2" fill="none" />
           </svg>
         );
       case 'pentagon':
         return (
           <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
-            <circle cx="25" cy="25" r="20" stroke={strokeColor} strokeWidth="2.5" strokeDasharray="90 50" />
-            <polygon points="25,16 34,22 30,33 20,33 16,22" stroke={strokeColor} strokeWidth="1.5" fill="none" />
+            <circle cx="25" cy="25" r="20" stroke={arcColor} strokeWidth="2.5" strokeDasharray="75 50" />
+            <polygon points="25,14 36,22 32,35 18,35 14,22" stroke={strokeColor} strokeWidth="1.5" fill="none" />
           </svg>
         );
       case 'grid':
         return (
           <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
-            <circle cx="25" cy="25" r="20" stroke={strokeColor} strokeWidth="2.5" />
-            <rect x="17" y="17" width="16" height="16" rx="2" stroke={strokeColor} strokeWidth="1.5" />
-            <line x1="22" y1="17" x2="22" y2="33" stroke={strokeColor} strokeWidth="1.2" />
-            <line x1="28" y1="17" x2="28" y2="33" stroke={strokeColor} strokeWidth="1.2" />
-            <line x1="17" y1="22" x2="33" y2="22" stroke={strokeColor} strokeWidth="1.2" />
-            <line x1="17" y1="28" x2="33" y2="28" stroke={strokeColor} strokeWidth="1.2" />
+            <circle cx="25" cy="25" r="20" stroke={arcColor} strokeWidth="2.5" strokeDasharray="75 50" />
+            <rect x="17" y="17" width="16" height="16" stroke={strokeColor} strokeWidth="1.5" fill="none" />
+            <path d="M25 17v16M17 25h16" stroke={strokeColor} strokeWidth="1.2" />
           </svg>
         );
       case 'two-blocks':
         return (
           <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
-            <circle cx="25" cy="25" r="20" stroke={strokeColor} strokeWidth="2.5" />
-            <rect x="17" y="19" width="6" height="12" rx="2" stroke={strokeColor} strokeWidth="1.5" />
-            <circle cx="20" cy="25" r="1.5" fill={dotColor} />
-            <rect x="27" y="19" width="6" height="12" rx="2" stroke={strokeColor} strokeWidth="1.5" />
-            <circle cx="30" cy="25" r="1.5" fill={dotColor} />
+            <circle cx="25" cy="25" r="20" stroke={arcColor} strokeWidth="2.5" strokeDasharray="75 50" />
+            <rect x="15" y="20" width="8" height="10" rx="1" stroke={strokeColor} strokeWidth="1.5" fill="none" />
+            <rect x="27" y="20" width="8" height="10" rx="1" stroke={strokeColor} strokeWidth="1.5" fill="none" />
           </svg>
         );
       case 'dots-cluster':
         return (
           <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
-            <circle cx="25" cy="25" r="20" stroke={strokeColor} strokeWidth="2" strokeDasharray="100 40" />
-            <circle cx="25" cy="25" r="15" stroke={strokeColor} strokeWidth="1.2" />
-            <circle cx="21" cy="22" r="1.5" fill={dotColor} />
-            <circle cx="25" cy="22" r="1.5" fill={dotColor} />
-            <circle cx="29" cy="22" r="1.5" fill={dotColor} />
-            <circle cx="21" cy="28" r="1.5" fill={dotColor} />
-            <circle cx="25" cy="28" r="1.5" fill={dotColor} />
-            <circle cx="29" cy="28" r="1.5" fill={dotColor} />
+            <circle cx="25" cy="25" r="20" stroke={arcColor} strokeWidth="2.5" strokeDasharray="75 50" />
+            <circle cx="20" cy="20" r="2" fill={dotColor} />
+            <circle cx="30" cy="20" r="2" fill={dotColor} />
+            <circle cx="20" cy="30" r="2" fill={dotColor} />
+            <circle cx="30" cy="30" r="2" fill={dotColor} />
           </svg>
         );
       case 'brackets':
         return (
           <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
-            <circle cx="25" cy="25" r="20" stroke={strokeColor} strokeWidth="2.5" />
-            <path d="M19 18h-3v14h3" stroke={strokeColor} strokeWidth="2" />
-            <path d="M31 18h3v14h-3" stroke={strokeColor} strokeWidth="2" />
+            <circle cx="25" cy="25" r="20" stroke={arcColor} strokeWidth="2.5" strokeDasharray="75 50" />
+            <path d="M18 18h-3v14h3M32 18h3v14h-3" stroke={strokeColor} strokeWidth="2" fill="none" />
           </svg>
         );
       default:
@@ -187,9 +235,9 @@ export const UserGameModes = () => {
 
   return (
     <div className="w-full select-none pb-24 font-sans">
-      {/* 1. TOP ORANGE HEADER (Exact Match with Screenshot) */}
+      {/* 1. TOP ORANGE HEADER */}
       <div
-        className="p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300 mb-3.5 sticky top-0 z-30"
+        className="p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300 mb-3.5 sticky top-0 z-30 flex items-center justify-between"
         style={{ backgroundColor: currentTheme.headerBgColor }}
       >
         <div className="flex items-center gap-3">
@@ -200,10 +248,27 @@ export const UserGameModes = () => {
           >
             <FaArrowLeft size={14} />
           </button>
-          <h2 className="text-base font-bold tracking-tight text-white uppercase">
-            {marketName}
-          </h2>
+          <div>
+            <h2 className="text-base font-bold tracking-tight text-white uppercase">
+              {decodedMarketName}
+            </h2>
+            {marketDetails && (
+              <p className="text-[10px] text-white/80 font-semibold mt-0.5">
+                Open: {marketDetails.open_time} | Close: {marketDetails.close_time}
+              </p>
+            )}
+          </div>
         </div>
+
+        {sessionStatus.isMarketClosed ? (
+          <span className="bg-red-500 text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-2xs">
+            MARKET CLOSED
+          </span>
+        ) : !sessionStatus.isOpenSessionOpen ? (
+          <span className="bg-yellow-400 text-gray-900 text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-2xs">
+            OPEN RESULT DECLARED
+          </span>
+        ) : null}
       </div>
 
       <div className="px-3.5">
