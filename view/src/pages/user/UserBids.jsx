@@ -43,80 +43,99 @@ export const UserBids = () => {
     return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
   };
 
-  // Live Bids list state
+  // Live Bids list state with 10-item pagination
   const [bidsList, setBidsList] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
 
-  // Fetch real user bids from backend
-  React.useEffect(() => {
-    const fetchUserBids = async () => {
-      try {
-        setLoading(true);
-        const localUserStr = localStorage.getItem("user_data") || localStorage.getItem("user");
-        let localUser = null;
-        try { if (localUserStr) localUser = JSON.parse(localUserStr); } catch (e) {}
-        const mobile = localUser?.mobile || '';
+  const fetchUserBids = async (pageNum = 1, append = false) => {
+    try {
+      if (pageNum === 1) setLoading(true);
+      else setLoadingMore(true);
 
-        if (!mobile) {
-          setLoading(false);
-          return;
-        }
+      const localUserStr = localStorage.getItem("user_data") || localStorage.getItem("user");
+      let localUser = null;
+      try { if (localUserStr) localUser = JSON.parse(localUserStr); } catch (e) {}
+      const mobile = localUser?.mobile || '';
 
-        const res = await Axios({
-          url: `${SummaryApi.getUserBids.url}?mobile=${encodeURIComponent(mobile)}`,
-          method: SummaryApi.getUserBids.method
+      if (!mobile) {
+        setLoading(false);
+        setLoadingMore(false);
+        return;
+      }
+
+      const res = await Axios({
+        url: `${SummaryApi.getUserBids.url}?mobile=${encodeURIComponent(mobile)}&page=${pageNum}&limit=10`,
+        method: SummaryApi.getUserBids.method
+      });
+
+      if (res.data?.bids && Array.isArray(res.data.bids)) {
+        const formatted = res.data.bids.map(b => {
+          const createdAtDate = new Date(b.createdAt || Date.now());
+          const dateStr = createdAtDate.toLocaleDateString('en-GB');
+          const timeStr = createdAtDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+          const statusNorm = (b.status || 'Pending').toLowerCase();
+          const points = Number(b.points) || 0;
+          const winAmt = Number(b.winAmount) || 0;
+          const isAviator = b.marketName === 'AVIATOR CASINO' || b.gameMode === 'Aviator' || b.type === 'Casino';
+
+          let digitLabel = '';
+          if (isAviator) {
+            digitLabel = b.digit ? `Multiplier: ${b.digit}` : `Aviator Casino Bet`;
+          } else if (b.digit) digitLabel = `${b.session || 'Open'} Digit: ${b.digit}`;
+          else if (b.pana) digitLabel = `${b.session || 'Open'} Pana: ${b.pana}`;
+          else if (b.jodi) digitLabel = `Jodi: ${b.jodi}`;
+          else if (b.openPana && b.closePana) digitLabel = `Open Pana: ${b.openPana} | Close Pana: ${b.closePana}`;
+          else if (b.openDigit && b.closePana) digitLabel = `Open Digit: ${b.openDigit} | Close Pana: ${b.closePana}`;
+          else if (b.openPana && b.closeDigit) digitLabel = `Open Pana: ${b.openPana} | Close Digit: ${b.closeDigit}`;
+          else digitLabel = `${b.session || 'Open'}`;
+
+          return {
+            id: `#${String(b._id || b.id).slice(-8)}`,
+            marketName: b.marketName || 'MAIN MARKET',
+            date: dateStr,
+            time: timeStr,
+            createdAt: createdAtDate,
+            bidAmount: String(points),
+            potentialAmount: isAviator 
+              ? (winAmt > 0 ? String(winAmt) : String(points))
+              : String(points * 9),
+            winAmount: String(winAmt),
+            gameType: b.gameMode || (isAviator ? 'Aviator' : 'Main Market'),
+            digitLabel: digitLabel,
+            session: isAviator ? 'Casino' : (b.session || 'Open'),
+            status: (statusNorm === 'won' || statusNorm === 'win') ? 'win' : ((statusNorm === 'lost' || statusNorm === 'loss') ? 'loss' : 'pending')
+          };
         });
 
-        if (res.data?.bids && Array.isArray(res.data.bids)) {
-          const formatted = res.data.bids.map(b => {
-            const createdAtDate = new Date(b.createdAt || Date.now());
-            const dateStr = createdAtDate.toLocaleDateString('en-GB');
-            const timeStr = createdAtDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-            const statusNorm = (b.status || 'Pending').toLowerCase();
-            const points = Number(b.points) || 0;
-            const winAmt = Number(b.winAmount) || 0;
-            const isAviator = b.marketName === 'AVIATOR CASINO' || b.gameMode === 'Aviator' || b.type === 'Casino';
-
-            let digitLabel = '';
-            if (isAviator) {
-              digitLabel = b.digit ? `Multiplier: ${b.digit}` : `Aviator Casino Bet`;
-            } else if (b.digit) digitLabel = `${b.session || 'Open'} Digit: ${b.digit}`;
-            else if (b.pana) digitLabel = `${b.session || 'Open'} Pana: ${b.pana}`;
-            else if (b.jodi) digitLabel = `Jodi: ${b.jodi}`;
-            else if (b.openPana && b.closePana) digitLabel = `Open Pana: ${b.openPana} | Close Pana: ${b.closePana}`;
-            else if (b.openDigit && b.closePana) digitLabel = `Open Digit: ${b.openDigit} | Close Pana: ${b.closePana}`;
-            else if (b.openPana && b.closeDigit) digitLabel = `Open Pana: ${b.openPana} | Close Digit: ${b.closeDigit}`;
-            else digitLabel = `${b.session || 'Open'}`;
-
-            return {
-              id: `#${String(b._id || b.id).slice(-8)}`,
-              marketName: b.marketName || 'MAIN MARKET',
-              date: dateStr,
-              time: timeStr,
-              createdAt: createdAtDate,
-              bidAmount: String(points),
-              potentialAmount: isAviator 
-                ? (winAmt > 0 ? String(winAmt) : String(points))
-                : String(points * 9),
-              winAmount: String(winAmt),
-              gameType: b.gameMode || (isAviator ? 'Aviator' : 'Main Market'),
-              digitLabel: digitLabel,
-              session: isAviator ? 'Casino' : (b.session || 'Open'),
-              status: (statusNorm === 'won' || statusNorm === 'win') ? 'win' : ((statusNorm === 'lost' || statusNorm === 'loss') ? 'loss' : 'pending')
-            };
-          });
+        if (append) {
+          setBidsList(prev => [...prev, ...formatted]);
+        } else {
           setBidsList(formatted);
         }
-      } catch (err) {
-        console.warn('Error loading user bids:', err);
-      } finally {
-        setLoading(false);
+        setHasMore(Boolean(res.data.hasMore));
+        setPage(pageNum);
       }
-    };
+    } catch (err) {
+      console.warn('Error loading user bids:', err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
 
-    fetchUserBids();
+  React.useEffect(() => {
+    fetchUserBids(1, false);
   }, []);
+
+  const handleLoadMore = () => {
+    if (hasMore && !loadingMore) {
+      fetchUserBids(page + 1, true);
+    }
+  };
 
   // Theme-matched styling variables for bid cards
   const cardHeaderBg = isGreenTheme ? 'bg-[#ecfdf5]/60 border-b border-emerald-100/60' : 'bg-[#fff7ed]/60 border-b border-orange-100/60';
@@ -566,6 +585,28 @@ export const UserBids = () => {
             <p className="text-xs text-gray-400 font-medium max-w-xs mt-1">
               We couldn't find any bets matching your current filters.
             </p>
+          </div>
+        )}
+
+        {/* Load More Button for 10-item pagination */}
+        {hasMore && (
+          <div className="pt-2 pb-4 flex justify-center">
+            <button
+              type="button"
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+              style={{ backgroundColor: themeColor }}
+              className="px-7 py-3 rounded-xl text-white font-extrabold text-xs shadow-md hover:opacity-95 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+            >
+              {loadingMore ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  <span>Loading 10 More Bids...</span>
+                </>
+              ) : (
+                <span>Load 10 More Bids 🔽</span>
+              )}
+            </button>
           </div>
         )}
       </div>

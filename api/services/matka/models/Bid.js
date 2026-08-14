@@ -5,7 +5,8 @@ const bidSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: false
+      required: false,
+      index: true
     },
     userName: {
       type: String,
@@ -23,7 +24,8 @@ const bidSchema = new mongoose.Schema(
     },
     gameMode: {
       type: String,
-      required: true
+      required: true,
+      index: true
     },
     session: {
       type: String,
@@ -70,7 +72,8 @@ const bidSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["Pending", "Won", "Lost"],
-      default: "Pending"
+      default: "Pending",
+      index: true
     },
     winAmount: {
       type: Number,
@@ -81,6 +84,13 @@ const bidSchema = new mongoose.Schema(
     timestamps: true
   }
 );
+
+// Compound High-Performance Indexes for Microsecond Queries
+bidSchema.index({ userMobile: 1, createdAt: -1 });
+bidSchema.index({ userId: 1, createdAt: -1 });
+bidSchema.index({ marketName: 1, createdAt: -1 });
+bidSchema.index({ status: 1, createdAt: -1 });
+bidSchema.index({ createdAt: -1 });
 
 export const Bid = mongoose.model("Bid", bidSchema);
 export default Bid;

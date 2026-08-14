@@ -143,6 +143,10 @@ export const placeBid = async (req, res) => {
 export const getUserBids = async (req, res) => {
   try {
     const { mobile, userId } = req.query;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
     let filter = {};
 
     if (userId) {
@@ -156,11 +160,20 @@ export const getUserBids = async (req, res) => {
       });
     }
 
-    const bids = await Bid.find(filter).sort({ createdAt: -1 }).limit(100);
+    const totalCount = await Bid.countDocuments(filter);
+    const bids = await Bid.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
     return res.status(200).json({
       success: true,
-      bids: bids
+      bids: bids,
+      page: page,
+      limit: limit,
+      totalCount: totalCount,
+      hasMore: skip + bids.length < totalCount
     });
   } catch (error) {
     console.error("Error in getUserBids controller:", error);
