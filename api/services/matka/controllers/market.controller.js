@@ -67,7 +67,10 @@ export const getAllMarkets = async (req, res) => {
 
 export const addMarket = async (req, res) => {
   try {
-    const { market_name, open_time, close_time } = req.body;
+    const market_name = req.body.market_name || req.body.name;
+    const open_time = req.body.open_time || req.body.open_result_time;
+    const close_time = req.body.close_time || req.body.close_result_time;
+
     if (!market_name || !open_time || !close_time) {
       return res.status(400).json({ success: false, message: "All fields (Market Name, Opening Time, Closing Time) are required" });
     }
@@ -94,11 +97,36 @@ export const addMarket = async (req, res) => {
 
 export const deleteMarket = async (req, res) => {
   try {
-    const { id } = req.query;
+    const id = req.query.id || req.body.id || req.body.marketId;
     if (mongoose.connection.readyState === 1 && id) {
       await Market.findByIdAndDelete(id);
     }
     return res.status(200).json({ success: true, message: "Market deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateMarketStatus = async (req, res) => {
+  try {
+    const { gameId, marketId, status, is_closed } = req.body;
+    const targetId = gameId || marketId;
+
+    if (mongoose.connection.readyState === 1 && targetId) {
+      const market = await Market.findById(targetId);
+      if (market) {
+        if (typeof is_closed === 'boolean') {
+          market.is_closed = is_closed;
+        } else if (status) {
+          market.is_closed = status.toLowerCase() === 'closed';
+        } else {
+          market.is_closed = !market.is_closed;
+        }
+        await market.save();
+        return res.status(200).json({ success: true, message: "Market status updated!", data: formatMarketResult(market) });
+      }
+    }
+    return res.status(200).json({ success: true, message: "Market status updated (Demo mode)" });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

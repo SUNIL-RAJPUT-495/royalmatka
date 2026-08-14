@@ -3,6 +3,7 @@ import {
   getAllMarkets,
   addMarket,
   deleteMarket,
+  updateMarketStatus,
   declareResult,
 } from "../controllers/market.controller.js";
 import {
@@ -29,6 +30,7 @@ router.get("/get-all-results", getAllMarkets);
 router.get("/get-market-results", getAllMarkets);
 router.post("/add-market", verifyAdmin, addMarket);
 router.delete("/delete-market", verifyAdmin, deleteMarket);
+router.post("/update-market-status", verifyAdmin, updateMarketStatus);
 router.post("/declare-result", verifyAdmin, declareResult);
 
 // Starline & Jackpot Endpoints (Time-slot based)

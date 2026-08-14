@@ -198,6 +198,10 @@ const SummaryApi = {
         url: baseURL + "/api/market/delete-market",
         method: "delete"
     },
+    updateGameStatus: {
+        url: baseURL + "/api/market/update-market-status",
+        method: "post"
+    },
     declareResult: {
         url: baseURL + "/api/market/declare-result",
         method: "post"

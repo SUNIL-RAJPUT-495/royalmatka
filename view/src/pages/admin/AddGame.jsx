@@ -114,7 +114,8 @@ export const AddGame = () => {
         url: SummaryApi.addGame.url,
         method: SummaryApi.addGame.method,
         data: {
-          name: formData.name, 
+          market_name: formData.name, 
+          name: formData.name,
           open_time: formattedOpenResultTime, 
           close_time: formattedCloseResultTime,
           open_result_time: formattedOpenResultTime,
@@ -122,7 +123,7 @@ export const AddGame = () => {
         }
       });
 
-      toast.success(response.data.message || "Game added successfully!");
+      toast.success(response.data.message || "Main Market added successfully! 🎉");
       
       setFormData({ 
         name: '', 
@@ -139,23 +140,23 @@ export const AddGame = () => {
   };
 
   // --- TOGGLE GAME STATUS LOGIC ---
-  const handleToggleStatus = async (gameId, currentStatus) => {
-    const newStatus = currentStatus === 'Active' ? 'Closed' : 'Active';
+  const handleToggleStatus = async (gameId, currentIsClosed) => {
+    const targetClosedState = !currentIsClosed;
     try {
       await AxiosAdmin({
         url: SummaryApi.updateGameStatus.url, 
         method: SummaryApi.updateGameStatus.method,
-        data: { gameId: gameId, status: newStatus }
+        data: { gameId: gameId, is_closed: targetClosedState }
       });
       setGamesList(prevGames => 
         prevGames.map(game => 
-          game._id === gameId ? { ...game, status: newStatus } : game
+          (game._id === gameId || game.id === gameId) ? { ...game, is_closed: targetClosedState, status: targetClosedState ? 'Closed' : 'Active' } : game
         )
       );
-      toast.success(`Game status updated to ${newStatus}`);
+      toast.success(`Market status updated!`);
     } catch (error) {
       console.error("Error updating status:", error);
-      toast.error("Failed to update status.");
+      toast.error("Failed to update market status.");
     }
   };
 
@@ -168,13 +169,13 @@ export const AddGame = () => {
   const confirmDeleteMarket = async () => {
     try {
       const response = await AxiosAdmin({
-        url: SummaryApi.deleteMarket.url,
+        url: `${SummaryApi.deleteMarket.url}?id=${targetDeleteId}`,
         method: SummaryApi.deleteMarket.method,
-        data: { marketId: targetDeleteId } 
+        data: { marketId: targetDeleteId, id: targetDeleteId } 
       });
 
       toast.success(response.data.message || "Market deleted successfully!");
-      setGamesList(prevGames => prevGames.filter(game => game._id !== targetDeleteId));
+      setGamesList(prevGames => prevGames.filter(game => (game._id !== targetDeleteId && game.id !== targetDeleteId)));
     } catch (error) {
       console.error("Error deleting market:", error);
       toast.error(error?.response?.data?.message || "Failed to delete market.");
@@ -318,53 +319,59 @@ export const AddGame = () => {
                     <td colSpan="5" className="text-center p-6 text-gray-400 font-bold">No markets added yet.</td>
                   </tr>
                 ) : (
-                  gamesList.map((game) => (
-                    <tr key={game._id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-5 py-4 font-bold text-gray-900 uppercase">{game.name}</td>
-                      
-                      {/* Bid Times */}
-                      <td className="px-5 py-4 font-semibold text-gray-500">
-                        <div className="text-green-600">O: {game.open_time}</div>
-                        <div className="text-red-500 mt-0.5">C: {game.close_time}</div>
-                      </td>
+                  gamesList.map((game) => {
+                    const isClosed = game.is_closed ?? (game.status === 'Closed' || game.status === 'closed');
+                    const marketName = game.market_name || game.name || 'UNNAMED MARKET';
+                    const marketId = game._id || game.id;
 
-                      {/* Result Times */}
-                      <td className="px-5 py-4 font-semibold text-gray-500">
-                        <div className="text-blue-600">O: {game.open_result_time || 'N/A'}</div>
-                        <div className="text-purple-600 mt-0.5">C: {game.close_result_time || 'N/A'}</div>
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-5 py-4 text-center">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase shadow-3xs
-                          ${game.status === 'Active' ? 'bg-green-500' : 'bg-red-500'}`}
-                        >
-                          {game.status}
-                        </span>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-5 py-4 text-center space-x-2">
-                        <button 
-                          onClick={() => handleToggleStatus(game._id, game.status)}
-                          className={`px-3 py-1.5 rounded-lg text-[10px] font-bold text-white transition-all shadow-3xs cursor-pointer active:scale-95 ${
-                            game.status === 'Active' 
-                              ? 'bg-red-500 hover:bg-red-650' 
-                              : 'bg-green-500 hover:bg-green-650'
-                          }`}
-                        >
-                          {game.status === 'Active' ? 'Stop Betting' : 'Start Betting'}
-                        </button>
+                    return (
+                      <tr key={marketId} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-5 py-4 font-bold text-gray-900 uppercase">{marketName}</td>
                         
-                        <button 
-                          onClick={() => triggerDeleteMarket(game._id)}
-                          className="px-3 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 border border-red-100 rounded-lg text-[10px] font-bold transition-all shadow-3xs cursor-pointer active:scale-95"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                        {/* Bid Times */}
+                        <td className="px-5 py-4 font-semibold text-gray-500">
+                          <div className="text-emerald-600">O: {game.open_time}</div>
+                          <div className="text-red-500 mt-0.5">C: {game.close_time}</div>
+                        </td>
+
+                        {/* Result Times */}
+                        <td className="px-5 py-4 font-semibold text-gray-500">
+                          <div className="text-blue-600">O: {game.open_result_time || game.open_time || 'N/A'}</div>
+                          <div className="text-purple-600 mt-0.5">C: {game.close_result_time || game.close_time || 'N/A'}</div>
+                        </td>
+
+                        {/* Status */}
+                        <td className="px-5 py-4 text-center">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase shadow-3xs ${
+                            !isClosed ? 'bg-emerald-500' : 'bg-red-500'
+                          }`}>
+                            {!isClosed ? 'Active' : 'Closed'}
+                          </span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-5 py-4 text-center space-x-2">
+                          <button 
+                            onClick={() => handleToggleStatus(marketId, isClosed)}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold text-white transition-all shadow-3xs cursor-pointer active:scale-95 ${
+                              !isClosed 
+                                ? 'bg-red-500 hover:bg-red-600' 
+                                : 'bg-emerald-600 hover:bg-emerald-700'
+                            }`}
+                          >
+                            {!isClosed ? 'Stop Betting' : 'Start Betting'}
+                          </button>
+                          
+                          <button 
+                            onClick={() => triggerDeleteMarket(marketId)}
+                            className="px-3 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 border border-red-100 rounded-lg text-[10px] font-bold transition-all shadow-3xs cursor-pointer active:scale-95"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
