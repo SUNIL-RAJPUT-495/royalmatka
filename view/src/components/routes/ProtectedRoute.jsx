@@ -10,7 +10,14 @@ export const AdminProtectedRoute = () => {
   const adminToken = localStorage.getItem('royal_user_admin') || localStorage.getItem('admin_token');
   const isAdminLoggedIn = localStorage.getItem('is_admin_logged_in') === 'true';
 
-  if (!adminToken || !isAdminLoggedIn) {
+  // Persist session if token exists in localStorage
+  if (adminToken && !isAdminLoggedIn) {
+    localStorage.setItem('is_admin_logged_in', 'true');
+  }
+
+  const isAuth = Boolean(adminToken || isAdminLoggedIn);
+
+  if (!isAuth) {
     return <Navigate to="/systum/login" replace />;
   }
 
@@ -23,9 +30,7 @@ export const AdminProtectedRoute = () => {
  */
 export const UserProtectedRoute = ({ children }) => {
   const userToken = localStorage.getItem('royal_matka_user') || localStorage.getItem('user_token') || localStorage.getItem('access_token');
-  const userData = localStorage.getItem('user_data');
-  // Requires userToken AND userData
-  const isUserLoggedIn = Boolean(userToken && userData);
+  const isUserLoggedIn = Boolean(userToken);
 
   if (!isUserLoggedIn) {
     return <Navigate to="/login" replace />;

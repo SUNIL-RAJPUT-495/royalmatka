@@ -22,12 +22,9 @@ AxiosAdmin.interceptors.request.use(
 AxiosAdmin.interceptors.response.use(
     (response) => response,
     (error) => {
+        // Do not aggressively delete admin session keys on background 401 responses
         if (error.response && error.response.status === 401) {
-            localStorage.removeItem("royal_user_admin");
-            localStorage.removeItem("admin_token");
-            localStorage.removeItem("admin_data");
-            localStorage.removeItem("is_admin_logged_in");
-            window.dispatchEvent(new CustomEvent("on-unauthorized-admin"));
+            console.warn("Admin API 401 Notice:", error.config?.url);
         }
         return Promise.reject(error);
     }

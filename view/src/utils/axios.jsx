@@ -22,11 +22,7 @@ Axios.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
-            localStorage.removeItem("user_token");
-            localStorage.removeItem("token");
-            localStorage.removeItem("access_token");
-            localStorage.removeItem("user_data");
-            window.dispatchEvent(new CustomEvent("on-unauthorized"));
+            console.warn("User API 401 Notice:", error.config?.url);
         }
         return Promise.reject(error);
     }
