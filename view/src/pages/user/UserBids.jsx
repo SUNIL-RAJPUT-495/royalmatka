@@ -73,8 +73,13 @@ export const UserBids = () => {
             const dateStr = createdAtDate.toLocaleDateString('en-GB');
             const timeStr = createdAtDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
+            const statusNorm = (b.status || 'Pending').toLowerCase();
+            const points = Number(b.points) || 0;
+            const winAmt = Number(b.winAmount) || 0;
+            const isAviator = b.marketName === 'AVIATOR CASINO' || b.gameMode === 'Aviator' || b.type === 'Casino';
+
             let digitLabel = '';
-            if (b.marketName === 'AVIATOR CASINO' || b.gameMode === 'Aviator' || b.type === 'Casino') {
+            if (isAviator) {
               digitLabel = b.digit ? `Multiplier: ${b.digit}` : `Aviator Casino Bet`;
             } else if (b.digit) digitLabel = `${b.session || 'Open'} Digit: ${b.digit}`;
             else if (b.pana) digitLabel = `${b.session || 'Open'} Pana: ${b.pana}`;
@@ -84,9 +89,6 @@ export const UserBids = () => {
             else if (b.openPana && b.closeDigit) digitLabel = `Open Pana: ${b.openPana} | Close Digit: ${b.closeDigit}`;
             else digitLabel = `${b.session || 'Open'}`;
 
-            const statusNorm = (b.status || 'Pending').toLowerCase();
-            const points = Number(b.points) || 0;
-
             return {
               id: `#${String(b._id || b.id).slice(-8)}`,
               marketName: b.marketName || 'MAIN MARKET',
@@ -94,11 +96,14 @@ export const UserBids = () => {
               time: timeStr,
               createdAt: createdAtDate,
               bidAmount: String(points),
-              potentialAmount: String(points * 9),
-              gameType: b.gameMode || 'Main Market',
+              potentialAmount: isAviator 
+                ? (winAmt > 0 ? String(winAmt) : String(points))
+                : String(points * 9),
+              winAmount: String(winAmt),
+              gameType: b.gameMode || (isAviator ? 'Aviator' : 'Main Market'),
               digitLabel: digitLabel,
-              session: b.session || 'Open',
-              status: statusNorm === 'won' ? 'win' : (statusNorm === 'lost' ? 'loss' : 'pending')
+              session: isAviator ? 'Casino' : (b.session || 'Open'),
+              status: (statusNorm === 'won' || statusNorm === 'win') ? 'win' : ((statusNorm === 'lost' || statusNorm === 'loss') ? 'loss' : 'pending')
             };
           });
           setBidsList(formatted);
@@ -505,13 +510,13 @@ export const UserBids = () => {
                       </span>
                     </div>
 
-                    {/* Box 2: POTENTIAL */}
-                    <div className={`${potentialBoxClass} rounded-2xl p-3 shadow-2xs`}>
-                      <span className={`text-[9px] font-bold uppercase tracking-wide block ${potentialTextClass}`}>
-                        POTENTIAL
+                    {/* Box 2: POTENTIAL / WINNING / LOSS */}
+                    <div className={`${isWin ? 'bg-[#ecfdf5]/70 border border-emerald-200' : (isLoss ? 'bg-[#fee2e2]/60 border border-red-200' : potentialBoxClass)} rounded-2xl p-3 shadow-2xs`}>
+                      <span className={`text-[9px] font-bold uppercase tracking-wide block ${isWin ? 'text-[#16a34a]' : (isLoss ? 'text-[#ef4444]' : potentialTextClass)}`}>
+                        {isWin ? 'WON AMOUNT' : (isLoss ? 'LOSS AMOUNT' : 'POTENTIAL')}
                       </span>
-                      <span className={`text-base font-bold block mt-0.5 ${potentialTextClass}`}>
-                        ₹{bid.potentialAmount}
+                      <span className={`text-base font-bold block mt-0.5 ${isWin ? 'text-[#16a34a]' : (isLoss ? 'text-[#ef4444]' : potentialTextClass)}`}>
+                        ₹{isWin ? (Number(bid.winAmount) > 0 ? bid.winAmount : bid.potentialAmount) : (isLoss ? bid.bidAmount : bid.potentialAmount)}
                       </span>
                     </div>
                   </div>
