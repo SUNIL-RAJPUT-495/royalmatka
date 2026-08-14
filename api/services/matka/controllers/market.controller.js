@@ -52,38 +52,36 @@ const DEFAULT_MARKETS = [
   { _id: "10", market_name: "MAIN BAZAR", name: "MAIN BAZAR", open_time: "09:30 PM", close_time: "12:05 AM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" }
 ];
 
+const parseTimeToMinutes = (timeStr) => {
+  if (!timeStr) return 99999;
+  const cleanStr = String(timeStr).trim().toUpperCase();
+  const match = cleanStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/);
+  if (!match) return 99999;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3] || 'AM';
+
+  if (period === 'PM' && hours !== 12) {
+    hours += 12;
+  } else if (period === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  return hours * 60 + minutes;
+};
+
 export const getAllMarkets = async (req, res) => {
   try {
     if (mongoose.connection.readyState === 1) {
-      let markets = await Market.find().sort({ createdAt: -1 });
-      if (!markets || markets.length < 10) {
-        const defaultList = [
-          { market_name: "KALYAN MORNING", open_time: "11:00 AM", close_time: "12:00 PM", result_open: "***", result_close: "***", jodi_result: "**" },
-          { market_name: "KARNATAKA DAY", open_time: "09:55 AM", close_time: "10:55 AM", result_open: "566", result_close: "335", jodi_result: "71", is_closed: true },
-          { market_name: "TIME BAZAR", open_time: "12:55 PM", close_time: "01:55 PM", result_open: "179", result_close: "***", jodi_result: "7*", is_closed: true },
-          { market_name: "MADHUR DAY", open_time: "01:25 PM", close_time: "02:25 PM", result_open: "266", result_close: "***", jodi_result: "4*" },
-          { market_name: "SITA DAY", open_time: "01:40 PM", close_time: "02:40 PM", result_open: "355", result_close: "***", jodi_result: "3*" },
-          { market_name: "MILAN DAY", open_time: "02:50 PM", close_time: "04:50 PM", result_open: "***", result_close: "***", jodi_result: "**" },
-          { market_name: "RAJDHANI DAY", open_time: "02:55 PM", close_time: "04:55 PM", result_open: "***", result_close: "***", jodi_result: "**" },
-          { market_name: "KALYAN", open_time: "03:45 PM", close_time: "05:45 PM", result_open: "***", result_close: "***", jodi_result: "**" },
-          { market_name: "SRIDEVI NIGHT", open_time: "09:40 PM", close_time: "10:40 PM", result_open: "145", result_close: "480", jodi_result: "02" },
-          { market_name: "MAIN BAZAR", open_time: "09:30 PM", close_time: "12:05 AM", result_open: "***", result_close: "***", jodi_result: "**" }
-        ];
-
-        const existingNames = new Set(markets.map(m => m.market_name.toUpperCase()));
-        const missingMarkets = defaultList.filter(item => !existingNames.has(item.market_name.toUpperCase()));
-
-        if (missingMarkets.length > 0) {
-          await Market.insertMany(missingMarkets);
-          markets = await Market.find().sort({ createdAt: -1 });
-        }
-      }
+      let markets = await Market.find();
       const formattedMarkets = markets.map(formatMarketResult);
+      formattedMarkets.sort((a, b) => parseTimeToMinutes(a.open_time) - parseTimeToMinutes(b.open_time));
       return res.status(200).json({ success: true, data: formattedMarkets });
     }
-    return res.status(200).json({ success: true, data: DEFAULT_MARKETS });
+    return res.status(200).json({ success: true, data: [] });
   } catch (error) {
-    return res.status(200).json({ success: true, data: DEFAULT_MARKETS });
+    return res.status(200).json({ success: true, data: [] });
   }
 };
 
@@ -149,6 +147,17 @@ export const deleteMarket = async (req, res) => {
       await Market.findByIdAndDelete(id);
     }
     return res.status(200).json({ success: true, message: "Market deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteAllMarkets = async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Market.deleteMany({});
+    }
+    return res.status(200).json({ success: true, message: "All markets deleted successfully from database! 🗑️" });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

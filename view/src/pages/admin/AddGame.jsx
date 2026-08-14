@@ -30,6 +30,25 @@ export const AddGame = () => {
   const [targetDeleteId, setTargetDeleteId] = useState(null);
 
   // --- FETCH GAMES LOGIC ---
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr) return 99999;
+    const cleanStr = String(timeStr).trim().toUpperCase();
+    const match = cleanStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/);
+    if (!match) return 99999;
+
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const period = match[3] || 'AM';
+
+    if (period === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (period === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    return hours * 60 + minutes;
+  };
+
   const loadAllGames = async () => {
     setLoading(true);
     try {
@@ -37,12 +56,25 @@ export const AddGame = () => {
         url: SummaryApi.getGame.url,
         method: SummaryApi.getGame.method
       });
-      if (response?.data?.data && Array.isArray(response.data.data)) {
-        setGamesList(response.data.data); 
+      let dataList = response?.data?.data || response?.data;
+      if (!Array.isArray(dataList)) {
+        dataList = await fetchGame();
+      }
+      if (Array.isArray(dataList)) {
+        const sorted = [...dataList].sort((a, b) => parseTimeToMinutes(a.open_time) - parseTimeToMinutes(b.open_time));
+        setGamesList(sorted); 
       }
     } catch (error) {
       console.error("Error fetching games:", error);
-      toast.error("Failed to load markets list.");
+      try {
+        const fallbackData = await fetchGame();
+        if (Array.isArray(fallbackData)) {
+          const sorted = [...fallbackData].sort((a, b) => parseTimeToMinutes(a.open_time) - parseTimeToMinutes(b.open_time));
+          setGamesList(sorted);
+        }
+      } catch (err) {
+        toast.error("Failed to load markets list.");
+      }
     } finally {
       setLoading(false);
     }
@@ -72,8 +104,26 @@ export const AddGame = () => {
 
   const formatHHMMInput = (rawValue) => {
     const digits = rawValue.replace(/\D/g, "").slice(0, 4);
-    if (digits.length <= 2) return digits;
-    return `${digits.slice(0, 2)}:${digits.slice(2)}`;
+    if (digits.length === 0) return "";
+    
+    // Validate Hours (max 12, min 01 if 2 digits entered)
+    let hh = digits.slice(0, 2);
+    if (hh.length === 2) {
+      let numH = parseInt(hh, 10);
+      if (numH > 12) hh = "12";
+      if (numH === 0) hh = "01";
+    }
+
+    if (digits.length <= 2) return hh;
+
+    // Validate Minutes (max 59)
+    let mm = digits.slice(2, 4);
+    if (mm.length === 2) {
+      let numM = parseInt(mm, 10);
+      if (numM > 59) mm = "59";
+    }
+
+    return `${hh}:${mm}`;
   };
 
   const handleTimeInputChange = (e) => {
@@ -92,11 +142,17 @@ export const AddGame = () => {
     const parts = withColon.split(":");
     if (parts.length !== 2) return;
 
-    const hh = parts[0].replace(/\D/g, "");
-    const mm = parts[1].replace(/\D/g, "");
-    if (!hh || !mm) return;
+    let hh = parts[0].replace(/\D/g, "");
+    let mm = parts[1].replace(/\D/g, "");
 
-    const normalized = `${hh.padStart(2, "0").slice(0, 2)}:${mm.padStart(2, "0").slice(0, 2)}`;
+    let numH = parseInt(hh || "12", 10);
+    if (numH > 12) numH = 12;
+    if (numH < 1) numH = 1;
+
+    let numM = parseInt(mm || "00", 10);
+    if (numM > 59) numM = 59;
+
+    const normalized = `${String(numH).padStart(2, "0")}:${String(numM).padStart(2, "0")}`;
     setFormData((prev) => ({ ...prev, [id]: normalized }));
   };
 
@@ -250,6 +306,25 @@ export const AddGame = () => {
     }
   };
 
+  // DELETE ALL MARKETS LOGIC
+  const [deleteAllConfirmOpen, setDeleteAllConfirmOpen] = useState(false);
+
+  const confirmDeleteAllMarkets = async () => {
+    try {
+      const response = await AxiosAdmin({
+        url: SummaryApi.deleteAllMarkets?.url || '/api/market/delete-all-markets',
+        method: SummaryApi.deleteAllMarkets?.method || 'delete'
+      });
+      toast.success(response.data.message || "All markets wiped from database! 🗑️");
+      setGamesList([]);
+    } catch (error) {
+      console.error("Error wiping markets:", error);
+      toast.error("Failed to delete all markets.");
+    } finally {
+      setDeleteAllConfirmOpen(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f3f4f6] p-4 md:p-6 font-sans text-gray-800 text-left select-none flex justify-center items-start">
       
@@ -270,14 +345,24 @@ export const AddGame = () => {
                 </p>
               </div>
             </div>
-            <button
-              onClick={loadAllGames}
-              className="p-2.5 bg-white hover:bg-gray-50 text-blue-600 border border-blue-200 rounded-xl transition-all active:scale-95 shadow-xs cursor-pointer flex items-center gap-1 text-xs font-bold"
-              title="Refresh Markets List"
-            >
-              <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-              <span>Refresh</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setDeleteAllConfirmOpen(true)}
+                className="px-3 py-2.5 bg-red-50 hover:bg-red-600 hover:text-white text-red-600 border border-red-200 rounded-xl transition-all active:scale-95 shadow-xs cursor-pointer flex items-center gap-1 text-xs font-bold"
+                title="Wipe All Markets From Database"
+              >
+                <Trash2 size={14} />
+                <span>Delete All</span>
+              </button>
+              <button
+                onClick={loadAllGames}
+                className="p-2.5 bg-white hover:bg-gray-50 text-blue-600 border border-blue-200 rounded-xl transition-all active:scale-95 shadow-xs cursor-pointer flex items-center gap-1 text-xs font-bold"
+                title="Refresh Markets List"
+              >
+                <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+                <span>Refresh</span>
+              </button>
+            </div>
           </div>
 
           {/* Add Game Form Block */}
@@ -610,7 +695,7 @@ export const AddGame = () => {
         </div>
       )}
 
-      {/* Confirmation delete modal */}
+      {/* Confirmation delete single market modal */}
       <ConfirmModal
         isOpen={deleteConfirmOpen}
         title="Delete Market Config?"
@@ -622,6 +707,17 @@ export const AddGame = () => {
           setDeleteConfirmOpen(false);
           setTargetDeleteId(null);
         }}
+      />
+
+      {/* Confirmation delete ALL markets modal */}
+      <ConfirmModal
+        isOpen={deleteAllConfirmOpen}
+        title="Wipe All Main Markets?"
+        message="Are you sure you want to delete ALL main markets from the database permanently?"
+        confirmText="Delete All"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteAllMarkets}
+        onCancel={() => setDeleteAllConfirmOpen(false)}
       />
 
     </div>

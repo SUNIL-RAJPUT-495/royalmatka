@@ -22,6 +22,7 @@ import { UserContactUs } from "./pages/user/UserContactUs";
 import { UserNotificationSettings } from "./pages/user/UserNotificationSettings";
 import { UserWithdrawalsFeed } from "./pages/user/UserWithdrawalsFeed";
 import { UserGameModes } from "./pages/user/UserGameModes";
+import { UserBetPage } from "./pages/user/UserBetPage";
 import { UserJackpotGali } from "./pages/user/UserJackpotGali";
 import { UserJackpot } from "./pages/user/UserJackpot";
 import { UserStarline } from "./pages/user/UserStarline";
@@ -96,6 +97,8 @@ function App() {
               <Route path="/play-game/:marketName" element={<UserGameModes />} />
               <Route path="/game-modes/:marketName" element={<UserGameModes />} />
               <Route path="/market-games/:marketName" element={<UserGameModes />} />
+              <Route path="/bet/:marketName/:gameMode" element={<UserBetPage />} />
+              <Route path="/bet/:marketName" element={<UserBetPage />} />
               <Route path="/charts" element={<UserCharts />} />
               <Route path="/charts-list" element={<UserCharts />} />
               <Route path="/how-to-play" element={<UserHowToPlay />} />

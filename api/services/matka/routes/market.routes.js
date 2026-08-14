@@ -3,6 +3,7 @@ import {
   getAllMarkets,
   addMarket,
   deleteMarket,
+  deleteAllMarkets,
   updateMarketStatus,
   updateMarketDetails,
   declareResult,
@@ -33,6 +34,7 @@ router.get("/get-market-results", getAllMarkets);
 router.post("/add-market", verifyAdmin, addMarket);
 router.post("/update-market", verifyAdmin, updateMarketDetails);
 router.delete("/delete-market", verifyAdmin, deleteMarket);
+router.delete("/delete-all-markets", verifyAdmin, deleteAllMarkets);
 router.post("/update-market-status", verifyAdmin, updateMarketStatus);
 router.post("/declare-result", verifyAdmin, declareResult);
 

@@ -202,6 +202,10 @@ const SummaryApi = {
         url: baseURL + "/api/market/delete-market",
         method: "delete"
     },
+    deleteAllMarkets: {
+        url: baseURL + "/api/market/delete-all-markets",
+        method: "delete"
+    },
     updateGameStatus: {
         url: baseURL + "/api/market/update-market-status",
         method: "post"

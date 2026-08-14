@@ -76,17 +76,37 @@ const DUMMY_MARKETS = [
 export const UserHome = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
-  const [games, setGames] = useState(DUMMY_MARKETS);
+  const [games, setGames] = useState([]);
+
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr) return 99999;
+    const cleanStr = String(timeStr).trim().toUpperCase();
+    const match = cleanStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/);
+    if (!match) return 99999;
+
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const period = match[3] || 'AM';
+
+    if (period === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (period === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    return hours * 60 + minutes;
+  };
 
   useEffect(() => {
     const loadAllMarkets = async () => {
       try {
         const res = await fetchGame();
-        if (res && Array.isArray(res) && res.length > 0) {
-          setGames(res);
+        if (Array.isArray(res)) {
+          const sorted = [...res].sort((a, b) => parseTimeToMinutes(a.open_time) - parseTimeToMinutes(b.open_time));
+          setGames(sorted);
         }
       } catch (err) {
-        console.warn('Using dummy markets fallback:', err);
+        console.warn('Error loading markets:', err);
       }
     };
     loadAllMarkets();
