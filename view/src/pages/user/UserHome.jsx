@@ -92,6 +92,8 @@ export const UserHome = () => {
     loadAllMarkets();
   }, []);
 
+  const themePlayBtn = currentTheme?.playBtnBg || currentTheme?.headerBgColor || '#f97316';
+
   return (
     <div className="w-full space-y-4 select-none pb-6">
       {/* 1. CASINO / AVIATOR BANNER */}
@@ -99,7 +101,7 @@ export const UserHome = () => {
         onClick={() => navigate('/casino')}
         className="rounded-3xl p-4 text-white shadow-md relative overflow-hidden flex items-center justify-between transition-all duration-300 cursor-pointer hover:opacity-95 active:scale-[0.99]"
         style={{
-          background: `linear-gradient(135deg, ${currentTheme.headerBgColor} 0%, #9a3412 100%)`
+          background: `linear-gradient(135deg, ${currentTheme?.headerBgColor || '#ea580c'} 0%, #9a3412 100%)`
         }}
       >
         {/* Left Side: Casino text & Play Now button */}
@@ -168,8 +170,11 @@ export const UserHome = () => {
                   navigate(`/play-game/${encodeURIComponent(game.name)}`);
                 }
               }}
+              style={{
+                borderLeftColor: isClosed ? '#ef4444' : themePlayBtn
+              }}
               className={`bg-white rounded-2xl p-4 border border-gray-100/90 shadow-2xs hover:shadow-xs transition-all duration-200 border-l-[4px] ${
-                isClosed ? 'border-l-[#ef4444]' : 'border-l-[#f97316] cursor-pointer hover:bg-orange-50/20'
+                isClosed ? '' : 'cursor-pointer hover:bg-gray-50/50'
               }`}
             >
               {/* Top Row: Market Name on left, Clock/Play button on right */}
@@ -178,9 +183,12 @@ export const UserHome = () => {
                   <h4 className="font-bold text-gray-900 text-[13px] uppercase tracking-tight">
                     {game.name}
                   </h4>
-                  {/* Left-Aligned Clean Orange Result */}
+                  {/* Left-Aligned Dynamic Theme Result */}
                   <div className="mt-0.5">
-                    <span className="text-sm font-semibold tracking-wider text-[#f97316]">
+                    <span
+                      style={{ color: isClosed ? '#6b7280' : themePlayBtn }}
+                      className="text-sm font-semibold tracking-wider"
+                    >
                       {resultDisplay}
                     </span>
                   </div>
@@ -198,7 +206,8 @@ export const UserHome = () => {
                       e.stopPropagation();
                       navigate(`/play-game/${encodeURIComponent(game.name)}`);
                     }}
-                    className="w-8 h-8 rounded-full bg-[#f97316] text-white flex items-center justify-center shadow-xs cursor-pointer active:scale-95 transition-transform"
+                    style={{ backgroundColor: themePlayBtn }}
+                    className="w-8 h-8 rounded-full text-white flex items-center justify-center shadow-xs cursor-pointer active:scale-95 transition-transform"
                     title="Play Game"
                   >
                     <FaPlay size={9} className="ml-0.5" />
