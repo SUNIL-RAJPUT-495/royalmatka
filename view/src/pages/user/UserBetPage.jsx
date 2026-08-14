@@ -53,11 +53,20 @@ export const UserBetPage = () => {
     isMarketClosed: false
   });
 
-  // Always Scroll To Top when opening or changing game mode
+  // Always Scroll To Top when opening or changing game mode (iOS Safari compatible)
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+    const scrollToTop = () => {
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+      const root = document.getElementById('root');
+      if (root) root.scrollTop = 0;
+    };
+
+    scrollToTop();
+    requestAnimationFrame(scrollToTop);
+    const timer = setTimeout(scrollToTop, 50);
+    return () => clearTimeout(timer);
   }, [gameMode, marketName]);
 
   // Fetch Market Timing & Session Status

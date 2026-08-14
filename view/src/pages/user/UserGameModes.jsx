@@ -18,9 +18,20 @@ export const UserGameModes = () => {
     isMarketClosed: false
   });
 
-  // Always Scroll To Top when opening game modes page
+  // Always Scroll To Top when opening game modes page (iOS Safari compatible)
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    const scrollToTop = () => {
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+      const root = document.getElementById('root');
+      if (root) root.scrollTop = 0;
+    };
+
+    scrollToTop();
+    requestAnimationFrame(scrollToTop);
+    const timer = setTimeout(scrollToTop, 50);
+    return () => clearTimeout(timer);
   }, [decodedMarketName]);
 
   useEffect(() => {

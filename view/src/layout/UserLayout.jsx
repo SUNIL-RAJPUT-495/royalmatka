@@ -22,9 +22,20 @@ export const UserLayout = () => {
   const isBetPage = location.pathname.startsWith('/bet/');
   const showNavbar = isHomePage;
 
-  // Automatically scroll to top whenever page route changes
+  // Automatically scroll to top whenever page route changes (iOS Safari compatible)
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    const scrollToTop = () => {
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+      const root = document.getElementById('root');
+      if (root) root.scrollTop = 0;
+    };
+
+    scrollToTop();
+    requestAnimationFrame(scrollToTop);
+    const timer = setTimeout(scrollToTop, 50);
+    return () => clearTimeout(timer);
   }, [location.pathname]);
 
   const handleRedirectToLogin = () => {
