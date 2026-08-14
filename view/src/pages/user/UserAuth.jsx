@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { toast, Toaster } from "react-hot-toast";
 import Axios from "../../utils/axios";
 import SummaryApi from "../../common/SummerAPI";
+import { useTheme } from "../../context/ThemeContext";
 import {
   FaUserAlt,
   FaPhoneAlt,
@@ -19,6 +20,10 @@ import {
 export const UserAuth = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentTheme } = useTheme();
+
+  const themeColor = currentTheme?.headerBgColor || currentTheme?.playBtnBg || '#ea580c';
+  const brandName = currentTheme?.appName || 'Royal 1008';
 
   // Mode: "register" | "login"
   const [mode, setMode] = useState(location.pathname === "/register" ? "register" : "login");
@@ -359,8 +364,8 @@ export const UserAuth = () => {
 
       {/* TOP LOGO & HEADER */}
       <div className="text-center mb-6">
-        <h1 className="text-3xl font-extrabold text-[#ff6600] tracking-tight flex items-center justify-center gap-1.5 drop-shadow-xs">
-          <span>Royal777</span>
+        <h1 className="text-3xl font-black uppercase tracking-wider flex items-center justify-center gap-1.5 drop-shadow-xs" style={{ color: themeColor }}>
+          <span>{brandName}</span>
         </h1>
         <p className="text-xs font-semibold text-gray-500 mt-0.5 tracking-wide">
           Premium Betting Platform
@@ -370,9 +375,9 @@ export const UserAuth = () => {
       {/* CENTER CARD CONTAINER */}
       <div className="w-full max-w-[420px] bg-white rounded-[28px] shadow-[0_10px_40px_rgba(0,0,0,0.06)] border border-gray-100 p-6 sm:p-8 transition-all">
         
-        {/* ORANGE CIRCULAR TOP ICON */}
+        {/* CIRCULAR TOP ICON */}
         <div className="flex justify-center mb-3">
-          <div className="w-14 h-14 rounded-full bg-[#ff6600] text-white flex items-center justify-center shadow-md shadow-orange-500/20 text-xl">
+          <div className="w-14 h-14 rounded-full text-white flex items-center justify-center shadow-md text-xl" style={{ backgroundColor: themeColor }}>
             <FaUserAlt />
           </div>
         </div>
@@ -381,14 +386,14 @@ export const UserAuth = () => {
         <div className="flex items-center justify-center gap-2 mb-6">
           {mode === "register" ? (
             <>
-              <span className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${regStep === 1 ? "bg-[#ff6600] scale-110" : "bg-gray-200"}`} />
-              <span className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${regStep === 2 ? "bg-[#ff6600] scale-110" : "bg-gray-200"}`} />
-              <span className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${regStep === 3 ? "bg-[#ff6600] scale-110" : "bg-gray-200"}`} />
+              <span className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${regStep === 1 ? "scale-110" : "bg-gray-200"}`} style={{ backgroundColor: regStep === 1 ? themeColor : undefined }} />
+              <span className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${regStep === 2 ? "scale-110" : "bg-gray-200"}`} style={{ backgroundColor: regStep === 2 ? themeColor : undefined }} />
+              <span className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${regStep === 3 ? "scale-110" : "bg-gray-200"}`} style={{ backgroundColor: regStep === 3 ? themeColor : undefined }} />
             </>
           ) : (
             <>
-              <span className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${loginStep === 1 ? "bg-[#ff6600] scale-110" : "bg-gray-200"}`} />
-              <span className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${loginStep === 2 ? "bg-[#ff6600] scale-110" : "bg-gray-200"}`} />
+              <span className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${loginStep === 1 ? "scale-110" : "bg-gray-200"}`} style={{ backgroundColor: loginStep === 1 ? themeColor : undefined }} />
+              <span className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${loginStep === 2 ? "scale-110" : "bg-gray-200"}`} style={{ backgroundColor: loginStep === 2 ? themeColor : undefined }} />
             </>
           )}
         </div>
@@ -407,7 +412,7 @@ export const UserAuth = () => {
                 </div>
 
                 <div className="relative">
-                  <div className="flex items-center border-2 border-gray-200 focus-within:border-[#ff6600] rounded-xl px-3.5 py-3 transition-colors bg-white">
+                  <div className="flex items-center border-2 border-gray-200 focus-within:border-amber-500 rounded-xl px-3.5 py-3 transition-colors bg-white">
                     <FaPhoneAlt className="text-gray-400 text-sm mr-2 shrink-0" />
                     <span className="text-gray-600 font-bold text-sm mr-2 shrink-0">+91</span>
                     <input
@@ -425,7 +430,8 @@ export const UserAuth = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#ff6600] hover:bg-[#e65c00] active:scale-[0.99] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                  style={{ backgroundColor: themeColor }}
+                  className="w-full hover:opacity-90 active:scale-[0.99] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
                 >
                   <span>{loading ? "Sending..." : "Send OTP"}</span>
                   <FaArrowRight size={12} />
@@ -443,7 +449,7 @@ export const UserAuth = () => {
                     <span className="font-bold text-gray-800">+91 {mobile}</span>
                   </p>
                   {generatedDemoOtp && (
-                    <span className="inline-block mt-2 bg-orange-50 text-[#ff6600] text-[11px] font-bold px-3 py-1 rounded-full border border-orange-200">
+                    <span className="inline-block mt-2 bg-amber-50 text-amber-700 text-[11px] font-bold px-3 py-1 rounded-full border border-amber-200">
                       Demo OTP: {generatedDemoOtp}
                     </span>
                   )}
@@ -461,7 +467,7 @@ export const UserAuth = () => {
                       value={digit}
                       onChange={(e) => handleOtpChange(idx, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                      className="w-12 h-14 sm:w-14 sm:h-14 text-center text-xl font-extrabold text-gray-900 border-2 border-gray-200 focus:border-[#ff6600] rounded-xl outline-none transition-colors bg-white shadow-2xs"
+                      className="w-12 h-14 sm:w-14 sm:h-14 text-center text-xl font-extrabold text-gray-900 border-2 border-gray-200 focus:border-amber-500 rounded-xl outline-none transition-colors bg-white shadow-2xs"
                       autoFocus={idx === 0}
                     />
                   ))}
@@ -477,7 +483,8 @@ export const UserAuth = () => {
                     <button
                       type="button"
                       onClick={handleRegisterSendOtp}
-                      className="text-xs font-bold text-[#ff6600] hover:underline cursor-pointer"
+                      style={{ color: themeColor }}
+                      className="text-xs font-bold hover:underline cursor-pointer"
                     >
                       Resend OTP Now
                     </button>
@@ -487,7 +494,8 @@ export const UserAuth = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#ff6600] hover:bg-[#e65c00] active:scale-[0.99] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                  style={{ backgroundColor: themeColor }}
+                  className="w-full hover:opacity-90 active:scale-[0.99] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
                 >
                   <span>{loading ? "Verifying..." : "Verify OTP"}</span>
                 </button>
@@ -588,7 +596,8 @@ export const UserAuth = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#ff6600] hover:bg-[#e65c00] active:scale-[0.99] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 mt-2"
+                  style={{ backgroundColor: themeColor }}
+                  className="w-full hover:opacity-90 active:scale-[0.99] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 mt-2"
                 >
                   <span>{loading ? "Creating..." : "Create Account"}</span>
                   <FaArrowRight size={12} />
@@ -612,7 +621,7 @@ export const UserAuth = () => {
                 </div>
 
                 {/* MOBILE NUMBER INPUT */}
-                <div className="border-2 border-gray-200 focus-within:border-[#ff6600] rounded-xl px-3.5 py-3 flex items-center bg-white">
+                <div className="border-2 border-gray-200 focus-within:border-amber-500 rounded-xl px-3.5 py-3 flex items-center bg-white">
                   <FaPhoneAlt className="text-gray-400 text-sm mr-2 shrink-0" />
                   <span className="text-gray-600 font-bold text-sm mr-2 shrink-0">+91</span>
                   <input
@@ -632,9 +641,10 @@ export const UserAuth = () => {
                   <button
                     type="button"
                     onClick={() => setLoginMethod("password")}
+                    style={loginMethod === "password" ? { backgroundColor: themeColor, color: "#ffffff" } : {}}
                     className={`flex-1 py-2.5 rounded-lg transition-all cursor-pointer ${
                       loginMethod === "password"
-                        ? "bg-white text-[#ff6600] shadow-2xs"
+                        ? "shadow-2xs"
                         : "text-gray-500 hover:text-gray-800"
                     }`}
                   >
@@ -643,9 +653,10 @@ export const UserAuth = () => {
                   <button
                     type="button"
                     onClick={() => setLoginMethod("otp")}
+                    style={loginMethod === "otp" ? { backgroundColor: themeColor, color: "#ffffff" } : {}}
                     className={`flex-1 py-2.5 rounded-lg transition-all cursor-pointer ${
                       loginMethod === "otp"
-                        ? "bg-white text-[#ff6600] shadow-2xs"
+                        ? "shadow-2xs"
                         : "text-gray-500 hover:text-gray-800"
                     }`}
                   >
@@ -656,7 +667,8 @@ export const UserAuth = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#ff6600] hover:bg-[#e65c00] active:scale-[0.99] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                  style={{ backgroundColor: themeColor }}
+                  className="w-full hover:opacity-90 active:scale-[0.99] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
                 >
                   <span>{loading ? "Processing..." : loginMethod === "otp" ? "Send OTP →" : "Continue →"}</span>
                 </button>
@@ -673,7 +685,7 @@ export const UserAuth = () => {
                   </p>
                 </div>
 
-                <div className="border-2 border-gray-200 focus-within:border-[#ff6600] rounded-xl px-3.5 py-3 flex items-center bg-white relative">
+                <div className="border-2 border-gray-200 focus-within:border-amber-500 rounded-xl px-3.5 py-3 flex items-center bg-white relative">
                   <FaLock className="text-gray-400 text-sm mr-2.5 shrink-0" />
                   <input
                     type={showPassword ? "text" : "password"}
@@ -696,7 +708,8 @@ export const UserAuth = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#ff6600] hover:bg-[#e65c00] active:scale-[0.99] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                  style={{ backgroundColor: themeColor }}
+                  className="w-full hover:opacity-90 active:scale-[0.99] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
                 >
                   <span>{loading ? "Logging in..." : "Login Account"}</span>
                   <FaArrowRight size={12} />
@@ -709,7 +722,8 @@ export const UserAuth = () => {
                       setLoginMethod("otp");
                       handleLoginContinue({ preventDefault: () => {} });
                     }}
-                    className="text-[#ff6600] font-bold hover:underline cursor-pointer"
+                    style={{ color: themeColor }}
+                    className="font-bold hover:underline cursor-pointer"
                   >
                     Login via OTP instead
                   </button>
@@ -733,7 +747,7 @@ export const UserAuth = () => {
                     Enter code sent to <span className="font-bold text-gray-800">+91 {mobile}</span>
                   </p>
                   {generatedDemoOtp && (
-                    <span className="inline-block mt-2 bg-orange-50 text-[#ff6600] text-[11px] font-bold px-3 py-1 rounded-full border border-orange-200">
+                    <span className="inline-block mt-2 bg-amber-50 text-amber-700 text-[11px] font-bold px-3 py-1 rounded-full border border-amber-200">
                       Demo OTP: {generatedDemoOtp}
                     </span>
                   )}
@@ -750,7 +764,7 @@ export const UserAuth = () => {
                       value={digit}
                       onChange={(e) => handleOtpChange(idx, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                      className="w-12 h-14 sm:w-14 sm:h-14 text-center text-xl font-extrabold text-gray-900 border-2 border-gray-200 focus:border-[#ff6600] rounded-xl outline-none transition-colors bg-white shadow-2xs"
+                      className="w-12 h-14 sm:w-14 sm:h-14 text-center text-xl font-extrabold text-gray-900 border-2 border-gray-200 focus:border-amber-500 rounded-xl outline-none transition-colors bg-white shadow-2xs"
                       autoFocus={idx === 0}
                     />
                   ))}
@@ -765,7 +779,8 @@ export const UserAuth = () => {
                     <button
                       type="button"
                       onClick={handleLoginContinue}
-                      className="text-xs font-bold text-[#ff6600] hover:underline cursor-pointer"
+                      style={{ color: themeColor }}
+                      className="text-xs font-bold hover:underline cursor-pointer"
                     >
                       Resend OTP Now
                     </button>
@@ -775,7 +790,8 @@ export const UserAuth = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#ff6600] hover:bg-[#e65c00] active:scale-[0.99] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                  style={{ backgroundColor: themeColor }}
+                  className="w-full hover:opacity-90 active:scale-[0.99] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
                 >
                   <span>{loading ? "Verifying..." : "Verify & Login"}</span>
                 </button>
@@ -784,7 +800,8 @@ export const UserAuth = () => {
                   <button
                     type="button"
                     onClick={() => setLoginMethod("password")}
-                    className="text-[#ff6600] font-bold hover:underline cursor-pointer"
+                    style={{ color: themeColor }}
+                    className="font-bold hover:underline cursor-pointer"
                   >
                     Login via Password instead
                   </button>
@@ -809,7 +826,8 @@ export const UserAuth = () => {
               <button
                 type="button"
                 onClick={() => switchMode("login")}
-                className="font-bold text-[#ff6600] hover:underline cursor-pointer"
+                style={{ color: themeColor }}
+                className="font-bold hover:underline cursor-pointer"
               >
                 Login Here
               </button>
@@ -820,7 +838,8 @@ export const UserAuth = () => {
               <button
                 type="button"
                 onClick={() => switchMode("register")}
-                className="font-bold text-[#ff6600] hover:underline cursor-pointer"
+                style={{ color: themeColor }}
+                className="font-bold hover:underline cursor-pointer"
               >
                 Create Account
               </button>
