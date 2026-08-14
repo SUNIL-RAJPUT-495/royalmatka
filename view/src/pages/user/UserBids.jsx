@@ -25,7 +25,7 @@ export const UserBids = () => {
   const themeColor = currentTheme?.headerBgColor || (isGreenTheme ? '#447668' : '#f95e07');
 
   // Status Filter: 'all' | 'wins' | 'losses' | 'pending'
-  const [filterTab, setFilterTab] = useState('pending');
+  const [filterTab, setFilterTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter Drawer State (Closed by default)
