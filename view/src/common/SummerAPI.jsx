@@ -268,6 +268,10 @@ const SummaryApi = {
         url: baseURL + "/api/bid/get-all-bids",
         method: "get"
     },
+    deleteBid: {
+        url: baseURL + "/api/bid/delete-bid",
+        method: "delete"
+    },
 
     // Notifications
     getAllNotifications: {

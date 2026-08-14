@@ -18,7 +18,7 @@ const Aviator = () => {
 
         const syncWalletBalance = async () => {
             try {
-                const savedUserStr = localStorage.getItem('user_data');
+                const savedUserStr = localStorage.getItem('user_data') || localStorage.getItem('user');
                 let savedUser = null;
                 try { if (savedUserStr) savedUser = JSON.parse(savedUserStr); } catch (e) {}
 
@@ -30,9 +30,16 @@ const Aviator = () => {
 
                 const u = res?.data?.user || res?.data?.data || savedUser;
                 if (u) {
-                    const withdrowalable = Number(u.wallet?.withdrowalable ?? u.withdrowalable) || 0;
-                    const bonus = Number(u.wallet?.bonusBalance ?? u.bonusBalance) || 0;
-                    setBalance(withdrowalable + bonus);
+                    const bal = u.balance !== undefined
+                        ? u.balance
+                        : (u.walletBalance !== undefined
+                            ? u.walletBalance
+                            : (u.wallet_balance !== undefined
+                                ? u.wallet_balance
+                                : (Number(u.wallet?.withdrowalable || 0) + Number(u.wallet?.bonusBalance || 0))));
+                    if (bal !== undefined && bal !== null && !isNaN(bal)) {
+                        setBalance(Number(bal));
+                    }
                 }
             } catch (err) {
                 console.warn('Aviator wallet sync error:', err);

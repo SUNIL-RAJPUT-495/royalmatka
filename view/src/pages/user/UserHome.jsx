@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { fetchGame } from '../../utils/api';
+import { getMarketSessionStatus } from '../../utils/marketTiming';
 import { IoFlashSharp, IoTimeOutline } from 'react-icons/io5';
 import { FaPlay } from 'react-icons/fa';
 import aviatorImg from '../../assets/aviator.jpg';
@@ -167,7 +168,8 @@ export const UserHome = () => {
       {/* 3. Market Cards List */}
       <div className="space-y-3">
         {games.map((game) => {
-          const isClosed = game.is_closed ?? (game.status === 'closed');
+          const sessionStatus = getMarketSessionStatus(game);
+          const isClosed = game.is_closed || game.status === 'closed' || sessionStatus.isMarketClosed;
           const marketTitle = game.market_name || game.name || game.title || 'UNNAMED MARKET';
           
           let resultDisplay = game.display_result || game.result;

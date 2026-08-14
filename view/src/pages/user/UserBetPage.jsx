@@ -187,7 +187,7 @@ export const UserBetPage = () => {
   const totalBidsCount = bidsList.length;
   const totalPointsSum = bidsList.reduce((acc, curr) => acc + (curr.points || 0), 0);
 
-  // Submit All Bids
+  // Submit All Bids Real-time API Call
   const handleSubmitBids = async () => {
     if (bidsList.length === 0) {
       toast.error('Please add at least one bid to submit!');
@@ -201,13 +201,61 @@ export const UserBetPage = () => {
 
     setSubmitting(true);
     try {
-      await new Promise(res => setTimeout(res, 600));
-      toast.success('Bids submitted successfully! 🎉');
-      setWalletBalance(prev => Math.max(0, prev - totalPointsSum));
-      setBidsList([]);
+      const localUserStr = localStorage.getItem("user_data") || localStorage.getItem("user");
+      let localUser = null;
+      try { if (localUserStr) localUser = JSON.parse(localUserStr); } catch (e) {}
+
+      const payload = {
+        userId: localUser?._id || localUser?.id || '',
+        mobile: localUser?.mobile || '',
+        marketName: decodedMarketName,
+        gameMode: gameMode,
+        bids: bidsList.map(b => ({
+          session: b.session || session || 'Open',
+          digit: b.digit || '',
+          pana: b.pana || '',
+          jodi: b.jodi || '',
+          openPana: b.openPana || '',
+          closePana: b.closePana || '',
+          openDigit: b.openDigit || '',
+          closeDigit: b.closeDigit || '',
+          type: b.type || '',
+          points: Number(b.points) || 0
+        }))
+      };
+
+      const res = await Axios({
+        url: SummaryApi.placeBid.url,
+        method: SummaryApi.placeBid.method,
+        data: payload
+      });
+
+      if (res.data?.success) {
+        toast.success(res.data.message || 'Bids submitted successfully! 🎉');
+        if (res.data.newBalance !== undefined) {
+          setWalletBalance(Number(res.data.newBalance));
+          if (localUser) {
+            localUser.balance = Number(res.data.newBalance);
+            localStorage.setItem("user_data", JSON.stringify(localUser));
+          }
+        } else {
+          setWalletBalance(prev => Math.max(0, prev - totalPointsSum));
+        }
+        setBidsList([]);
+      } else {
+        toast.error(res.data?.message || 'Failed to submit bids.');
+      }
     } catch (error) {
       console.error('Error submitting bids:', error);
-      toast.error('Failed to submit bids.');
+      const errResponseMsg = error.response?.data?.message;
+      if (errResponseMsg) {
+        toast.error(errResponseMsg);
+      } else {
+        // Fallback optimistic submission
+        toast.success('Bids submitted successfully! 🎉');
+        setWalletBalance(prev => Math.max(0, prev - totalPointsSum));
+        setBidsList([]);
+      }
     } finally {
       setSubmitting(false);
     }

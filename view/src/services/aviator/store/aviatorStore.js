@@ -98,12 +98,19 @@ const isUSD = urlParams.currency === "USD";
 // Helper to get real user wallet balance from localStorage
 const getInitialUserBalance = () => {
   try {
-    const savedUserStr = typeof window !== 'undefined' ? localStorage.getItem('user_data') : null;
+    const savedUserStr = typeof window !== 'undefined' ? (localStorage.getItem('user_data') || localStorage.getItem('user')) : null;
     if (savedUserStr) {
       const u = JSON.parse(savedUserStr);
-      const withdrowalable = Number(u?.wallet?.withdrowalable ?? u?.withdrowalable) || 0;
-      const bonus = Number(u?.wallet?.bonusBalance ?? u?.bonusBalance) || 0;
-      return withdrowalable + bonus;
+      const bal = u.balance !== undefined
+        ? u.balance
+        : (u.walletBalance !== undefined
+          ? u.walletBalance
+          : (u.wallet_balance !== undefined
+            ? u.wallet_balance
+            : (Number(u.wallet?.withdrowalable || 0) + Number(u.wallet?.bonusBalance || 0))));
+      if (bal !== null && !isNaN(bal)) {
+        return Number(bal);
+      }
     }
   } catch (e) {}
   return 0;
