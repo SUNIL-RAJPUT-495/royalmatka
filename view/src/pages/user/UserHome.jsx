@@ -148,6 +148,7 @@ export const UserHome = () => {
       <div className="space-y-3">
         {games.map((game) => {
           const isClosed = game.is_closed ?? (game.status === 'closed');
+          const marketTitle = game.market_name || game.name || game.title || 'UNNAMED MARKET';
           
           let resultDisplay = game.display_result || game.result;
           if (!resultDisplay) {
@@ -164,10 +165,10 @@ export const UserHome = () => {
 
           return (
             <div
-              key={game._id}
+              key={game._id || marketTitle}
               onClick={() => {
                 if (!isClosed) {
-                  navigate(`/play-game/${encodeURIComponent(game.name)}`);
+                  navigate(`/play-game/${encodeURIComponent(marketTitle)}`);
                 }
               }}
               style={{
@@ -181,7 +182,7 @@ export const UserHome = () => {
               <div className="flex items-start justify-between">
                 <div>
                   <h4 className="font-bold text-gray-900 text-[13px] uppercase tracking-tight">
-                    {game.name}
+                    {marketTitle}
                   </h4>
                   {/* Left-Aligned Dynamic Theme Result */}
                   <div className="mt-0.5">
@@ -204,7 +205,7 @@ export const UserHome = () => {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/play-game/${encodeURIComponent(game.name)}`);
+                      navigate(`/play-game/${encodeURIComponent(marketTitle)}`);
                     }}
                     style={{ backgroundColor: themePlayBtn }}
                     className="w-8 h-8 rounded-full text-white flex items-center justify-center shadow-xs cursor-pointer active:scale-95 transition-transform"
