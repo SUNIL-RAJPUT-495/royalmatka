@@ -25,15 +25,16 @@ export const UserGameModes = () => {
     { id: 'two-digit-panel', name: 'Two Digit Panel (CP,SR)', isClosed: false, iconType: 'grid' },
     { id: 'sp-dp-tp', name: 'SP DP TP', isClosed: false, iconType: 'two-blocks' },
     { id: 'half-sangam', name: 'Half Sangam', isClosed: true, iconType: 'dots-cluster' },
-    { id: 'full-sangam', name: 'Full Sangam', isClosed: true, iconType: 'dots-cluster' },
     { id: 'red-brackets', name: 'Red Brackets', isClosed: false, iconType: 'brackets' },
     { id: 'digit-based', name: 'Digit Based', isClosed: false, iconType: 'digit-symbol' }
   ];
 
+  const themeColor = currentTheme?.headerBgColor || currentTheme?.playBtnBg || '#ea580c';
+
   const renderIcon = (type, isClosed) => {
-    const strokeColor = isClosed ? '#9ca3af' : '#c2410c';
-    const arcColor = isClosed ? '#d1d5db' : '#ea580c';
-    const dotColor = isClosed ? '#9ca3af' : '#ea580c';
+    const strokeColor = isClosed ? '#9ca3af' : themeColor;
+    const arcColor = isClosed ? '#d1d5db' : themeColor;
+    const dotColor = isClosed ? '#9ca3af' : themeColor;
 
     switch (type) {
       case 'single-dot-concentric':
