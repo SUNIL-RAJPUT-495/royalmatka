@@ -41,24 +41,32 @@ const formatMarketResult = (marketDoc) => {
 // Default dummy markets if DB is empty or disconnected
 const DEFAULT_MARKETS = [
   { _id: "1", market_name: "KALYAN MORNING", name: "KALYAN MORNING", open_time: "11:00 AM", close_time: "12:00 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
-  { _id: "2", market_name: "TIME BAZAR", name: "TIME BAZAR", open_time: "01:00 PM", close_time: "02:00 PM", is_closed: false, status: "Active", result_open: "179", result_close: "***", jodi_result: "7*", display_result: "179-7*-***" },
-  { _id: "3", market_name: "MILAN DAY", name: "MILAN DAY", open_time: "03:00 PM", close_time: "05:00 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
-  { _id: "4", market_name: "KALYAN", name: "KALYAN", open_time: "04:30 PM", close_time: "06:30 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
-  { _id: "5", market_name: "SRIDEVI NIGHT", name: "SRIDEVI NIGHT", open_time: "07:00 PM", close_time: "08:00 PM", is_closed: false, status: "Active", result_open: "145", result_close: "480", jodi_result: "02", display_result: "145-02-480" },
-  { _id: "6", market_name: "MAIN BAZAR", name: "MAIN BAZAR", open_time: "09:30 PM", close_time: "12:05 AM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" }
+  { _id: "2", market_name: "KARNATAKA DAY", name: "KARNATAKA DAY", open_time: "09:55 AM", close_time: "10:55 AM", is_closed: true, status: "Closed", result_open: "566", result_close: "335", jodi_result: "71", display_result: "566-71-335" },
+  { _id: "3", market_name: "TIME BAZAR", name: "TIME BAZAR", open_time: "12:55 PM", close_time: "01:55 PM", is_closed: true, status: "Closed", result_open: "179", result_close: "***", jodi_result: "7*", display_result: "179-7*-***" },
+  { _id: "4", market_name: "MADHUR DAY", name: "MADHUR DAY", open_time: "01:25 PM", close_time: "02:25 PM", is_closed: false, status: "Active", result_open: "266", result_close: "***", jodi_result: "4*", display_result: "266-4*-***" },
+  { _id: "5", market_name: "SITA DAY", name: "SITA DAY", open_time: "01:40 PM", close_time: "02:40 PM", is_closed: false, status: "Active", result_open: "355", result_close: "***", jodi_result: "3*", display_result: "355-3*-***" },
+  { _id: "6", market_name: "MILAN DAY", name: "MILAN DAY", open_time: "02:50 PM", close_time: "04:50 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
+  { _id: "7", market_name: "RAJDHANI DAY", name: "RAJDHANI DAY", open_time: "02:55 PM", close_time: "04:55 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
+  { _id: "8", market_name: "KALYAN", name: "KALYAN", open_time: "03:45 PM", close_time: "05:45 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
+  { _id: "9", market_name: "SRIDEVI NIGHT", name: "SRIDEVI NIGHT", open_time: "09:40 PM", close_time: "10:40 PM", is_closed: false, status: "Active", result_open: "145", result_close: "480", jodi_result: "02", display_result: "145-02-480" },
+  { _id: "10", market_name: "MAIN BAZAR", name: "MAIN BAZAR", open_time: "09:30 PM", close_time: "12:05 AM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" }
 ];
 
 export const getAllMarkets = async (req, res) => {
   try {
     if (mongoose.connection.readyState === 1) {
       let markets = await Market.find().sort({ createdAt: -1 });
-      if (!markets || markets.length < 6) {
+      if (!markets || markets.length < 10) {
         const defaultList = [
           { market_name: "KALYAN MORNING", open_time: "11:00 AM", close_time: "12:00 PM", result_open: "***", result_close: "***", jodi_result: "**" },
-          { market_name: "TIME BAZAR", open_time: "01:00 PM", close_time: "02:00 PM", result_open: "179", result_close: "***", jodi_result: "7*" },
-          { market_name: "MILAN DAY", open_time: "03:00 PM", close_time: "05:00 PM", result_open: "***", result_close: "***", jodi_result: "**" },
-          { market_name: "KALYAN", open_time: "04:30 PM", close_time: "06:30 PM", result_open: "***", result_close: "***", jodi_result: "**" },
-          { market_name: "SRIDEVI NIGHT", open_time: "07:00 PM", close_time: "08:00 PM", result_open: "145", result_close: "480", jodi_result: "02" },
+          { market_name: "KARNATAKA DAY", open_time: "09:55 AM", close_time: "10:55 AM", result_open: "566", result_close: "335", jodi_result: "71", is_closed: true },
+          { market_name: "TIME BAZAR", open_time: "12:55 PM", close_time: "01:55 PM", result_open: "179", result_close: "***", jodi_result: "7*", is_closed: true },
+          { market_name: "MADHUR DAY", open_time: "01:25 PM", close_time: "02:25 PM", result_open: "266", result_close: "***", jodi_result: "4*" },
+          { market_name: "SITA DAY", open_time: "01:40 PM", close_time: "02:40 PM", result_open: "355", result_close: "***", jodi_result: "3*" },
+          { market_name: "MILAN DAY", open_time: "02:50 PM", close_time: "04:50 PM", result_open: "***", result_close: "***", jodi_result: "**" },
+          { market_name: "RAJDHANI DAY", open_time: "02:55 PM", close_time: "04:55 PM", result_open: "***", result_close: "***", jodi_result: "**" },
+          { market_name: "KALYAN", open_time: "03:45 PM", close_time: "05:45 PM", result_open: "***", result_close: "***", jodi_result: "**" },
+          { market_name: "SRIDEVI NIGHT", open_time: "09:40 PM", close_time: "10:40 PM", result_open: "145", result_close: "480", jodi_result: "02" },
           { market_name: "MAIN BAZAR", open_time: "09:30 PM", close_time: "12:05 AM", result_open: "***", result_close: "***", jodi_result: "**" }
         ];
 
