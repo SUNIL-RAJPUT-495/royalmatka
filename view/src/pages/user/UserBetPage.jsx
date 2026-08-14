@@ -15,6 +15,8 @@ import { SingleDigit } from '../../components/user/mainMarket/SingleDigit';
 import { SingleDigitBulk } from '../../components/user/mainMarket/SingleDigitBulk';
 import { JodiDigit } from '../../components/user/mainMarket/JodiDigit';
 import { JodiBulk } from '../../components/user/mainMarket/JodiBulk';
+import { SinglePana } from '../../components/user/mainMarket/SinglePana';
+import { SinglePanaBulk } from '../../components/user/mainMarket/SinglePanaBulk';
 
 export const UserBetPage = () => {
   const { currentTheme } = useTheme();
@@ -35,6 +37,28 @@ export const UserBetPage = () => {
       return [
         { id: 1, jodi: '10', points: 10 },
         { id: 2, jodi: '45', points: 10 }
+      ];
+    }
+    if (gameMode === 'single-pana') {
+      return [
+        { id: 1, session: 'Open', pana: '278', points: 10 },
+        { id: 2, session: 'Close', pana: '478', points: 10 }
+      ];
+    }
+    if (gameMode === 'single-pana-bulk') {
+      return [
+        { id: 1, pana: '128', points: 10 },
+        { id: 2, pana: '137', points: 10 },
+        { id: 3, pana: '146', points: 10 },
+        { id: 4, pana: '236', points: 10 },
+        { id: 5, pana: '245', points: 10 },
+        { id: 6, pana: '290', points: 10 },
+        { id: 7, pana: '380', points: 10 },
+        { id: 8, pana: '470', points: 10 },
+        { id: 9, pana: '489', points: 10 },
+        { id: 10, pana: '560', points: 10 },
+        { id: 11, pana: '579', points: 10 },
+        { id: 12, pana: '678', points: 10 }
       ];
     }
     return [
@@ -81,6 +105,7 @@ export const UserBetPage = () => {
       case 'jodi-digit': return 'Jodi';
       case 'jodi-bulk': return 'Jodi';
       case 'single-pana': return 'Single Pana';
+      case 'single-pana-bulk': return 'Single Pana';
       case 'double-pana': return 'Double Pana';
       case 'triple-pana': return 'Triple Pana';
       case 'sp-motor': return 'SP Motor';
@@ -239,26 +264,46 @@ export const UserBetPage = () => {
           />
         )}
 
+        {gameMode === 'single-pana' && (
+          <SinglePana
+            session={session}
+            setSession={setSession}
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+            isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+          />
+        )}
+
+        {gameMode === 'single-pana-bulk' && (
+          <SinglePanaBulk
+            session={session}
+            setSession={setSession}
+            setBidsList={setBidsList}
+            themeColor={themeColor}
+            isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+          />
+        )}
+
         {/* 3. BIDS TABLE CARD */}
         <div className="bg-white rounded-xl border border-gray-200/80 shadow-3xs overflow-hidden">
           {/* Header Row */}
-          {(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk') ? (
+          {(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk' || gameMode === 'single-pana-bulk') ? (
             <div className="bg-[#f8f9fc] border-b border-gray-200/80 px-4 py-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
-              <span className="w-1/3 text-center">JODI</span>
+              <span className="w-1/3 text-center">{gameMode === 'single-pana-bulk' ? 'SINGLE PANA' : 'JODI'}</span>
               <span className="w-1/3 text-center">POINTS</span>
               <span className="w-1/3 text-center">ACTION</span>
             </div>
           ) : (
             <div className="bg-[#f8f9fc] border-b border-gray-200/80 px-4 py-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
               <span className="w-1/4 text-center">SESSION</span>
-              <span className="w-1/4 text-center">DIGIT</span>
+              <span className="w-1/4 text-center">{gameMode.includes('pana') ? 'PANA' : 'DIGIT'}</span>
               <span className="w-1/4 text-center">POINTS</span>
               <span className="w-1/4 text-center">ACTION</span>
             </div>
           )}
 
-          {/* Table Data Rows */}
-          <div className="divide-y divide-gray-100">
+          {/* Table Data Rows (Max 7-8 bids visible, scrollbar hidden) */}
+          <div className="divide-y divide-gray-100 max-h-[285px] overflow-y-auto [scrollbar-width:none] [ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {bidsList.length === 0 ? (
               <div className="p-4 text-center text-xs font-medium text-gray-400">
                 No bids added yet. Enter digit & points above!
@@ -269,19 +314,19 @@ export const UserBetPage = () => {
                   key={bid.id} 
                   className="px-4 py-2 flex items-center justify-between text-xs font-bold text-gray-800 hover:bg-gray-50/50 transition-colors"
                 >
-                  {(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk') ? (
+                  {(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk' || gameMode === 'single-pana-bulk') ? (
                     <>
-                      <span className="w-1/3 text-center font-extrabold text-gray-900 text-sm">{bid.jodi}</span>
-                      <span className="w-1/3 text-center font-extrabold text-gray-900 text-sm">{bid.points}</span>
+                      <span className="w-1/3 text-center font-extrabold text-gray-900 text-sm">{bid.pana || bid.jodi}</span>
+                      <span className="w-1/3 text-center font-extrabold text-gray-900 text-sm">₹{bid.points}</span>
                     </>
                   ) : (
                     <>
                       <span className="w-1/4 text-center text-gray-700 font-semibold">{bid.session}</span>
-                      <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.digit}</span>
+                      <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.pana || bid.digit}</span>
                       <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.points}</span>
                     </>
                   )}
-                  <span className={(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk') ? "w-1/3 flex justify-center" : "w-1/4 flex justify-center"}>
+                  <span className={(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk' || gameMode === 'single-pana-bulk') ? "w-1/3 flex justify-center" : "w-1/4 flex justify-center"}>
                     <button
                       type="button"
                       onClick={() => handleRemoveBid(bid.id)}
