@@ -18,6 +18,11 @@ export const UserGameModes = () => {
     isMarketClosed: false
   });
 
+  // Always Scroll To Top when opening game modes page
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [decodedMarketName]);
+
   useEffect(() => {
     const loadMarketInfo = async () => {
       try {

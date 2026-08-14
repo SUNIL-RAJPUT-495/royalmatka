@@ -53,6 +53,11 @@ export const UserBetPage = () => {
     isMarketClosed: false
   });
 
+  // Always Scroll To Top when opening or changing game mode
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [gameMode, marketName]);
+
   // Fetch Market Timing & Session Status
   useEffect(() => {
     const loadMarketInfo = async () => {
