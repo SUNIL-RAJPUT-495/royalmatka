@@ -13,10 +13,8 @@ export const AddGame = () => {
   // --- ADD FORM STATE ---
   const [formData, setFormData] = useState({
     name: '',       
-    open_time: '', open_period: 'AM',
+    open_time: '', open_period: 'PM',
     close_time: '', close_period: 'PM',
-    open_result_time: '', open_result_period: 'AM',   
-    close_result_time: '', close_result_period: 'PM',
     off_days: []
   });
   
@@ -116,21 +114,19 @@ export const AddGame = () => {
   // ADD MARKET SUBMIT
   const handleSubmit = async () => {
     if (!formData.name || !formData.open_time || !formData.close_time) {
-      toast.error("Please fill Game Name, Open Time & Close Time!");
+      toast.error("Please enter Market Name, Open Time and Close Time!");
       return;
     }
     if (
       !isValidTwelveHourTime(formData.open_time) ||
       !isValidTwelveHourTime(formData.close_time)
     ) {
-      toast.error("Please enter valid time in HH:MM format (e.g. 04:10).");
+      toast.error("Please enter valid time in HH:MM format (e.g. 04:30).");
       return;
     }
 
     const formattedOpenTime = `${formatTimeTo12Hour(formData.open_time)} ${formData.open_period}`;
     const formattedCloseTime = `${formatTimeTo12Hour(formData.close_time)} ${formData.close_period}`;
-    const formattedOpenResultTime = formData.open_result_time ? `${formatTimeTo12Hour(formData.open_result_time)} ${formData.open_result_period}` : formattedOpenTime;
-    const formattedCloseResultTime = formData.close_result_time ? `${formatTimeTo12Hour(formData.close_result_time)} ${formData.close_result_period}` : formattedCloseTime;
 
     try {
       const response = await AxiosAdmin({
@@ -141,8 +137,8 @@ export const AddGame = () => {
           name: formData.name,
           open_time: formattedOpenTime, 
           close_time: formattedCloseTime,
-          open_result_time: formattedOpenResultTime,
-          close_result_time: formattedCloseResultTime,
+          open_result_time: formattedOpenTime,
+          close_result_time: formattedCloseTime,
           off_days: formData.off_days
         }
       });
@@ -151,10 +147,8 @@ export const AddGame = () => {
       
       setFormData({ 
         name: '', 
-        open_time: '', open_period: 'AM',
+        open_time: '', open_period: 'PM',
         close_time: '', close_period: 'PM',
-        open_result_time: '', open_result_period: 'AM',
-        close_result_time: '', close_result_period: 'PM',
         off_days: []
       });
       
@@ -173,8 +167,6 @@ export const AddGame = () => {
       name: game.market_name || game.name || '',
       open_time: game.open_time || '',
       close_time: game.close_time || '',
-      open_result_time: game.open_result_time || game.open_time || '',
-      close_result_time: game.close_result_time || game.close_time || '',
       off_days: Array.isArray(game.off_days) ? game.off_days : []
     });
     setEditModalOpen(true);
@@ -197,8 +189,8 @@ export const AddGame = () => {
           name: editMarketData.name,
           open_time: editMarketData.open_time,
           close_time: editMarketData.close_time,
-          open_result_time: editMarketData.open_result_time,
-          close_result_time: editMarketData.close_result_time,
+          open_result_time: editMarketData.open_time,
+          close_result_time: editMarketData.close_time,
           off_days: editMarketData.off_days
         }
       });
@@ -274,7 +266,7 @@ export const AddGame = () => {
               <div>
                 <h1 className="text-lg font-bold tracking-tight">Main Markets Manager</h1>
                 <p className="text-xs text-gray-500 font-semibold mt-0.5">
-                  Add, edit, and control live Main Market timings & status
+                  Set Open Time (First 3-Digit Result) & Close Time (Last 3-Digit Result)
                 </p>
               </div>
             </div>
@@ -295,39 +287,41 @@ export const AddGame = () => {
               <span>Add New Main Market</span>
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
               {/* Game Name */}
-              <div className="space-y-1 text-xs lg:col-span-4">
-                <label className="block font-bold text-gray-500 uppercase tracking-wider">Game / Market Name</label>
+              <div className="space-y-1 text-xs md:col-span-2">
+                <label className="block font-bold text-gray-500 uppercase tracking-wider">Market Name</label>
                 <input
                   type="text"
                   id="name"
-                  placeholder="e.g. KALYAN MORNING"
+                  placeholder="e.g. KALYAN, MILAN DAY, TIME BAZAR"
                   value={formData.name}
                   onChange={handleChange}
                   className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-xs font-semibold outline-none focus:border-blue-500 shadow-3xs uppercase"
                 />
               </div>
 
-              {/* Open Bid Time */}
+              {/* Open Time (First 3-digit result time) */}
               <div className="space-y-1 text-xs">
-                <label className="block font-bold text-gray-500 uppercase tracking-wider">Open Bid Time</label>
+                <label className="block font-bold text-gray-500 uppercase tracking-wider">
+                  Open Time <span className="text-emerald-600 font-semibold">(Open 3-Digit Result)</span>
+                </label>
                 <div className="flex shadow-3xs border border-gray-300 rounded-xl bg-white focus-within:border-blue-500 overflow-hidden">
                   <input
                     type="text"
                     id="open_time"
-                    placeholder="11:00"
+                    placeholder="04:30"
                     maxLength={5}
                     value={formData.open_time}
                     onChange={handleTimeInputChange}
                     onBlur={(e) => normalizeTimeOnBlur('open_time', e.target.value)}
-                    className="w-full px-3 py-2.5 bg-transparent text-xs font-semibold outline-none"
+                    className="w-full px-3.5 py-2.5 bg-transparent text-xs font-semibold outline-none"
                   />
                   <select
                     id="open_period"
                     value={formData.open_period}
                     onChange={handleChange}
-                    className="bg-gray-100 border-l border-gray-300 px-2 py-2 text-xs font-bold text-gray-700 outline-none cursor-pointer"
+                    className="bg-gray-100 border-l border-gray-300 px-3 py-2 text-xs font-bold text-gray-700 outline-none cursor-pointer"
                   >
                     <option value="AM">AM</option>
                     <option value="PM">PM</option>
@@ -335,77 +329,27 @@ export const AddGame = () => {
                 </div>
               </div>
 
-              {/* Close Bid Time */}
+              {/* Close Time (Last 3-digit result time) */}
               <div className="space-y-1 text-xs">
-                <label className="block font-bold text-gray-500 uppercase tracking-wider">Close Bid Time</label>
+                <label className="block font-bold text-gray-500 uppercase tracking-wider">
+                  Close Time <span className="text-red-500 font-semibold">(Close 3-Digit Result)</span>
+                </label>
                 <div className="flex shadow-3xs border border-gray-300 rounded-xl bg-white focus-within:border-blue-500 overflow-hidden">
                   <input
                     type="text"
                     id="close_time"
-                    placeholder="12:00"
+                    placeholder="06:30"
                     maxLength={5}
                     value={formData.close_time}
                     onChange={handleTimeInputChange}
                     onBlur={(e) => normalizeTimeOnBlur('close_time', e.target.value)}
-                    className="w-full px-3 py-2.5 bg-transparent text-xs font-semibold outline-none"
+                    className="w-full px-3.5 py-2.5 bg-transparent text-xs font-semibold outline-none"
                   />
                   <select
                     id="close_period"
                     value={formData.close_period}
                     onChange={handleChange}
-                    className="bg-gray-100 border-l border-gray-300 px-2 py-2 text-xs font-bold text-gray-700 outline-none cursor-pointer"
-                  >
-                    <option value="AM">AM</option>
-                    <option value="PM">PM</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Open Result Time */}
-              <div className="space-y-1 text-xs">
-                <label className="block font-bold text-gray-500 uppercase tracking-wider">Open Result Time</label>
-                <div className="flex shadow-3xs border border-gray-300 rounded-xl bg-white focus-within:border-blue-500 overflow-hidden">
-                  <input
-                    type="text"
-                    id="open_result_time"
-                    placeholder="11:05"
-                    maxLength={5}
-                    value={formData.open_result_time}
-                    onChange={handleTimeInputChange}
-                    onBlur={(e) => normalizeTimeOnBlur('open_result_time', e.target.value)}
-                    className="w-full px-3 py-2.5 bg-transparent text-xs font-semibold outline-none"
-                  />
-                  <select
-                    id="open_result_period"
-                    value={formData.open_result_period}
-                    onChange={handleChange}
-                    className="bg-gray-100 border-l border-gray-300 px-2 py-2 text-xs font-bold text-gray-700 outline-none cursor-pointer"
-                  >
-                    <option value="AM">AM</option>
-                    <option value="PM">PM</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Close Result Time */}
-              <div className="space-y-1 text-xs">
-                <label className="block font-bold text-gray-500 uppercase tracking-wider">Close Result Time</label>
-                <div className="flex shadow-3xs border border-gray-300 rounded-xl bg-white focus-within:border-blue-500 overflow-hidden">
-                  <input
-                    type="text"
-                    id="close_result_time"
-                    placeholder="12:05"
-                    maxLength={5}
-                    value={formData.close_result_time}
-                    onChange={handleTimeInputChange}
-                    onBlur={(e) => normalizeTimeOnBlur('close_result_time', e.target.value)}
-                    className="w-full px-3 py-2.5 bg-transparent text-xs font-semibold outline-none"
-                  />
-                  <select
-                    id="close_result_period"
-                    value={formData.close_result_period}
-                    onChange={handleChange}
-                    className="bg-gray-100 border-l border-gray-300 px-2 py-2 text-xs font-bold text-gray-700 outline-none cursor-pointer"
+                    className="bg-gray-100 border-l border-gray-300 px-3 py-2 text-xs font-bold text-gray-700 outline-none cursor-pointer"
                   >
                     <option value="AM">AM</option>
                     <option value="PM">PM</option>
@@ -414,7 +358,7 @@ export const AddGame = () => {
               </div>
 
               {/* Off Days Selection */}
-              <div className="space-y-1.5 text-xs lg:col-span-4 pt-1">
+              <div className="space-y-1.5 text-xs md:col-span-2 pt-1">
                 <label className="block font-bold text-gray-500 uppercase tracking-wider">Market Off Days (Optional)</label>
                 <div className="flex flex-wrap gap-2">
                   {DAYS_OF_WEEK.map((day) => {
@@ -438,7 +382,7 @@ export const AddGame = () => {
               </div>
 
               {/* Submit button */}
-              <div className="lg:col-span-4 flex justify-end pt-2">
+              <div className="md:col-span-2 flex justify-end pt-2">
                 <button
                   onClick={handleSubmit}
                   className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-6 py-3 rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-1.5 cursor-pointer"
@@ -456,7 +400,7 @@ export const AddGame = () => {
           <div className="bg-gray-900 p-4 border-b border-gray-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <List className="text-blue-400 w-5 h-5" />
-              <h3 className="font-bold text-xs text-white uppercase tracking-wider">All Active & Closed Main Markets</h3>
+              <h3 className="font-bold text-xs text-white uppercase tracking-wider">All Main Markets</h3>
             </div>
             <span className="bg-blue-500/20 text-blue-300 text-xs font-bold px-2.5 py-0.5 rounded-full border border-blue-500/30">
               Total: {gamesList.length}
@@ -468,8 +412,8 @@ export const AddGame = () => {
               <thead className="bg-[#f8f9fc] border-b border-gray-200 text-[10px] font-bold uppercase tracking-wider text-gray-500">
                 <tr>
                   <th className="px-5 py-4">Market Name</th>
-                  <th className="px-5 py-4">Bid Times (Open - Close)</th>
-                  <th className="px-5 py-4">Result Times (Open - Close)</th>
+                  <th className="px-5 py-4">Open Time (First 3-Digit Result)</th>
+                  <th className="px-5 py-4">Close Time (Last 3-Digit Result)</th>
                   <th className="px-5 py-4">Off Days</th>
                   <th className="px-5 py-4 text-center">Status</th>
                   <th className="px-5 py-4 text-center">Actions</th>
@@ -496,20 +440,18 @@ export const AddGame = () => {
                         <td className="px-5 py-4 font-extrabold text-gray-900 uppercase">
                           {marketName}
                           <div className="text-[10px] text-gray-400 font-mono mt-0.5 font-normal">
-                            Result: <span className="font-bold text-orange-600">{game.display_result || '***-**-***'}</span>
+                            Live Result: <span className="font-bold text-orange-600">{game.display_result || '***-**-***'}</span>
                           </div>
                         </td>
                         
-                        {/* Bid Times */}
-                        <td className="px-5 py-4 font-semibold text-gray-600">
-                          <div className="text-emerald-600 font-bold">O: {game.open_time}</div>
-                          <div className="text-red-500 font-bold mt-0.5">C: {game.close_time}</div>
+                        {/* Open Time */}
+                        <td className="px-5 py-4 font-bold text-emerald-600">
+                          {game.open_time}
                         </td>
 
-                        {/* Result Times */}
-                        <td className="px-5 py-4 font-semibold text-gray-600">
-                          <div className="text-blue-600 font-bold">O: {game.open_result_time || game.open_time}</div>
-                          <div className="text-purple-600 font-bold mt-0.5">C: {game.close_result_time || game.close_time}</div>
+                        {/* Close Time */}
+                        <td className="px-5 py-4 font-bold text-red-500">
+                          {game.close_time}
                         </td>
 
                         {/* Off Days */}
@@ -575,11 +517,11 @@ export const AddGame = () => {
       {/* EDIT MARKET MODAL */}
       {editModalOpen && editMarketData && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in select-none">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
                 <Edit3 className="text-blue-600" size={18} />
-                <span>Edit Market Details</span>
+                <span>Edit Market Timings</span>
               </h3>
               <button
                 onClick={() => setEditModalOpen(false)}
@@ -602,42 +544,21 @@ export const AddGame = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Open Bid Time</label>
+                  <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Open Time (First 3-Digit)</label>
                   <input
                     type="text"
                     value={editMarketData.open_time}
                     onChange={(e) => setEditMarketData({ ...editMarketData, open_time: e.target.value })}
-                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl font-semibold outline-none focus:border-blue-500"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl font-semibold outline-none focus:border-blue-500 text-emerald-600"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Close Bid Time</label>
+                  <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Close Time (Last 3-Digit)</label>
                   <input
                     type="text"
                     value={editMarketData.close_time}
                     onChange={(e) => setEditMarketData({ ...editMarketData, close_time: e.target.value })}
-                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl font-semibold outline-none focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Open Result Time</label>
-                  <input
-                    type="text"
-                    value={editMarketData.open_result_time}
-                    onChange={(e) => setEditMarketData({ ...editMarketData, open_result_time: e.target.value })}
-                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl font-semibold outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-gray-500 uppercase tracking-wider mb-1">Close Result Time</label>
-                  <input
-                    type="text"
-                    value={editMarketData.close_result_time}
-                    onChange={(e) => setEditMarketData({ ...editMarketData, close_result_time: e.target.value })}
-                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl font-semibold outline-none focus:border-blue-500"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl font-semibold outline-none focus:border-blue-500 text-red-500"
                   />
                 </div>
               </div>
