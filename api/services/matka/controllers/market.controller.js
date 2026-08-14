@@ -30,8 +30,6 @@ const formatMarketResult = (marketDoc) => {
     status: market.is_closed ? "Closed" : "Active",
     open_time: market.open_time || "12:00 PM",
     close_time: market.close_time || "02:00 PM",
-    open_result_time: market.open_result_time || market.open_time || "12:00 PM",
-    close_result_time: market.close_result_time || market.close_time || "02:00 PM",
     off_days: Array.isArray(market.off_days) ? market.off_days : [],
     result_open: openPana,
     result_close: closePana,
@@ -42,12 +40,12 @@ const formatMarketResult = (marketDoc) => {
 
 // Default dummy markets if DB is empty or disconnected
 const DEFAULT_MARKETS = [
-  { _id: "1", market_name: "KALYAN MORNING", name: "KALYAN MORNING", open_time: "11:00 AM", close_time: "12:00 PM", open_result_time: "11:05 AM", close_result_time: "12:05 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
-  { _id: "2", market_name: "TIME BAZAR", name: "TIME BAZAR", open_time: "01:00 PM", close_time: "02:00 PM", open_result_time: "01:05 PM", close_result_time: "02:05 PM", is_closed: false, status: "Active", result_open: "179", result_close: "***", jodi_result: "7*", display_result: "179-7*-***" },
-  { _id: "3", market_name: "MILAN DAY", name: "MILAN DAY", open_time: "03:00 PM", close_time: "05:00 PM", open_result_time: "03:05 PM", close_result_time: "05:05 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
-  { _id: "4", market_name: "KALYAN", name: "KALYAN", open_time: "04:30 PM", close_time: "06:30 PM", open_result_time: "04:35 PM", close_result_time: "06:35 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
-  { _id: "5", market_name: "SRIDEVI NIGHT", name: "SRIDEVI NIGHT", open_time: "07:00 PM", close_time: "08:00 PM", open_result_time: "07:05 PM", close_result_time: "08:05 PM", is_closed: false, status: "Active", result_open: "145", result_close: "480", jodi_result: "02", display_result: "145-02-480" },
-  { _id: "6", market_name: "MAIN BAZAR", name: "MAIN BAZAR", open_time: "09:30 PM", close_time: "12:05 AM", open_result_time: "09:35 PM", close_result_time: "12:10 AM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" }
+  { _id: "1", market_name: "KALYAN MORNING", name: "KALYAN MORNING", open_time: "11:00 AM", close_time: "12:00 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
+  { _id: "2", market_name: "TIME BAZAR", name: "TIME BAZAR", open_time: "01:00 PM", close_time: "02:00 PM", is_closed: false, status: "Active", result_open: "179", result_close: "***", jodi_result: "7*", display_result: "179-7*-***" },
+  { _id: "3", market_name: "MILAN DAY", name: "MILAN DAY", open_time: "03:00 PM", close_time: "05:00 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
+  { _id: "4", market_name: "KALYAN", name: "KALYAN", open_time: "04:30 PM", close_time: "06:30 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
+  { _id: "5", market_name: "SRIDEVI NIGHT", name: "SRIDEVI NIGHT", open_time: "07:00 PM", close_time: "08:00 PM", is_closed: false, status: "Active", result_open: "145", result_close: "480", jodi_result: "02", display_result: "145-02-480" },
+  { _id: "6", market_name: "MAIN BAZAR", name: "MAIN BAZAR", open_time: "09:30 PM", close_time: "12:05 AM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" }
 ];
 
 export const getAllMarkets = async (req, res) => {
@@ -56,12 +54,12 @@ export const getAllMarkets = async (req, res) => {
       let markets = await Market.find().sort({ createdAt: -1 });
       if (!markets || markets.length === 0) {
         markets = await Market.insertMany([
-          { market_name: "KALYAN MORNING", open_time: "11:00 AM", close_time: "12:00 PM", open_result_time: "11:05 AM", close_result_time: "12:05 PM", result_open: "***", result_close: "***", jodi_result: "**" },
-          { market_name: "TIME BAZAR", open_time: "01:00 PM", close_time: "02:00 PM", open_result_time: "01:05 PM", close_result_time: "02:05 PM", result_open: "179", result_close: "***", jodi_result: "7*" },
-          { market_name: "MILAN DAY", open_time: "03:00 PM", close_time: "05:00 PM", open_result_time: "03:05 PM", close_result_time: "05:05 PM", result_open: "***", result_close: "***", jodi_result: "**" },
-          { market_name: "KALYAN", open_time: "04:30 PM", close_time: "06:30 PM", open_result_time: "04:35 PM", close_result_time: "06:35 PM", result_open: "***", result_close: "***", jodi_result: "**" },
-          { market_name: "SRIDEVI NIGHT", open_time: "07:00 PM", close_time: "08:00 PM", open_result_time: "07:05 PM", close_result_time: "08:05 PM", result_open: "145", result_close: "480", jodi_result: "02" },
-          { market_name: "MAIN BAZAR", open_time: "09:30 PM", close_time: "12:05 AM", open_result_time: "09:35 PM", close_result_time: "12:10 AM", result_open: "***", result_close: "***", jodi_result: "**" }
+          { market_name: "KALYAN MORNING", open_time: "11:00 AM", close_time: "12:00 PM", result_open: "***", result_close: "***", jodi_result: "**" },
+          { market_name: "TIME BAZAR", open_time: "01:00 PM", close_time: "02:00 PM", result_open: "179", result_close: "***", jodi_result: "7*" },
+          { market_name: "MILAN DAY", open_time: "03:00 PM", close_time: "05:00 PM", result_open: "***", result_close: "***", jodi_result: "**" },
+          { market_name: "KALYAN", open_time: "04:30 PM", close_time: "06:30 PM", result_open: "***", result_close: "***", jodi_result: "**" },
+          { market_name: "SRIDEVI NIGHT", open_time: "07:00 PM", close_time: "08:00 PM", result_open: "145", result_close: "480", jodi_result: "02" },
+          { market_name: "MAIN BAZAR", open_time: "09:30 PM", close_time: "12:05 AM", result_open: "***", result_close: "***", jodi_result: "**" }
         ]);
       }
       const formattedMarkets = markets.map(formatMarketResult);
@@ -78,8 +76,6 @@ export const addMarket = async (req, res) => {
     const market_name = req.body.market_name || req.body.name;
     const open_time = req.body.open_time;
     const close_time = req.body.close_time;
-    const open_result_time = req.body.open_result_time || open_time;
-    const close_result_time = req.body.close_result_time || close_time;
     const off_days = req.body.off_days || [];
 
     if (!market_name || !open_time || !close_time) {
@@ -90,8 +86,6 @@ export const addMarket = async (req, res) => {
         market_name: market_name.trim().toUpperCase(),
         open_time: open_time.trim(),
         close_time: close_time.trim(),
-        open_result_time: open_result_time ? open_result_time.trim() : open_time.trim(),
-        close_result_time: close_result_time ? close_result_time.trim() : close_time.trim(),
         off_days: Array.isArray(off_days) ? off_days : [],
         result_open: "***",
         result_close: "***",
@@ -111,7 +105,7 @@ export const addMarket = async (req, res) => {
 
 export const updateMarketDetails = async (req, res) => {
   try {
-    const { id, marketId, market_name, name, open_time, close_time, open_result_time, close_result_time, off_days } = req.body;
+    const { id, marketId, market_name, name, open_time, close_time, off_days } = req.body;
     const targetId = id || marketId;
 
     if (mongoose.connection.readyState === 1 && targetId) {
@@ -120,8 +114,6 @@ export const updateMarketDetails = async (req, res) => {
         if (market_name || name) market.market_name = (market_name || name).trim().toUpperCase();
         if (open_time) market.open_time = open_time.trim();
         if (close_time) market.close_time = close_time.trim();
-        if (open_result_time) market.open_result_time = open_result_time.trim();
-        if (close_result_time) market.close_result_time = close_result_time.trim();
         if (Array.isArray(off_days)) market.off_days = off_days;
 
         await market.save();
