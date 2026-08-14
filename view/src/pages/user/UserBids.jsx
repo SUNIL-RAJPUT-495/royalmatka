@@ -13,6 +13,8 @@ import {
   IoClose
 } from 'react-icons/io5';
 import { HiOutlineAdjustmentsHorizontal } from 'react-icons/hi2';
+import Axios from '../../utils/axios';
+import SummaryApi from '../../common/SummerAPI';
 
 export const UserBids = () => {
   const { currentTheme } = useTheme();
@@ -41,45 +43,73 @@ export const UserBids = () => {
     return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
   };
 
-  // Sample data matching screenshot
-  const [bidsList, setBidsList] = useState([
-    {
-      id: '#f655d33c',
-      marketName: 'MILAN DAY',
-      date: '12/08/2026',
-      time: '03:49 PM',
-      bidAmount: '10',
-      potentialAmount: '100',
-      gameType: 'Single Ank',
-      digitLabel: 'Close Digit: 0',
-      session: 'Close',
-      status: 'pending' // 'pending' | 'win' | 'loss'
-    },
-    {
-      id: '#f655d343',
-      marketName: 'MILAN DAY',
-      date: '12/08/2026',
-      time: '03:49 PM',
-      bidAmount: '10',
-      potentialAmount: '100',
-      gameType: 'Single Ank',
-      digitLabel: 'Close Digit: 7',
-      session: 'Close',
-      status: 'pending'
-    },
-    {
-      id: '#f655d344',
-      marketName: 'MILAN DAY',
-      date: '12/08/2026',
-      time: '03:49 PM',
-      bidAmount: '10',
-      potentialAmount: '100',
-      gameType: 'Single Ank',
-      digitLabel: 'Close Digit: 8',
-      session: 'Close',
-      status: 'pending'
-    }
-  ]);
+  // Live Bids list state
+  const [bidsList, setBidsList] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch real user bids from backend
+  React.useEffect(() => {
+    const fetchUserBids = async () => {
+      try {
+        setLoading(true);
+        const localUserStr = localStorage.getItem("user_data") || localStorage.getItem("user");
+        let localUser = null;
+        try { if (localUserStr) localUser = JSON.parse(localUserStr); } catch (e) {}
+        const mobile = localUser?.mobile || '';
+
+        if (!mobile) {
+          setLoading(false);
+          return;
+        }
+
+        const res = await Axios({
+          url: `${SummaryApi.getUserBids.url}?mobile=${encodeURIComponent(mobile)}`,
+          method: SummaryApi.getUserBids.method
+        });
+
+        if (res.data?.bids && Array.isArray(res.data.bids)) {
+          const formatted = res.data.bids.map(b => {
+            const createdAtDate = new Date(b.createdAt || Date.now());
+            const dateStr = createdAtDate.toLocaleDateString('en-GB');
+            const timeStr = createdAtDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+            let digitLabel = '';
+            if (b.digit) digitLabel = `${b.session || 'Open'} Digit: ${b.digit}`;
+            else if (b.pana) digitLabel = `${b.session || 'Open'} Pana: ${b.pana}`;
+            else if (b.jodi) digitLabel = `Jodi: ${b.jodi}`;
+            else if (b.openPana && b.closePana) digitLabel = `Open Pana: ${b.openPana} | Close Pana: ${b.closePana}`;
+            else if (b.openDigit && b.closePana) digitLabel = `Open Digit: ${b.openDigit} | Close Pana: ${b.closePana}`;
+            else if (b.openPana && b.closeDigit) digitLabel = `Open Pana: ${b.openPana} | Close Digit: ${b.closeDigit}`;
+            else digitLabel = `${b.session || 'Open'}`;
+
+            const statusNorm = (b.status || 'Pending').toLowerCase();
+            const points = Number(b.points) || 0;
+
+            return {
+              id: `#${String(b._id || b.id).slice(-8)}`,
+              marketName: b.marketName || 'MAIN MARKET',
+              date: dateStr,
+              time: timeStr,
+              createdAt: createdAtDate,
+              bidAmount: String(points),
+              potentialAmount: String(points * 9),
+              gameType: b.gameMode || 'Main Market',
+              digitLabel: digitLabel,
+              session: b.session || 'Open',
+              status: statusNorm === 'won' ? 'win' : (statusNorm === 'lost' ? 'loss' : 'pending')
+            };
+          });
+          setBidsList(formatted);
+        }
+      } catch (err) {
+        console.warn('Error loading user bids:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserBids();
+  }, []);
 
   // Theme-matched styling variables for bid cards
   const cardHeaderBg = isGreenTheme ? 'bg-[#ecfdf5]/60 border-b border-emerald-100/60' : 'bg-[#fff7ed]/60 border-b border-orange-100/60';
@@ -107,9 +137,9 @@ export const UserBids = () => {
     return true;
   });
 
-  // Calculate totals
-  const totalBets = 10;
-  const totalWinnings = 0;
+  // Calculate totals dynamically
+  const totalBets = bidsList.length;
+  const totalWinnings = bidsList.filter(b => b.status === 'win').reduce((acc, curr) => acc + (Number(curr.potentialAmount) || 0), 0);
 
   return (
     <div className="w-full min-h-screen bg-[#f5f6fa] select-none font-sans flex flex-col pb-28">
