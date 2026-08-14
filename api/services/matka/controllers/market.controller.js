@@ -52,15 +52,23 @@ export const getAllMarkets = async (req, res) => {
   try {
     if (mongoose.connection.readyState === 1) {
       let markets = await Market.find().sort({ createdAt: -1 });
-      if (!markets || markets.length === 0) {
-        markets = await Market.insertMany([
+      if (!markets || markets.length < 6) {
+        const defaultList = [
           { market_name: "KALYAN MORNING", open_time: "11:00 AM", close_time: "12:00 PM", result_open: "***", result_close: "***", jodi_result: "**" },
           { market_name: "TIME BAZAR", open_time: "01:00 PM", close_time: "02:00 PM", result_open: "179", result_close: "***", jodi_result: "7*" },
           { market_name: "MILAN DAY", open_time: "03:00 PM", close_time: "05:00 PM", result_open: "***", result_close: "***", jodi_result: "**" },
           { market_name: "KALYAN", open_time: "04:30 PM", close_time: "06:30 PM", result_open: "***", result_close: "***", jodi_result: "**" },
           { market_name: "SRIDEVI NIGHT", open_time: "07:00 PM", close_time: "08:00 PM", result_open: "145", result_close: "480", jodi_result: "02" },
           { market_name: "MAIN BAZAR", open_time: "09:30 PM", close_time: "12:05 AM", result_open: "***", result_close: "***", jodi_result: "**" }
-        ]);
+        ];
+
+        const existingNames = new Set(markets.map(m => m.market_name.toUpperCase()));
+        const missingMarkets = defaultList.filter(item => !existingNames.has(item.market_name.toUpperCase()));
+
+        if (missingMarkets.length > 0) {
+          await Market.insertMany(missingMarkets);
+          markets = await Market.find().sort({ createdAt: -1 });
+        }
       }
       const formattedMarkets = markets.map(formatMarketResult);
       return res.status(200).json({ success: true, data: formattedMarkets });
