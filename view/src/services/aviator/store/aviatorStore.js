@@ -28,6 +28,34 @@ const syncWalletWithBackend = async (amount, action) => {
   }
 };
 
+const saveAviatorBidToBackend = async (amount, status = 'Pending', winAmount = 0, multiplier = 1.00) => {
+  try {
+    const savedUserStr = typeof window !== 'undefined' ? (localStorage.getItem('user_data') || localStorage.getItem('user')) : null;
+    let savedUser = null;
+    try { if (savedUserStr) savedUser = JSON.parse(savedUserStr); } catch (e) {}
+    if (!savedUser?.mobile) return;
+
+    await Axios({
+      url: SummaryApi.placeBid.url,
+      method: SummaryApi.placeBid.method,
+      data: {
+        userId: savedUser._id || savedUser.id,
+        mobile: savedUser.mobile,
+        marketName: 'AVIATOR CASINO',
+        gameMode: 'Aviator',
+        bids: [{
+          session: 'N/A',
+          digit: `@${multiplier.toFixed(2)}x`,
+          points: Number(amount),
+          type: status
+        }]
+      }
+    });
+  } catch (err) {
+    console.warn('Aviator bid record error:', err);
+  }
+};
+
 // Built-in store creator
 export const create = (createState) => {
   let state;
@@ -266,8 +294,9 @@ export const useAviatorStore = create((set, get) => {
         return "Insufficient Balance";
       }
 
-      // 1. Instant deduction from backend database
+      // 1. Instant deduction & record bid in backend database
       syncWalletWithBackend(card.amount, 'deduct');
+      saveAviatorBidToBackend(card.amount, 'Pending', 0, 1.00);
 
       // Emit to backend socket if connected
       if (socket.connected) {
@@ -329,8 +358,9 @@ export const useAviatorStore = create((set, get) => {
       const cashOutMult = forceMultiplier || state.multiplier;
       const winAmt = parseFloat((card.amount * cashOutMult).toFixed(2));
 
-      // Sync win crediting with MongoDB backend
+      // Sync win crediting & record winning bid with MongoDB backend
       syncWalletWithBackend(winAmt, 'credit');
+      saveAviatorBidToBackend(card.amount, 'Won', winAmt, cashOutMult);
 
       if (socket.connected) {
         socket.emit("cashout");

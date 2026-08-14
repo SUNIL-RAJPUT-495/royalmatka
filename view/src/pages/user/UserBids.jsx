@@ -74,7 +74,9 @@ export const UserBids = () => {
             const timeStr = createdAtDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
             let digitLabel = '';
-            if (b.digit) digitLabel = `${b.session || 'Open'} Digit: ${b.digit}`;
+            if (b.marketName === 'AVIATOR CASINO' || b.gameMode === 'Aviator' || b.type === 'Casino') {
+              digitLabel = b.digit ? `Multiplier: ${b.digit}` : `Aviator Casino Bet`;
+            } else if (b.digit) digitLabel = `${b.session || 'Open'} Digit: ${b.digit}`;
             else if (b.pana) digitLabel = `${b.session || 'Open'} Pana: ${b.pana}`;
             else if (b.jodi) digitLabel = `Jodi: ${b.jodi}`;
             else if (b.openPana && b.closePana) digitLabel = `Open Pana: ${b.openPana} | Close Pana: ${b.closePana}`;
