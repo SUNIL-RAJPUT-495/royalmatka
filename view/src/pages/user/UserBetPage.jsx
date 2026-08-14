@@ -56,6 +56,8 @@ export const UserBetPage = () => {
   // Always Scroll To Top when opening or changing game mode
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   }, [gameMode, marketName]);
 
   // Fetch Market Timing & Session Status
@@ -232,7 +234,7 @@ export const UserBetPage = () => {
       </div>
 
       {/* MAIN CONTAINER */}
-      <div className="p-3.5 space-y-3.5">
+      <div className="p-4 pt-3.5 space-y-4">
 
         {/* 2. DYNAMIC MAIN MARKET MODULAR COMPONENT BASED ON GAME MODE */}
         {gameMode === 'single-digit' && (
