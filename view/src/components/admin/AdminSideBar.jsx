@@ -41,7 +41,7 @@ export const AdminSideBar = ({ closeSidebar }) => {
         if (isFullAccessAdmin) return true;
         if (heading === "Main Menu") return true;
 
-        if (heading === "Game Management" || heading === "Jackpot Gali") {
+        if (heading === "Game Management" || heading === "Jackpot Gali" || heading === "Casino") {
             return adminPermissions.includes("Game Management") || adminPermissions.includes("Starline") || adminPermissions.includes("Jackpot");
         }
         if (heading === "Financial Management") {
@@ -78,6 +78,11 @@ export const AdminSideBar = ({ closeSidebar }) => {
                 { icons: FaTrophy, itemsDetails: "Matka Results", link: "matka-results" },
                 { icons: FaCheckCircle, itemsDetails: "Declare Results", link: "ResultDecleare" },
                 { icons: FaPercent, itemsDetails: "Game Rates", link: "game-rates" },
+            ]
+        },
+        {
+            heading: "Casino",
+            items: [
                 { icons: FaRocket, itemsDetails: "Aviator", link: "aviator" },
             ]
         },
