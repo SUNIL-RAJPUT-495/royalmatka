@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { FaArrowLeft } from 'react-icons/fa';
 import { IoWalletOutline } from 'react-icons/io5';
@@ -30,6 +30,8 @@ import { HalfSangam } from '../../components/user/mainMarket/HalfSangam';
 import { DigitBased } from '../../components/user/mainMarket/DigitBased';
 import { RedBrackets } from '../../components/user/mainMarket/RedBrackets';
 import { FullSangam } from '../../components/user/mainMarket/FullSangam';
+import { LeftDigit } from '../../components/user/mainMarket/LeftDigit';
+import { RightDigit } from '../../components/user/mainMarket/RightDigit';
 
 export const UserBetPage = () => {
   const { currentTheme } = useTheme();
@@ -47,6 +49,7 @@ export const UserBetPage = () => {
   const [points, setPoints] = useState('');
   const [bidsList, setBidsList] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [marketDetails, setMarketDetails] = useState(null);
   const [sessionStatus, setSessionStatus] = useState({
     isOpenSessionOpen: true,
     isCloseSessionOpen: true,
@@ -69,20 +72,51 @@ export const UserBetPage = () => {
     return () => clearTimeout(timer);
   }, [gameMode, marketName]);
 
-  // Fetch Market Timing & Session Status
+  const [searchParams] = useSearchParams();
+  const isGaliParam = searchParams.get('type') === 'gali';
+
+  // Fetch Market Timing & Session Status (Live check every 5 seconds)
   useEffect(() => {
+    let intervalId;
     const loadMarketInfo = async () => {
       try {
+        if (isGaliParam) {
+          const resGali = await Axios({
+            url: SummaryApi.getGaliMarkets?.url || '/api/market/get-gali-markets',
+            method: SummaryApi.getGaliMarkets?.method || 'get'
+          });
+          if (resGali?.data?.data && Array.isArray(resGali.data.data)) {
+            const matchGali = resGali.data.data.find(
+              (g) => (g.name || '').toUpperCase() === decodedMarketName
+            );
+            if (matchGali) {
+              setMarketDetails({
+                ...matchGali,
+                open_time: matchGali.time,
+                close_time: matchGali.time
+              });
+              const isClosed = Boolean(matchGali.is_closed || (matchGali.jodi_result && matchGali.jodi_result !== '**'));
+              setSessionStatus({
+                isOpenSessionOpen: !isClosed,
+                isCloseSessionOpen: !isClosed,
+                isMarketClosed: isClosed
+              });
+              return;
+            }
+          }
+        }
+
         const gamesList = await fetchGame();
         if (Array.isArray(gamesList)) {
           const match = gamesList.find(
             (g) => (g.market_name || g.name || '').toUpperCase() === decodedMarketName
           );
           if (match) {
+            setMarketDetails(match);
             const status = getMarketSessionStatus(match);
             setSessionStatus(status);
             if (!status.isOpenSessionOpen && status.isCloseSessionOpen) {
-              setSession('Close'); // Auto switch session to Close if Open result time passed
+              setSession('Close');
             }
           }
         }
@@ -90,12 +124,17 @@ export const UserBetPage = () => {
         console.warn('Error fetching market timing in bet page:', err);
       }
     };
+
     loadMarketInfo();
-  }, [decodedMarketName]);
+    intervalId = setInterval(loadMarketInfo, 5000);
+    return () => clearInterval(intervalId);
+  }, [decodedMarketName, isGaliParam]);
 
   // Map mode ID to title string
   const getModeTitle = (mode) => {
     switch (mode) {
+      case 'left-digit': return 'Left Digit';
+      case 'right-digit': return 'Right Digit';
       case 'single-digit': return 'Single Ank';
       case 'single-digit-bulk': return 'Single Digit Bulk';
       case 'jodi-digit': return 'Jodi';
@@ -154,10 +193,25 @@ export const UserBetPage = () => {
     fetchUserBalance();
   }, []);
 
-  // Handle Add More Bid (Single Digit)
+  // Handle Add More Bid (Single Digit / Left Digit / Right Digit)
   const handleAddMore = () => {
+    if (sessionStatus.isMarketClosed) {
+      toast.error(`Market '${decodedMarketName}' is closed for betting! 🚫`);
+      return;
+    }
+    if (gameMode !== 'left-digit' && gameMode !== 'right-digit') {
+      if (session === 'Open' && !sessionStatus.isOpenSessionOpen) {
+        toast.error(`Open session bidding for ${decodedMarketName} has closed! 🚫`);
+        return;
+      }
+      if (session === 'Close' && !sessionStatus.isCloseSessionOpen) {
+        toast.error(`Close session bidding for ${decodedMarketName} has closed! 🚫`);
+        return;
+      }
+    }
+
     if (!digit.trim()) {
-      toast.error('Please enter Single Digit!');
+      toast.error(`Please enter ${gameMode === 'left-digit' ? 'Left Digit' : gameMode === 'right-digit' ? 'Right Digit' : 'Single Digit'}!`);
       return;
     }
     if (!points || parseInt(points, 10) <= 0) {
@@ -167,9 +221,10 @@ export const UserBetPage = () => {
 
     const newBid = {
       id: Date.now(),
-      session,
+      session: 'Open',
       digit: digit.trim(),
-      points: parseInt(points, 10)
+      points: parseInt(points, 10),
+      type: gameMode === 'left-digit' ? 'Left' : gameMode === 'right-digit' ? 'Right' : ''
     };
 
     setBidsList(prev => [...prev, newBid]);
@@ -189,6 +244,11 @@ export const UserBetPage = () => {
 
   // Submit All Bids Real-time API Call
   const handleSubmitBids = async () => {
+    if (sessionStatus.isMarketClosed) {
+      toast.error(`Bidding for ${decodedMarketName} is closed for today! 🚫`);
+      return;
+    }
+
     if (bidsList.length === 0) {
       toast.error('Please add at least one bid to submit!');
       return;
@@ -210,6 +270,7 @@ export const UserBetPage = () => {
         mobile: localUser?.mobile || '',
         marketName: decodedMarketName,
         gameMode: gameMode,
+        type: isGaliParam ? 'gali' : (b.type || ''),
         bids: bidsList.map(b => ({
           session: b.session || session || 'Open',
           digit: b.digit || '',
@@ -219,7 +280,7 @@ export const UserBetPage = () => {
           closePana: b.closePana || '',
           openDigit: b.openDigit || '',
           closeDigit: b.closeDigit || '',
-          type: b.type || '',
+          type: isGaliParam ? 'gali' : (b.type || ''),
           points: Number(b.points) || 0
         }))
       };
@@ -277,7 +338,7 @@ export const UserBetPage = () => {
             <FaArrowLeft size={14} />
           </button>
           <h1 className="text-xs sm:text-sm font-bold tracking-wide">
-            {decodeURIComponent(marketName).toUpperCase()} — {getModeTitle(gameMode)}
+            {decodedMarketName} {marketDetails?.time || marketDetails?.close_time || marketDetails?.open_time || ''} — {getModeTitle(gameMode)}
           </h1>
         </div>
 
@@ -293,7 +354,39 @@ export const UserBetPage = () => {
       {/* MAIN CONTAINER */}
       <div className="p-4 pt-3.5 space-y-4">
 
+        {/* 1. MARKET CLOSED WARNING BANNER */}
+        {sessionStatus.isMarketClosed && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-xs font-bold text-center space-y-1 shadow-3xs animate-in fade-in">
+            <span className="block text-xs font-extrabold uppercase tracking-wider text-red-800">🚫 Bidding Closed For Today</span>
+            <span className="block text-[11px] font-semibold text-red-600">
+              Timings for {decodedMarketName} have ended for today. Bidding is disabled.
+            </span>
+          </div>
+        )}
+
         {/* 2. DYNAMIC MAIN MARKET MODULAR COMPONENT BASED ON GAME MODE */}
+        {gameMode === 'left-digit' && (
+          <LeftDigit
+            digit={digit}
+            setDigit={setDigit}
+            points={points}
+            setPoints={setPoints}
+            handleAddMore={handleAddMore}
+            themeColor={themeColor}
+          />
+        )}
+
+        {gameMode === 'right-digit' && (
+          <RightDigit
+            digit={digit}
+            setDigit={setDigit}
+            points={points}
+            setPoints={setPoints}
+            handleAddMore={handleAddMore}
+            themeColor={themeColor}
+          />
+        )}
+
         {gameMode === 'single-digit' && (
           <SingleDigit
             session={session}
@@ -305,6 +398,8 @@ export const UserBetPage = () => {
             handleAddMore={handleAddMore}
             themeColor={themeColor}
             isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+            isCloseSessionOpen={sessionStatus.isCloseSessionOpen}
+            isMarketClosed={sessionStatus.isMarketClosed}
           />
         )}
 
@@ -315,6 +410,8 @@ export const UserBetPage = () => {
             setBidsList={setBidsList}
             themeColor={themeColor}
             isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+            isCloseSessionOpen={sessionStatus.isCloseSessionOpen}
+            isMarketClosed={sessionStatus.isMarketClosed}
           />
         )}
 
@@ -322,6 +419,8 @@ export const UserBetPage = () => {
           <JodiDigit
             setBidsList={setBidsList}
             themeColor={themeColor}
+            isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+            isMarketClosed={sessionStatus.isMarketClosed}
           />
         )}
 
@@ -329,6 +428,8 @@ export const UserBetPage = () => {
           <JodiBulk
             setBidsList={setBidsList}
             themeColor={themeColor}
+            isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+            isMarketClosed={sessionStatus.isMarketClosed}
           />
         )}
 
@@ -339,6 +440,8 @@ export const UserBetPage = () => {
             setBidsList={setBidsList}
             themeColor={themeColor}
             isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+            isCloseSessionOpen={sessionStatus.isCloseSessionOpen}
+            isMarketClosed={sessionStatus.isMarketClosed}
           />
         )}
 
@@ -349,6 +452,8 @@ export const UserBetPage = () => {
             setBidsList={setBidsList}
             themeColor={themeColor}
             isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+            isCloseSessionOpen={sessionStatus.isCloseSessionOpen}
+            isMarketClosed={sessionStatus.isMarketClosed}
           />
         )}
 
@@ -359,6 +464,8 @@ export const UserBetPage = () => {
             setBidsList={setBidsList}
             themeColor={themeColor}
             isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+            isCloseSessionOpen={sessionStatus.isCloseSessionOpen}
+            isMarketClosed={sessionStatus.isMarketClosed}
           />
         )}
 
@@ -369,6 +476,8 @@ export const UserBetPage = () => {
             setBidsList={setBidsList}
             themeColor={themeColor}
             isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+            isCloseSessionOpen={sessionStatus.isCloseSessionOpen}
+            isMarketClosed={sessionStatus.isMarketClosed}
           />
         )}
 
@@ -379,6 +488,8 @@ export const UserBetPage = () => {
             setBidsList={setBidsList}
             themeColor={themeColor}
             isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+            isCloseSessionOpen={sessionStatus.isCloseSessionOpen}
+            isMarketClosed={sessionStatus.isMarketClosed}
           />
         )}
 
@@ -389,6 +500,8 @@ export const UserBetPage = () => {
             setBidsList={setBidsList}
             themeColor={themeColor}
             isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+            isCloseSessionOpen={sessionStatus.isCloseSessionOpen}
+            isMarketClosed={sessionStatus.isMarketClosed}
           />
         )}
 
@@ -399,6 +512,8 @@ export const UserBetPage = () => {
             setBidsList={setBidsList}
             themeColor={themeColor}
             isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+            isCloseSessionOpen={sessionStatus.isCloseSessionOpen}
+            isMarketClosed={sessionStatus.isMarketClosed}
           />
         )}
 
@@ -409,6 +524,8 @@ export const UserBetPage = () => {
             setBidsList={setBidsList}
             themeColor={themeColor}
             isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+            isCloseSessionOpen={sessionStatus.isCloseSessionOpen}
+            isMarketClosed={sessionStatus.isMarketClosed}
           />
         )}
 
@@ -473,7 +590,13 @@ export const UserBetPage = () => {
         {/* 3. BIDS TABLE CARD */}
         <div className="bg-white rounded-xl border border-gray-200/80 shadow-3xs overflow-hidden">
           {/* Header Row */}
-          {(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk' || gameMode === 'single-pana-bulk' || gameMode === 'digit-based' || gameMode === 'red-brackets') ? (
+          {(gameMode === 'left-digit' || gameMode === 'right-digit') ? (
+            <div className="bg-[#f8f9fc] border-b border-gray-200/80 px-4 py-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              <span className="w-1/3 text-center">{gameMode === 'left-digit' ? 'LEFT DIGIT' : 'RIGHT DIGIT'}</span>
+              <span className="w-1/3 text-center">POINTS</span>
+              <span className="w-1/3 text-center">ACTION</span>
+            </div>
+          ) : (gameMode === 'jodi-digit' || gameMode === 'jodi-bulk' || gameMode === 'single-pana-bulk' || gameMode === 'digit-based' || gameMode === 'red-brackets') ? (
             <div className="bg-[#f8f9fc] border-b border-gray-200/80 px-4 py-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
               <span className="w-1/3 text-center">{gameMode === 'single-pana-bulk' ? 'SINGLE PANA' : 'JODI'}</span>
               <span className="w-1/3 text-center">POINTS</span>
@@ -522,9 +645,9 @@ export const UserBetPage = () => {
                   key={bid.id} 
                   className="px-3 py-2 flex items-center justify-between text-xs font-bold text-gray-800 hover:bg-gray-50/50 transition-colors"
                 >
-                  {(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk' || gameMode === 'single-pana-bulk' || gameMode === 'digit-based' || gameMode === 'red-brackets') ? (
+                  {(gameMode === 'left-digit' || gameMode === 'right-digit' || gameMode === 'jodi-digit' || gameMode === 'jodi-bulk' || gameMode === 'single-pana-bulk' || gameMode === 'digit-based' || gameMode === 'red-brackets') ? (
                     <>
-                      <span className="w-1/3 text-center font-extrabold text-gray-900 text-sm">{bid.pana || bid.jodi}</span>
+                      <span className="w-1/3 text-center font-extrabold text-gray-900 text-sm">{bid.digit || bid.pana || bid.jodi}</span>
                       <span className="w-1/3 text-center font-extrabold text-gray-900 text-sm">₹{bid.points}</span>
                     </>
                   ) : gameMode === 'half-sangam' ? (
@@ -563,7 +686,7 @@ export const UserBetPage = () => {
                       <span className="w-1/4 text-center font-extrabold text-gray-900 text-sm">{bid.points}</span>
                     </>
                   )}
-                  <span className={(gameMode === 'jodi-digit' || gameMode === 'jodi-bulk' || gameMode === 'single-pana-bulk' || gameMode === 'digit-based' || gameMode === 'red-brackets') ? "w-1/3 flex justify-center" : (gameMode === 'odd-even' || gameMode === 'two-digit-panel' || gameMode === 'sp-dp-tp') ? "w-1/5 flex justify-center" : "w-1/4 flex justify-center"}>
+                  <span className={(gameMode === 'left-digit' || gameMode === 'right-digit' || gameMode === 'jodi-digit' || gameMode === 'jodi-bulk' || gameMode === 'single-pana-bulk' || gameMode === 'digit-based' || gameMode === 'red-brackets') ? "w-1/3 flex justify-center" : (gameMode === 'odd-even' || gameMode === 'two-digit-panel' || gameMode === 'sp-dp-tp') ? "w-1/5 flex justify-center" : "w-1/4 flex justify-center"}>
                     <button
                       type="button"
                       onClick={() => handleRemoveBid(bid.id)}
@@ -600,9 +723,15 @@ export const UserBetPage = () => {
         <button
           type="button"
           onClick={handleSubmitBids}
-          disabled={submitting}
-          style={{ backgroundColor: themeColor }}
-          className="px-7 py-2.5 text-white font-bold text-xs rounded-full shadow-md hover:opacity-95 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+          disabled={bidsList.length === 0 || submitting}
+          style={{
+            backgroundColor: bidsList.length > 0 ? themeColor : '#85a898'
+          }}
+          className={`px-8 py-3 text-white font-extrabold text-sm rounded-full shadow-md transition-all ${
+            bidsList.length > 0
+              ? 'cursor-pointer hover:opacity-95 active:scale-95'
+              : 'cursor-not-allowed opacity-80'
+          }`}
         >
           {submitting ? 'Submitting...' : 'Submit'}
         </button>

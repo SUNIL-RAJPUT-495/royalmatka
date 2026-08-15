@@ -1,5 +1,22 @@
 import Market from "../models/Market.js";
+import Bid from "../models/Bid.js";
+import User from "../../auth/models/User.js";
+import GameRate from "../models/GameRate.js";
 import mongoose from "mongoose";
+
+// Helper to parse rate values e.g. "1 ka 9.5" or "1 ka 140"
+const parseMultiplier = (rateStr, defaultMult) => {
+  if (!rateStr) return defaultMult;
+  const str = String(rateStr).trim();
+  const match = str.match(/(\d+(?:\.\d+)?)\s*ka\s*(\d+(?:\.\d+)?)/i);
+  if (match) {
+    const bet = parseFloat(match[1]);
+    const win = parseFloat(match[2]);
+    if (bet > 0 && win > 0) return win / bet;
+  }
+  const num = parseFloat(str);
+  return isNaN(num) || num <= 0 ? defaultMult : num;
+};
 
 // Calculate single digit from 3-digit Pana (Sum mod 10)
 const calculateSingleDigit = (pana) => {
@@ -38,19 +55,7 @@ const formatMarketResult = (marketDoc) => {
   };
 };
 
-// Default dummy markets if DB is empty or disconnected
-const DEFAULT_MARKETS = [
-  { _id: "1", market_name: "KALYAN MORNING", name: "KALYAN MORNING", open_time: "11:00 AM", close_time: "12:00 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
-  { _id: "2", market_name: "KARNATAKA DAY", name: "KARNATAKA DAY", open_time: "09:55 AM", close_time: "10:55 AM", is_closed: true, status: "Closed", result_open: "566", result_close: "335", jodi_result: "71", display_result: "566-71-335" },
-  { _id: "3", market_name: "TIME BAZAR", name: "TIME BAZAR", open_time: "12:55 PM", close_time: "01:55 PM", is_closed: true, status: "Closed", result_open: "179", result_close: "***", jodi_result: "7*", display_result: "179-7*-***" },
-  { _id: "4", market_name: "MADHUR DAY", name: "MADHUR DAY", open_time: "01:25 PM", close_time: "02:25 PM", is_closed: false, status: "Active", result_open: "266", result_close: "***", jodi_result: "4*", display_result: "266-4*-***" },
-  { _id: "5", market_name: "SITA DAY", name: "SITA DAY", open_time: "01:40 PM", close_time: "02:40 PM", is_closed: false, status: "Active", result_open: "355", result_close: "***", jodi_result: "3*", display_result: "355-3*-***" },
-  { _id: "6", market_name: "MILAN DAY", name: "MILAN DAY", open_time: "02:50 PM", close_time: "04:50 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
-  { _id: "7", market_name: "RAJDHANI DAY", name: "RAJDHANI DAY", open_time: "02:55 PM", close_time: "04:55 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
-  { _id: "8", market_name: "KALYAN", name: "KALYAN", open_time: "03:45 PM", close_time: "05:45 PM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" },
-  { _id: "9", market_name: "SRIDEVI NIGHT", name: "SRIDEVI NIGHT", open_time: "09:40 PM", close_time: "10:40 PM", is_closed: false, status: "Active", result_open: "145", result_close: "480", jodi_result: "02", display_result: "145-02-480" },
-  { _id: "10", market_name: "MAIN BAZAR", name: "MAIN BAZAR", open_time: "09:30 PM", close_time: "12:05 AM", is_closed: false, status: "Active", result_open: "***", result_close: "***", jodi_result: "**", display_result: "***-**-***" }
-];
+
 
 const parseTimeToMinutes = (timeStr) => {
   if (!timeStr) return 99999;
@@ -190,47 +195,200 @@ export const updateMarketStatus = async (req, res) => {
 
 export const declareResult = async (req, res) => {
   try {
-    const { marketId, resultOpen, resultClose, jodiResult } = req.body;
-    if (!marketId) {
-      return res.status(400).json({ success: false, message: "Market ID is required" });
-    }
+    const { marketId, market_name, marketName, game, openPana, closePana, resultOpen, resultClose, jodiResult } = req.body;
+    const targetName = (market_name || marketName || game || '').trim();
+    const openPanaVal = resultOpen || openPana;
+    const closePanaVal = resultClose || closePana;
 
     if (mongoose.connection.readyState === 1) {
-      const market = await Market.findById(marketId);
-      if (!market) {
-        return res.status(404).json({ success: false, message: "Market not found" });
+      let market = null;
+      if (marketId) {
+        market = await Market.findById(marketId);
+      }
+      if (!market && targetName) {
+        market = await Market.findOne({ market_name: new RegExp(`^${targetName}$`, 'i') });
       }
 
-      if (resultOpen !== undefined && resultOpen !== null && resultOpen !== "") {
-        market.result_open = String(resultOpen).trim();
-      }
-      if (resultClose !== undefined && resultClose !== null && resultClose !== "") {
-        market.result_close = String(resultClose).trim();
-      }
-
-      // Calculate center Jodi automatically
-      const openDigit = calculateSingleDigit(market.result_open);
-      const closeDigit = calculateSingleDigit(market.result_close);
-
-      if (openDigit !== '*' && closeDigit !== '*') {
-        market.jodi_result = `${openDigit}${closeDigit}`;
-      } else if (openDigit !== '*') {
-        market.jodi_result = `${openDigit}*`;
-      } else if (jodiResult) {
-        market.jodi_result = String(jodiResult).trim();
+      if (!market && targetName) {
+        market = await Market.create({
+          market_name: targetName.toUpperCase(),
+          open_time: "09:00 AM",
+          close_time: "10:00 PM",
+          result_open: openPanaVal || "***",
+          result_close: closePanaVal || "***",
+          jodi_result: jodiResult || "**"
+        });
       }
 
-      await market.save();
+      if (market) {
+        if (openPanaVal !== undefined && openPanaVal !== null && openPanaVal !== "") {
+          market.result_open = String(openPanaVal).trim();
+        }
+        if (closePanaVal !== undefined && closePanaVal !== null && closePanaVal !== "") {
+          market.result_close = String(closePanaVal).trim();
+        }
 
-      return res.status(200).json({
-        success: true,
-        message: "Main Market result declared successfully! 🎯",
-        data: formatMarketResult(market)
-      });
+        // Calculate center Jodi automatically
+        const openDigit = calculateSingleDigit(market.result_open);
+        const closeDigit = calculateSingleDigit(market.result_close);
+
+        if (openDigit !== '*' && closeDigit !== '*') {
+          market.jodi_result = `${openDigit}${closeDigit}`;
+        } else if (openDigit !== '*') {
+          market.jodi_result = `${openDigit}*`;
+        } else if (jodiResult) {
+          market.jodi_result = String(jodiResult).trim();
+        }
+
+        await market.save();
+
+        // Dynamic Rate Multipliers (Default standard rates)
+        let rateSingleDigit = 9.5;
+        let rateJodi = 95;
+        let rateSinglePana = 140;
+        let rateDoublePana = 280;
+        let rateTriplePana = 600;
+        let rateSangam = 1000;
+
+        try {
+          const dbRates = await GameRate.find({ active: true }).lean();
+          for (const r of dbRates) {
+            const rName = (r.name || '').toLowerCase();
+            if (rName.includes('single digit') || rName.includes('single ank')) rateSingleDigit = parseMultiplier(r.value, 9.5);
+            else if (rName.includes('jodi')) rateJodi = parseMultiplier(r.value, 95);
+            else if (rName.includes('single pana') || rName.includes('single patti')) rateSinglePana = parseMultiplier(r.value, 140);
+            else if (rName.includes('double pana') || rName.includes('double patti')) rateDoublePana = parseMultiplier(r.value, 280);
+            else if (rName.includes('triple pana') || rName.includes('triple patti')) rateTriplePana = parseMultiplier(r.value, 600);
+            else if (rName.includes('sangam')) rateSangam = parseMultiplier(r.value, 1000);
+          }
+        } catch (rErr) {
+          console.warn("Using default game rates:", rErr);
+        }
+
+        // Settle bids phased: Open result settles Open bids, Close result settles Close & Jodi bids
+        const finalMarketName = market.market_name || targetName;
+        const pendingBids = await Bid.find({
+          marketName: new RegExp(`^${finalMarketName.trim()}$`, 'i'),
+          status: "Pending"
+        });
+
+        const openPanaValid = market.result_open && market.result_open !== '***' && String(market.result_open).trim().length === 3;
+        const closePanaValid = market.result_close && market.result_close !== '***' && String(market.result_close).trim().length === 3;
+
+        for (const bid of pendingBids) {
+          const mode = (bid.gameMode || '').toLowerCase().replace(/-/g, ' ');
+          const pts = Number(bid.points) || 0;
+          const session = bid.session || 'Open';
+
+          let shouldEvaluate = false;
+          let isWin = false;
+          let mult = rateSingleDigit;
+
+          // 1. OPEN SESSION BIDS (Settle immediately when Open result is declared)
+          if (session === 'Open') {
+            if (openPanaValid) {
+              shouldEvaluate = true;
+              if (mode.includes('single digit') || mode.includes('single ank') || mode.includes('ank') || mode.includes('two digit') || mode.includes('odd') || mode.includes('even') || mode.includes('digit based')) {
+                if (openDigit !== '*' && String(bid.digit) === String(openDigit)) { isWin = true; mult = rateSingleDigit; }
+              } else if (mode.includes('single pana') || mode.includes('single patti') || mode.includes('sp motor')) {
+                if (String(bid.pana || bid.digit) === String(market.result_open)) { isWin = true; mult = rateSinglePana; }
+              } else if (mode.includes('double pana') || mode.includes('double patti') || mode.includes('dp motor')) {
+                if (String(bid.pana || bid.digit) === String(market.result_open)) { isWin = true; mult = rateDoublePana; }
+              } else if (mode.includes('triple pana') || mode.includes('triple patti')) {
+                if (String(bid.pana || bid.digit) === String(market.result_open)) { isWin = true; mult = rateTriplePana; }
+              } else if (mode.includes('sp dp tp')) {
+                if (String(bid.pana || bid.digit) === String(market.result_open)) {
+                  isWin = true;
+                  const targetPana = String(market.result_open);
+                  const isTriple = targetPana[0] === targetPana[1] && targetPana[1] === targetPana[2];
+                  const isDouble = targetPana[0] === targetPana[1] || targetPana[1] === targetPana[2] || targetPana[0] === targetPana[2];
+                  mult = isTriple ? rateTriplePana : (isDouble ? rateDoublePana : rateSinglePana);
+                }
+              }
+            }
+          }
+
+          // 2. CLOSE SESSION BIDS (Settle immediately when Close result is declared)
+          else if (session === 'Close') {
+            if (closePanaValid) {
+              shouldEvaluate = true;
+              if (mode.includes('single digit') || mode.includes('single ank') || mode.includes('ank') || mode.includes('two digit') || mode.includes('odd') || mode.includes('even') || mode.includes('digit based')) {
+                if (closeDigit !== '*' && String(bid.digit) === String(closeDigit)) { isWin = true; mult = rateSingleDigit; }
+              } else if (mode.includes('single pana') || mode.includes('single patti') || mode.includes('sp motor')) {
+                if (String(bid.pana || bid.digit) === String(market.result_close)) { isWin = true; mult = rateSinglePana; }
+              } else if (mode.includes('double pana') || mode.includes('double patti') || mode.includes('dp motor')) {
+                if (String(bid.pana || bid.digit) === String(market.result_close)) { isWin = true; mult = rateDoublePana; }
+              } else if (mode.includes('triple pana') || mode.includes('triple patti')) {
+                if (String(bid.pana || bid.digit) === String(market.result_close)) { isWin = true; mult = rateTriplePana; }
+              } else if (mode.includes('sp dp tp')) {
+                if (String(bid.pana || bid.digit) === String(market.result_close)) {
+                  isWin = true;
+                  const targetPana = String(market.result_close);
+                  const isTriple = targetPana[0] === targetPana[1] && targetPana[1] === targetPana[2];
+                  const isDouble = targetPana[0] === targetPana[1] || targetPana[1] === targetPana[2] || targetPana[0] === targetPana[2];
+                  mult = isTriple ? rateTriplePana : (isDouble ? rateDoublePana : rateSinglePana);
+                }
+              }
+            }
+          }
+
+          // 3. JODI, RED BRACKETS & SANGAM BIDS (Settle when both Open and Close are declared)
+          else if (mode.includes('jodi') || mode.includes('red brackets')) {
+            if (openPanaValid && closePanaValid) {
+              shouldEvaluate = true;
+              if (market.jodi_result && !market.jodi_result.includes('*') && String(bid.jodi || bid.digit) === String(market.jodi_result)) {
+                isWin = true; mult = rateJodi;
+              }
+            }
+          } else if (mode.includes('sangam') || mode.includes('sang')) {
+            if (openPanaValid && closePanaValid) {
+              shouldEvaluate = true;
+              if (bid.openPana && bid.closePana && String(bid.openPana) === String(market.result_open) && String(bid.closePana) === String(market.result_close)) {
+                isWin = true; mult = rateSangam;
+              } else if (bid.openDigit && bid.closePana && String(bid.openDigit) === String(openDigit) && String(bid.closePana) === String(market.result_close)) {
+                isWin = true; mult = rateSangam;
+              } else if (bid.openPana && bid.closeDigit && String(bid.openPana) === String(market.result_open) && String(bid.closeDigit) === String(closeDigit)) {
+                isWin = true; mult = rateSangam;
+              }
+            }
+          }
+
+          // Execute settlement if evaluated in current declaration phase
+          if (shouldEvaluate) {
+            if (isWin) {
+              const winAmt = Math.round(pts * mult);
+              bid.status = "Won";
+              bid.winAmount = winAmt;
+              await bid.save();
+
+              if (bid.userMobile || bid.userId) {
+                const userQuery = bid.userId ? { _id: bid.userId } : { mobile: bid.userMobile };
+                await User.findOneAndUpdate(userQuery, { 
+                  $inc: { 
+                    balance: winAmt,
+                    "wallet.withdrowalable": winAmt 
+                  } 
+                });
+              }
+            } else {
+              bid.status = "Lost";
+              bid.winAmount = 0;
+              await bid.save();
+            }
+          }
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: "Result declared & session bids settled successfully! 🎯",
+          data: formatMarketResult(market)
+        });
+      }
     }
 
     return res.status(200).json({ success: true, message: "Result declared (Demo mode)" });
   } catch (error) {
+    console.error("Error declaring result:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };

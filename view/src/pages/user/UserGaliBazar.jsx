@@ -163,11 +163,10 @@ export const UserGaliBazar = () => {
             {/* TAB 1: StarLine (Always Fixed on Left) */}
             <div
               onClick={() => handleTabClick('starline')}
-              className={`rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center gap-1 shadow-sm cursor-pointer transition-all ${
-                !isGaliMode
+              className={`rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center gap-1 shadow-sm cursor-pointer transition-all ${!isGaliMode
                   ? 'bg-white shadow-md border-2 border-white scale-[1.02]'
                   : 'bg-white/95 hover:bg-white active:scale-95 border border-white/60'
-              }`}
+                }`}
             >
               <div className="w-8 h-8 rounded-xl bg-[#f5eeff] flex items-center justify-center text-[#9333ea] shrink-0 shadow-2xs">
                 <IoStarOutline size={18} className="text-[#9333ea]" />
@@ -240,11 +239,10 @@ export const UserGaliBazar = () => {
               <div
                 key={market.id || market.name}
                 onClick={() => !isClosed && handlePlayMarket(market)}
-                className={`bg-white rounded-2xl p-3.5 shadow-xs border-l-[4px] flex flex-col justify-between relative transition-all duration-200 select-none border border-gray-100 ${
-                  isClosed
+                className={`bg-white rounded-2xl p-3.5 shadow-xs border-l-[4px] flex flex-col justify-between relative transition-all duration-200 select-none border border-gray-100 ${isClosed
                     ? 'opacity-95'
                     : 'cursor-pointer hover:shadow-md active:scale-[0.98]'
-                }`}
+                  }`}
                 style={{ borderLeftColor: accentBorderColor }}
               >
                 {/* Top: Market Title */}

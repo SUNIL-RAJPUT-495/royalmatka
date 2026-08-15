@@ -142,7 +142,10 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="AddGame" element={<AdminPanel />} />
+              <Route path="main-market-bids" element={<AdminBid />} />
+              <Route path="main-bids" element={<AdminBid />} />
               <Route path="AdminBid" element={<AdminBid />} />
+              <Route path="admin-bids" element={<AdminBid />} />
               <Route path="matka-results" element={<MatkaResultPage />} />
               <Route path="MatkaResultPage" element={<MatkaResultPage />} />
               <Route path="ResultDecleare" element={<ResultAdmin />} />
@@ -203,6 +206,8 @@ function App() {
               <Route path="GameRatesAdmin" element={<GameRatesAdmin />} />
               <Route path="game-rates" element={<GameRatesAdmin />} />
               <Route path="ResultAdmin" element={<ResultAdmin />} />
+              <Route path="ResultDecleare" element={<ResultAdmin />} />
+              <Route path="result-declare" element={<ResultAdmin />} />
               <Route path="results" element={<ResultAdmin />} />
             </Route>
           </Route>

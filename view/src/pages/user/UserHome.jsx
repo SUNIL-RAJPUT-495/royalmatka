@@ -169,11 +169,15 @@ export const UserHome = () => {
       <div className="space-y-3">
         {games.map((game) => {
           const sessionStatus = getMarketSessionStatus(game);
-          const isClosed = game.is_closed || game.status === 'closed' || sessionStatus.isMarketClosed;
+          // Time-based session determines market closure; after 12:00 AM midnight, bidding opens for new date
+          const isClosed = sessionStatus.isMarketClosed;
           const marketTitle = game.market_name || game.name || game.title || 'UNNAMED MARKET';
           
           let resultDisplay = game.display_result || game.result;
-          if (!resultDisplay) {
+          // Fresh result display for new day (before today's open time)
+          if (sessionStatus.isOpenSessionOpen && sessionStatus.isCloseSessionOpen) {
+            resultDisplay = '***-**-***';
+          } else if (!resultDisplay) {
             const oPana = game.result_open || game.open_result_pana || game.open_pana || '***';
             const cPana = game.result_close || game.close_result_pana || game.close_pana || '***';
             let jodi = game.jodi_result || game.jodi || '**';

@@ -98,13 +98,18 @@ export const TriplePana = ({
             </button>
             <button
               type="button"
-              onClick={() => setSession('Close')}
-              style={{ backgroundColor: session === 'Close' ? themeColor : 'transparent' }}
-              className={`flex-1 py-1.5 h-8 rounded-lg text-xs font-extrabold text-center transition-all cursor-pointer flex items-center justify-center ${
-                session === 'Close' ? 'text-white shadow-3xs' : 'text-gray-600 font-semibold'
+              disabled={isCloseSessionOpen === false}
+              onClick={() => isCloseSessionOpen !== false && setSession('Close')}
+              style={{ backgroundColor: session === 'Close' && isCloseSessionOpen !== false ? themeColor : 'transparent' }}
+              className={`flex-1 py-1.5 h-8 rounded-lg text-xs font-extrabold text-center transition-all flex items-center justify-center ${
+                isCloseSessionOpen === false
+                  ? 'text-gray-400 cursor-not-allowed opacity-60'
+                  : session === 'Close'
+                  ? 'text-white shadow-3xs cursor-pointer'
+                  : 'text-gray-600 font-semibold cursor-pointer'
               }`}
             >
-              Close
+              {isCloseSessionOpen === false ? 'Close (Closed)' : 'Close'}
             </button>
           </div>
         </div>

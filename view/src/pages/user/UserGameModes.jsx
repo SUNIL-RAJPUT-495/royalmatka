@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { FaArrowLeft } from 'react-icons/fa';
 import { fetchGame } from '../../utils/api';
@@ -8,6 +8,7 @@ import { getMarketSessionStatus } from '../../utils/marketTiming';
 export const UserGameModes = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const { marketName = 'SRIDEVI NIGHT' } = useParams();
   const decodedMarketName = decodeURIComponent(marketName).toUpperCase();
 
@@ -17,6 +18,9 @@ export const UserGameModes = () => {
     isCloseSessionOpen: true,
     isMarketClosed: false
   });
+
+  const GALI_MARKETS_LIST = ['DESAWAR', 'FARIDABAD', 'GAZIYABAD', 'GALI', 'DELHI BAZAR', 'SHRI GANESH', 'TAJ', 'CHARMINAR'];
+  const isGaliMarket = location.search.includes('type=gali') || GALI_MARKETS_LIST.some(name => decodedMarketName.includes(name));
 
   // Always Scroll To Top when opening game modes page (iOS Safari compatible)
   useEffect(() => {
@@ -56,6 +60,14 @@ export const UserGameModes = () => {
     loadMarketInfo();
   }, [decodedMarketName]);
 
+  const galiGameTypes = [
+    { id: 'left-digit', name: 'Left Digit', isOpenOnly: false, iconType: 'left-digit' },
+    { id: 'right-digit', name: 'Right Digit', isOpenOnly: false, iconType: 'right-digit' },
+    { id: 'jodi-digit', name: 'Jodi Digit', isOpenOnly: false, iconType: 'two-dots-concentric' },
+    { id: 'jodi-bulk', name: 'Jodi Bulk', isOpenOnly: false, iconType: 'two-dots-arc' },
+    { id: 'digit-based', name: 'Digit Based', isOpenOnly: false, iconType: 'digit-symbol' }
+  ];
+
   const baseGameTypes = [
     { id: 'single-digit', name: 'Single Digit', isOpenOnly: false, iconType: 'single-dot-concentric' },
     { id: 'single-digit-bulk', name: 'Single Digit Bulk', isOpenOnly: false, iconType: 'single-dot-arc' },
@@ -78,12 +90,14 @@ export const UserGameModes = () => {
     { id: 'digit-based', name: 'Digit Based', isOpenOnly: false, iconType: 'digit-symbol' }
   ];
 
+  const activeBaseGameTypes = isGaliMarket ? galiGameTypes : baseGameTypes;
+
   // Dynamically calculate isClosed for every game mode
-  const gameTypes = baseGameTypes.map(game => {
+  const gameTypes = activeBaseGameTypes.map(game => {
     let isClosed = false;
     if (sessionStatus.isMarketClosed) {
       isClosed = true;
-    } else if (game.isOpenOnly) {
+    } else if (game.isOpenOnly && !isGaliMarket) {
       // Open-only games (Jodi, Sangam, Brackets) close as soon as Open Result Time passes
       isClosed = !sessionStatus.isOpenSessionOpen;
     } else {
@@ -239,6 +253,20 @@ export const UserGameModes = () => {
             <path d="M18 18h-3v14h3M32 18h3v14h-3" stroke={strokeColor} strokeWidth="2" fill="none" />
           </svg>
         );
+      case 'left-digit':
+        return (
+          <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
+            <circle cx="25" cy="25" r="20" stroke={arcColor} strokeWidth="2.5" strokeDasharray="75 50" />
+            <text x="25" y="31" textAnchor="middle" fill={dotColor} fontSize="17" fontWeight="bold" fontFamily="sans-serif">L</text>
+          </svg>
+        );
+      case 'right-digit':
+        return (
+          <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
+            <circle cx="25" cy="25" r="20" stroke={arcColor} strokeWidth="2.5" strokeDasharray="75 50" />
+            <text x="25" y="31" textAnchor="middle" fill={dotColor} fontSize="17" fontWeight="bold" fontFamily="sans-serif">R</text>
+          </svg>
+        );
       default:
         return (
           <svg className="w-12 h-12" viewBox="0 0 50 50" fill="none">
@@ -297,7 +325,7 @@ export const UserGameModes = () => {
                 key={game.id}
                 onClick={() => {
                   if (!game.isClosed) {
-                    navigate(`/bet/${marketName}/${game.id}`);
+                    navigate(`/bet/${marketName}/${game.id}${isGaliMarket ? '?type=gali' : ''}`);
                   }
                 }}
                 className={`bg-white rounded-3xl p-5 border border-gray-150/90 shadow-2xs flex flex-col items-center justify-center text-center transition-all min-h-[145px] space-y-2 ${

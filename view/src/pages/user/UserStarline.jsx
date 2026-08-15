@@ -3,29 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { FaArrowLeft, FaPlay, FaChartLine } from 'react-icons/fa';
 import { IoNotificationsOutline, IoStarOutline, IoTimeOutline, IoGridOutline, IoFlashSharp } from 'react-icons/io5';
+import Axios from '../../utils/axios';
 
-const DEFAULT_STARLINE_MARKETS = [
-  { id: 'sl-1', name: '10:00 AM', result: '***-*', time: '10:00 AM', status: 'closed', is_closed: true },
-  { id: 'sl-2', name: '11:00 AM', result: '***-*', time: '11:00 AM', status: 'closed', is_closed: true },
-  { id: 'sl-3', name: '12:00 PM', result: '***-*', time: '12:00 PM', status: 'closed', is_closed: true },
-  { id: 'sl-4', name: '01:00 PM', result: '***-*', time: '01:00 PM', status: 'running', is_closed: false },
-  { id: 'sl-5', name: '02:00 PM', result: '***-*', time: '02:00 PM', status: 'running', is_closed: false },
-  { id: 'sl-6', name: '03:00 PM', result: '***-*', time: '03:00 PM', status: 'running', is_closed: false },
-  { id: 'sl-7', name: '04:00 PM', result: '***-*', time: '04:00 PM', status: 'running', is_closed: false },
-  { id: 'sl-8', name: '05:00 PM', result: '***-*', time: '05:00 PM', status: 'running', is_closed: false },
-  { id: 'sl-9', name: '06:00 PM', result: '***-*', time: '06:00 PM', status: 'running', is_closed: false },
-  { id: 'sl-10', name: '07:00 PM', result: '***-*', time: '07:00 PM', status: 'running', is_closed: false },
-  { id: 'sl-11', name: '08:00 PM', result: '***-*', time: '08:00 PM', status: 'running', is_closed: false },
-  { id: 'sl-12', name: '09:00 PM', result: '***-*', time: '09:00 PM', status: 'running', is_closed: false }
-];
+const DEFAULT_STARLINE_MARKETS = [];
 
 export const UserStarline = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
-  const [markets] = useState(DEFAULT_STARLINE_MARKETS);
+  const [markets, setMarkets] = useState(DEFAULT_STARLINE_MARKETS);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    Axios.get('/api/market/get-starline-markets').then(res => {
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        setMarkets(res.data.data);
+      } else {
+        setMarkets([]);
+      }
+    }).catch(() => {
+      setMarkets([]);
+    });
   }, []);
 
   const handlePlayMarket = (market) => {
@@ -128,13 +125,20 @@ export const UserStarline = () => {
         </div>
 
         {/* 2-Column Grid */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-3.5">
-          {markets.map((market) => {
+        {markets.length === 0 ? (
+          <div className="col-span-2 bg-white rounded-2xl p-8 border border-gray-150 text-center shadow-xs space-y-2 py-12">
+            <IoStarOutline className="w-10 h-10 text-gray-300 mx-auto" />
+            <h3 className="text-sm font-bold text-gray-800">No Markets Available</h3>
+            <p className="text-xs text-gray-400 font-medium">There are currently no StarLine markets available.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:gap-3.5">
+            {markets.map((market, idx) => {
             const isClosed = market.status === 'closed' || market.is_closed;
 
             return (
               <div
-                key={market.id}
+                key={market._id || market.id || idx}
                 onClick={() => !isClosed && handlePlayMarket(market)}
                 className={`bg-white rounded-2xl p-3.5 shadow-xs border-l-[4px] flex flex-col justify-between relative transition-all duration-200 select-none border border-gray-100 ${
                   isClosed
@@ -191,6 +195,7 @@ export const UserStarline = () => {
             );
           })}
         </div>
+        )}
       </div>
     </div>
   );

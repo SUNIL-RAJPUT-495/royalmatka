@@ -31,11 +31,11 @@ export const BonusManagementPage = () => {
   const fetchSettings = async () => {
     try {
       const response = await AxiosAdmin({
-        url: SummaryApi.getTransactionSettings.url,
-        method: SummaryApi.getTransactionSettings.method
+        url: SummaryApi.getTransactionSettings?.url || '/api/settings/get-settings',
+        method: SummaryApi.getTransactionSettings?.method || 'get'
       });
       
-      if (response.data.success && response.data.data) {
+      if (response?.data?.success && response?.data?.data) {
         const data = response.data.data;
         setSignupBonus(data.signupBonus || 0);
         setReferrerBonus(data.referralBonus || 0); 
@@ -55,10 +55,10 @@ export const BonusManagementPage = () => {
     setIsStatsLoading(true);
     try {
       const response = await AxiosAdmin({
-        url: SummaryApi.getBonusStats.url,
-        method: SummaryApi.getBonusStats.method
+        url: SummaryApi.getBonusStats?.url || '/api/settings/bonus-stats',
+        method: SummaryApi.getBonusStats?.method || 'get'
       });
-      if (response.data.success) {
+      if (response?.data?.success && response?.data?.stats) {
         setStats(response.data.stats);
       }
     } catch (error) {
@@ -78,23 +78,27 @@ export const BonusManagementPage = () => {
     setIsLoading(true);
     try {
       const response = await AxiosAdmin({
-        url: SummaryApi.updateTransactionSettings.url,
-        method: SummaryApi.updateTransactionSettings.method,
+        url: SummaryApi.updateTransactionSettings?.url || '/api/settings/update-settings',
+        method: SummaryApi.updateTransactionSettings?.method || 'post',
         data: {
-          signupBonus,
-          referralBonus: referrerBonus, 
-          referredBonus,
-          maxReferrals,
-          isPercentage,
-          minDeposit,      
-          minWithdrawal    
+          signupBonus: Number(signupBonus) || 0,
+          referralBonus: Number(referrerBonus) || 0, 
+          referredBonus: Number(referredBonus) || 0,
+          maxReferrals: Number(maxReferrals) || 0,
+          isPercentage: Boolean(isPercentage),
+          minDeposit: Number(minDeposit) || 0,      
+          minWithdrawal: Number(minWithdrawal) || 0    
         }
       });
-      if (response.data.success) {
+      if (response?.data?.success) {
         toast.success(response.data.message || "Settings Updated Successfully!");
+        fetchSettings();
+        fetchBonusStats();
+      } else {
+        toast.error(response?.data?.message || "Failed to update settings.");
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
       toast.error("Failed to update settings.");
     } finally {
       setIsLoading(false);

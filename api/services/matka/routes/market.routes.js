@@ -15,7 +15,11 @@ import {
 } from "../controllers/starline.controller.js";
 import {
   getGaliMarkets,
-  declareGaliResult
+  declareGaliResult,
+  addGaliMarket,
+  updateGaliMarket,
+  deleteGaliMarket,
+  deleteAllGaliMarkets
 } from "../controllers/gali.controller.js";
 import {
   getGameRates,
@@ -45,6 +49,10 @@ router.post("/declare-starline-result", verifyAdmin, declareStarlineResult);
 // Gali Bazar Endpoints (Name + 2-digit Jodi based)
 router.get("/get-gali-markets", getGaliMarkets);
 router.post("/declare-gali-result", verifyAdmin, declareGaliResult);
+router.post("/add-gali-market", verifyAdmin, addGaliMarket);
+router.put("/update-gali-market/:id", verifyAdmin, updateGaliMarket);
+router.delete("/delete-gali-market/:id", verifyAdmin, deleteGaliMarket);
+router.delete("/delete-all-gali-markets", verifyAdmin, deleteAllGaliMarkets);
 
 // Game Rates Endpoints
 router.get("/get-game-rates", getGameRates);

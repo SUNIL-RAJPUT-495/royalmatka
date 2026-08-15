@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
 
+// Helper to format date in IST (Asia/Kolkata) as YYYY-MM-DD
+export const getISTDateString = (dateObj = new Date()) => {
+  return new Date(dateObj).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+};
+
 const bidSchema = new mongoose.Schema(
   {
     userId: {
@@ -26,6 +31,12 @@ const bidSchema = new mongoose.Schema(
       type: String,
       required: true,
       index: true
+    },
+    bidDate: {
+      type: String,
+      required: true,
+      index: true,
+      default: () => getISTDateString()
     },
     session: {
       type: String,
@@ -86,11 +97,12 @@ const bidSchema = new mongoose.Schema(
 );
 
 // Compound High-Performance Indexes for Microsecond Queries
-bidSchema.index({ userMobile: 1, createdAt: -1 });
+bidSchema.index({ userMobile: 1, bidDate: -1, createdAt: -1 });
+bidSchema.index({ marketName: 1, bidDate: -1, createdAt: -1 });
 bidSchema.index({ userId: 1, createdAt: -1 });
-bidSchema.index({ marketName: 1, createdAt: -1 });
 bidSchema.index({ status: 1, createdAt: -1 });
 bidSchema.index({ createdAt: -1 });
+bidSchema.index({ bidDate: -1 });
 
 export const Bid = mongoose.model("Bid", bidSchema);
 export default Bid;

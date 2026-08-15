@@ -74,7 +74,7 @@ export const AdminSideBar = ({ closeSidebar }) => {
             heading: "Game Management",
             items: [
                 { icons: MdGames, itemsDetails: "Add Game", link: "AddGame" },
-                { icons: GiBackwardTime, itemsDetails: "Bids", link: "AdminBid" },
+                { icons: GiBackwardTime, itemsDetails: "Main Market Bids", link: "main-market-bids" },
                 { icons: FaTrophy, itemsDetails: "Matka Results", link: "matka-results" },
                 { icons: FaCheckCircle, itemsDetails: "Declare Results", link: "ResultDecleare" },
                 { icons: FaPercent, itemsDetails: "Game Rates", link: "game-rates" },

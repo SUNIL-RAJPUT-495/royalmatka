@@ -230,6 +230,18 @@ const SummaryApi = {
         url: baseURL + "/api/market/declare-gali-result",
         method: "post"
     },
+    addGaliMarket: {
+        url: baseURL + "/api/market/add-gali-market",
+        method: "post"
+    },
+    updateGaliMarket: {
+        url: baseURL + "/api/market/update-gali-market",
+        method: "put"
+    },
+    deleteGaliMarket: {
+        url: baseURL + "/api/market/delete-gali-market",
+        method: "delete"
+    },
     getGameRates: {
         url: baseURL + "/api/market/get-game-rates",
         method: "get"
@@ -281,6 +293,20 @@ const SummaryApi = {
     sendNotification: {
         url: baseURL + "/api/notification/send",
         method: "post"
+    },
+
+    // Bonus & System Settings
+    getTransactionSettings: {
+        url: baseURL + "/api/settings/get-settings",
+        method: "get"
+    },
+    updateTransactionSettings: {
+        url: baseURL + "/api/settings/update-settings",
+        method: "post"
+    },
+    getBonusStats: {
+        url: baseURL + "/api/settings/bonus-stats",
+        method: "get"
     }
 };
 

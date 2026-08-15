@@ -7,6 +7,7 @@ import SummaryApi from '../../common/SummerAPI';
 import AxiosAdmin from '../../utils/axiosAdmin';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../admin/ConfirmModal';
+import { fetchGame } from '../../utils/api';
 
 export const AdminBid = () => {
   // --- States ---
@@ -100,12 +101,46 @@ export const AdminBid = () => {
     return bid.digit || 'N/A';
   };
 
-  // Unique dynamic options for filters
-  const uniqueMarkets = Array.from(new Set(bids.map(b => getBidMarket(b)).filter(Boolean)));
-  const uniqueGameTypes = Array.from(new Set(bids.map(b => getBidGameType(b)).filter(Boolean)));
+  const [dbMarkets, setDbMarkets] = useState([]);
 
-  // --- Updated Filtering Logic ---
-  const filteredBids = bids.filter((bid) => {
+  useEffect(() => {
+    const loadLiveMarkets = async () => {
+      try {
+        const games = await fetchGame();
+        if (Array.isArray(games)) {
+          const names = games.map(g => (g.market_name || g.name || '').toUpperCase()).filter(Boolean);
+          setDbMarkets(names);
+        }
+      } catch (err) {
+        console.warn('Error fetching live markets for AdminBid:', err);
+      }
+    };
+    loadLiveMarkets();
+  }, []);
+
+  // Helper to check if a bid is Casino / Aviator
+  const isCasinoOrAviatorBid = (bid) => {
+    const market = getBidMarket(bid).toUpperCase();
+    const gameType = getBidGameType(bid).toUpperCase();
+    const type = (bid.type || '').toLowerCase();
+    return (
+      market.includes('AVIATOR') ||
+      market.includes('CASINO') ||
+      gameType.includes('AVIATOR') ||
+      type === 'casino'
+    );
+  };
+
+  // Main Market Bids ONLY
+  const mainMarketBidsOnly = bids.filter(b => !isCasinoOrAviatorBid(b));
+
+  // Combine real DB markets and bid markets (strictly Main Market entries)
+  const bidMarkets = mainMarketBidsOnly.map(b => getBidMarket(b)).filter(Boolean);
+  const uniqueMarkets = Array.from(new Set([...dbMarkets, ...bidMarkets])).filter(m => !m.includes('AVIATOR') && !m.includes('CASINO'));
+  const uniqueGameTypes = Array.from(new Set(mainMarketBidsOnly.map(b => getBidGameType(b)).filter(Boolean)));
+
+  // --- Updated Filtering Logic: ONLY Main Market Bids ---
+  const filteredBids = mainMarketBidsOnly.filter((bid) => {
     const gameType = getBidGameType(bid);
     const market = getBidMarket(bid);
     const digitDisplay = getBidDigitDisplay(bid);
@@ -137,9 +172,9 @@ export const AdminBid = () => {
             <Banknote className="w-9 h-9 stroke-[2.2]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Bids Management</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Main Market Bids Management</h1>
             <p className="text-xs text-gray-500 font-semibold mt-1">
-              View, edit and manage all live bids placed in the system
+              View, filter and manage all Main Market bids placed by users
             </p>
           </div>
 

@@ -20,15 +20,12 @@ export const getStarlineMarkets = async (req, res) => {
   try {
     const { category = "Starline" } = req.query;
     if (mongoose.connection.readyState === 1) {
-      let markets = await StarlineMarket.find({ category }).sort({ createdAt: 1 });
-      if (!markets || markets.length === 0) {
-        markets = await StarlineMarket.insertMany(DEFAULT_STARLINE.map(item => ({ ...item, category })));
-      }
-      return res.status(200).json({ success: true, data: markets });
+      const markets = await StarlineMarket.find({ category }).sort({ createdAt: 1 });
+      return res.status(200).json({ success: true, data: markets || [] });
     }
-    return res.status(200).json({ success: true, data: DEFAULT_STARLINE });
+    return res.status(200).json({ success: true, data: [] });
   } catch (error) {
-    return res.status(200).json({ success: true, data: DEFAULT_STARLINE });
+    return res.status(200).json({ success: true, data: [] });
   }
 };
 

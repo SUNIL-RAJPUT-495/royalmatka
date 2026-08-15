@@ -1,20 +1,95 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Check, X, History, Edit3, Trash2, Eye, Calendar, Plus, AlertCircle, RefreshCw, BarChart2, Trophy 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '../../components/admin/ConfirmModal';
+import { fetchGame } from '../../utils/api';
+import SummaryApi from '../../common/SummerAPI';
+import AxiosAdmin from '../../utils/axiosAdmin';
 
 export const ResultAdmin = () => {
   // Tabs: 'Calculate Results' | 'Winners' | 'Losers' | 'History'
   const [activeTab, setActiveTab] = useState('Calculate Results');
 
-  // Form inputs
-  const [selectedGame, setSelectedGame] = useState('SITA MORNING');
-  const [selectedDate, setSelectedDate] = useState('2026-08-13');
+  // Real Form inputs - Default to Present Real-Time Date
+  const getTodayDateString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const todayStr = getTodayDateString();
+  const [selectedGame, setSelectedGame] = useState('');
+  const [selectedDate, setSelectedDate] = useState(getTodayDateString());
+  const [gamesList, setGamesList] = useState([]);
   
-  const [openPana, setOpenPana] = useState('679');
-  const [closePana, setClosePana] = useState('570');
+  const [openPana, setOpenPana] = useState('');
+  const [closePana, setClosePana] = useState('');
+  const [isEditable, setIsEditable] = useState(false);
+  const [declaring, setDeclaring] = useState(false);
+
+  // Bids list for Winners & Losers tabs
+  const [allBids, setAllBids] = useState([]);
+
+  const fetchBidsList = async () => {
+    try {
+      const bidsRes = await AxiosAdmin({
+        url: SummaryApi.getAllBids.url,
+        method: SummaryApi.getAllBids.method,
+        headers: { Authorization: `Bearer ${localStorage.getItem("admin_token")}` }
+      });
+      if (bidsRes.data?.bids && Array.isArray(bidsRes.data.bids)) {
+        setAllBids(bidsRes.data.bids);
+      }
+    } catch (err) {
+      console.warn('Error loading bids list:', err);
+    }
+  };
+
+  // Helper to handle game selection & auto-load existing declared result
+  const handleSelectGame = (gameName, list = gamesList) => {
+    setSelectedGame(gameName);
+    const target = list.find(g => (g.market_name || g.name) === gameName);
+    if (target) {
+      const op = target.result_open && target.result_open !== '***' ? target.result_open : '';
+      const cl = target.result_close && target.result_close !== '***' ? target.result_close : '';
+      setOpenPana(op);
+      setClosePana(cl);
+      // If both or either declared in DB, default to locked mode until Edit clicked; if neither declared, default to editable
+      if ((op && op !== '***') || (cl && cl !== '***')) {
+        setIsEditable(false);
+      } else {
+        setIsEditable(true);
+      }
+    } else {
+      setOpenPana('');
+      setClosePana('');
+      setIsEditable(true);
+    }
+  };
+
+  // Fetch real markets and all bids
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const markets = await fetchGame();
+        if (Array.isArray(markets) && markets.length > 0) {
+          setGamesList(markets);
+          // Keep empty initially until user selects a game
+          setSelectedGame('');
+          setOpenPana('');
+          setClosePana('');
+        }
+        await fetchBidsList();
+      } catch (err) {
+        console.warn('Error loading markets/bids for ResultAdmin:', err);
+      }
+    };
+    loadData();
+  }, []);
 
   // Interactive calculated states
   const [isCalculated, setIsCalculated] = useState(true);
@@ -22,8 +97,7 @@ export const ResultAdmin = () => {
   
   // Results History stores all declarations
   const [resultsHistory, setResultsHistory] = useState([
-    { id: 1, game: 'SITA MORNING', date: '8/13/2026', openPana: '679', closePana: '570', jodi: '22', openAnk: '2', closeAnk: '2' },
-    { id: 2, game: 'SITA MORNING', date: '8/12/2026', openPana: '246', closePana: '348', jodi: '25', openAnk: '2', closeAnk: '5' }
+    { id: 1, game: 'SRIDEVI NIGHT', date: todayStr, openPana: '145', closePana: '480', jodi: '02', openAnk: '0', closeAnk: '2' }
   ]);
 
   // Modals state
@@ -31,13 +105,13 @@ export const ResultAdmin = () => {
   const [targetDeleteId, setTargetDeleteId] = useState(null);
 
   const calculateAnk = (pana) => {
-    if (!pana || pana.length !== 3) return '-';
-    const sum = pana.split('').reduce((acc, digit) => acc + parseInt(digit || 0), 0);
+    if (!pana || String(pana).trim().length !== 3) return '-';
+    const sum = String(pana).trim().split('').reduce((acc, digit) => acc + parseInt(digit || 0, 10), 0);
     return String(sum % 10);
   };
 
   const handleCalculate = () => {
-    if (openPana.length !== 3 && closePana.length !== 3) {
+    if ((!openPana || openPana.length !== 3) && (!closePana || closePana.length !== 3)) {
       toast.error('Please enter valid 3-digit open or close pana values');
       return;
     }
@@ -45,51 +119,86 @@ export const ResultAdmin = () => {
     toast.success('Results calculated successfully!');
   };
 
-  const handleUpdateResults = () => {
-    const formattedDate = new Date(selectedDate).toLocaleDateString('en-US');
-    const opAnk = calculateAnk(openPana);
-    const clAnk = calculateAnk(closePana);
-    const jodiVal = (opAnk !== '-' && clAnk !== '-') ? (opAnk + clAnk) : '-';
+  const handleUpdateResults = async () => {
+    try {
+      setDeclaring(true);
+      const targetMarket = gamesList.find(g => (g.market_name || g.name) === selectedGame);
+      const marketId = targetMarket?._id;
 
-    const matchedIndex = resultsHistory.findIndex(r => r.game === selectedGame && r.date === formattedDate);
-    
-    if (matchedIndex > -1) {
-      // Update
-      const updated = [...resultsHistory];
-      updated[matchedIndex] = {
-        ...updated[matchedIndex],
-        openPana,
-        closePana,
-        jodi: jodiVal,
-        openAnk: opAnk,
-        closeAnk: clAnk
-      };
-      setResultsHistory(updated);
-      toast.success('Results updated successfully!');
-    } else {
-      // Add new
-      const newRecord = {
-        id: Date.now(),
-        game: selectedGame,
-        date: formattedDate,
-        openPana,
-        closePana,
-        jodi: jodiVal,
-        openAnk: opAnk,
-        closeAnk: clAnk
-      };
-      setResultsHistory(prev => [newRecord, ...prev]);
-      toast.success('Results declared successfully!');
+      const opAnk = calculateAnk(openPana);
+      const clAnk = calculateAnk(closePana);
+      const jodiVal = (opAnk !== '-' && clAnk !== '-') ? (opAnk + clAnk) : '-';
+
+      // Call Backend Declare Result API
+      const res = await AxiosAdmin({
+        url: SummaryApi.declareResult.url,
+        method: SummaryApi.declareResult.method,
+        headers: { Authorization: `Bearer ${localStorage.getItem("admin_token")}` },
+        data: {
+          marketId,
+          marketName: selectedGame,
+          resultOpen: openPana,
+          resultClose: closePana,
+          jodiResult: jodiVal !== '-' ? jodiVal : ''
+        }
+      });
+
+      if (res.data?.success) {
+        toast.success(res.data.message || 'Result declared & winning payouts processed! 🎯');
+      } else {
+        toast.success('Result updated successfully! 🎯');
+      }
+
+      const formattedDate = selectedDate;
+      const matchedIndex = resultsHistory.findIndex(r => r.game === selectedGame && r.date === formattedDate);
+      
+      if (matchedIndex > -1) {
+        const updated = [...resultsHistory];
+        updated[matchedIndex] = {
+          ...updated[matchedIndex],
+          openPana,
+          closePana,
+          jodi: jodiVal,
+          openAnk: opAnk,
+          closeAnk: clAnk
+        };
+        setResultsHistory(updated);
+      } else {
+        const newRecord = {
+          id: Date.now(),
+          game: selectedGame,
+          date: formattedDate,
+          openPana,
+          closePana,
+          jodi: jodiVal,
+          openAnk: opAnk,
+          closeAnk: clAnk
+        };
+        setResultsHistory(prev => [newRecord, ...prev]);
+      }
+      setIsCalculated(true);
+      setIsEditable(false);
+      await fetchBidsList();
+      const updatedMarkets = await fetchGame();
+      if (Array.isArray(updatedMarkets)) {
+        setGamesList(updatedMarkets);
+      }
+    } catch (err) {
+      console.error('Error declaring result:', err);
+      toast.error('Failed to declare result. Please check input values.');
+    } finally {
+      setDeclaring(false);
     }
-    setIsCalculated(true);
   };
 
   const handleLoadResult = (res) => {
     setSelectedGame(res.game);
-    setOpenPana(res.openPana);
-    setClosePana(res.closePana);
+    setOpenPana(res.openPana && res.openPana !== '***' ? res.openPana : '');
+    setClosePana(res.closePana && res.closePana !== '***' ? res.closePana : '');
+    setIsEditable(false);
     setIsCalculated(true);
-    toast.success(`Loaded result for ${res.game} (${res.date})`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    toast.success(`Loaded historical result for ${res.game} (${res.date})`);
   };
 
   const triggerDeleteClose = (id) => {
@@ -155,12 +264,18 @@ export const ResultAdmin = () => {
                   <div className="relative">
                     <select
                       value={selectedGame}
-                      onChange={(e) => setSelectedGame(e.target.value)}
+                      onChange={(e) => handleSelectGame(e.target.value)}
                       className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-xs font-semibold cursor-pointer outline-none appearance-none shadow-3xs"
                     >
-                      <option value="SITA MORNING">SITA MORNING</option>
-                      <option value="SITA BAZAR">SITA BAZAR</option>
-                      <option value="SITA NIGHT">SITA NIGHT</option>
+                      <option value="">Select Market / Game</option>
+                      {gamesList.map((g) => {
+                        const gName = g.market_name || g.name;
+                        return (
+                          <option key={g._id || gName} value={gName}>
+                            {gName}
+                          </option>
+                        );
+                      })}
                     </select>
                     <span className="absolute right-4 top-3 text-[10px] text-gray-400 pointer-events-none">▼</span>
                   </div>
@@ -192,55 +307,117 @@ export const ResultAdmin = () => {
                 </div>
               </div>
 
-              {/* Form Grid 2: Open & Close Pana */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Open Pana */}
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Open Pana <span className="text-blue-650">(09:40)</span></label>
+              {!selectedGame ? (
+                <div className="border border-dashed border-gray-300 rounded-3xl p-12 text-center flex flex-col items-center justify-center space-y-3 bg-gray-50/50 mt-4">
+                  <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg shadow-3xs">
+                    🎯
                   </div>
-                  <input
-                    type="text"
-                    maxLength={3}
-                    value={openPana}
-                    onChange={(e) => setOpenPana(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-xs font-semibold outline-none shadow-3xs"
-                  />
-                  <span className="text-[9px] text-gray-400 font-medium block pt-0.5">Debug: openPana = "{openPana}"</span>
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-800">Please Select a Game / Market</h4>
+                    <p className="text-[10px] text-gray-400 font-semibold mt-1">
+                      Select a market from the dropdown above to declare or view results.
+                    </p>
+                  </div>
                 </div>
+              ) : (
+                <>
 
-                {/* Close Pana */}
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Close Pana <span className="text-blue-650">(10:40)</span></label>
+              {/* Form Grid 2: Open & Close Pana */}
+              {(() => {
+                const targetMarket = gamesList.find(g => (g.market_name || g.name) === selectedGame);
+                const dbHasOpen = targetMarket?.result_open && targetMarket.result_open !== '***';
+                const dbHasClose = targetMarket?.result_close && targetMarket.result_close !== '***';
+
+                const isOpenLocked = !isEditable && Boolean(dbHasOpen);
+                const isCloseLocked = !isEditable && Boolean(dbHasClose);
+
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Open Pana */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Open Pana</label>
+                        {isOpenLocked ? (
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 flex items-center gap-1">
+                            🔒 Declared (Locked)
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            ✏️ Open For Entry
+                          </span>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        maxLength={3}
+                        disabled={isOpenLocked}
+                        placeholder={isOpenLocked ? openPana : 'Enter Open Pana (e.g. 145)'}
+                        value={openPana}
+                        onChange={(e) => setOpenPana(e.target.value)}
+                        className={`w-full px-4 py-2.5 border rounded-xl text-xs font-semibold outline-none shadow-3xs transition-all ${
+                          isOpenLocked 
+                            ? 'bg-gray-100/90 text-gray-600 cursor-not-allowed border-gray-200' 
+                            : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                        }`}
+                      />
+                    </div>
+
+                    {/* Close Pana */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Close Pana</label>
+                        {isCloseLocked ? (
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 flex items-center gap-1">
+                            🔒 Declared (Locked)
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            ✏️ Open For Entry
+                          </span>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        maxLength={3}
+                        disabled={isCloseLocked}
+                        placeholder={isCloseLocked ? closePana : 'Enter Close Pana (e.g. 480)'}
+                        value={closePana}
+                        onChange={(e) => setClosePana(e.target.value)}
+                        className={`w-full px-4 py-2.5 border rounded-xl text-xs font-semibold outline-none shadow-3xs transition-all ${
+                          isCloseLocked 
+                            ? 'bg-gray-100/90 text-gray-600 cursor-not-allowed border-gray-200' 
+                            : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                        }`}
+                      />
+                    </div>
                   </div>
-                  <input
-                    type="text"
-                    maxLength={3}
-                    value={closePana}
-                    onChange={(e) => setClosePana(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-xs font-semibold outline-none shadow-3xs"
-                  />
-                  <span className="text-[9px] text-gray-400 font-medium block pt-0.5">Debug: closePana = "{closePana}"</span>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* Action Buttons row */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button
                   type="button"
                   onClick={handleCalculate}
-                  className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold py-2.5 rounded-xl transition-all cursor-pointer shadow-3xs active:scale-[0.99] text-center"
+                  className="bg-gray-800 hover:bg-gray-900 text-white text-xs font-bold py-3 rounded-xl transition-all cursor-pointer shadow-3xs active:scale-[0.99] text-center"
                 >
-                  Calculate
+                  Calculate Ank & Jodi
                 </button>
 
                 <button
                   type="button"
                   onClick={handleUpdateResults}
-                  className="border border-[#2563eb] text-[#2563eb] hover:bg-blue-50 bg-white text-xs font-bold py-2.5 rounded-xl transition-all cursor-pointer active:scale-[0.99] text-center"
+                  disabled={declaring}
+                  className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold py-3 rounded-xl transition-all cursor-pointer shadow-3xs active:scale-[0.99] text-center flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  Update Results
+                  {declaring ? (
+                    <>
+                      <RefreshCw size={13} className="animate-spin" />
+                      <span>Declaring Result...</span>
+                    </>
+                  ) : (
+                    <span>Declare & Pay Out Results 🎯</span>
+                  )}
                 </button>
               </div>
 
@@ -402,11 +579,15 @@ export const ResultAdmin = () => {
                     <span className="text-xs font-bold text-gray-800">Declared Result</span>
                     <div className="flex items-center gap-2">
                       <button 
-                        onClick={() => toast.success('Editing active declared jodi result')}
-                        className="px-3 py-1 border border-blue-200 text-blue-600 text-[10px] font-bold rounded-lg flex items-center gap-1 hover:bg-blue-50 cursor-pointer shadow-3xs"
+                        onClick={() => {
+                          setIsEditable(true);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                          toast.success(`Edit mode unlocked for ${selectedGame}! You can now modify Pana values.`);
+                        }}
+                        className="px-3.5 py-1.5 bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 text-[10px] font-bold rounded-xl flex items-center gap-1 cursor-pointer shadow-3xs transition-all"
                       >
                         <Edit3 size={11} />
-                        <span>Edit</span>
+                        <span>Edit Result</span>
                       </button>
                       <button 
                         onClick={() => triggerDeleteClose(resultsHistory[0]?.id)}
@@ -435,67 +616,127 @@ export const ResultAdmin = () => {
                   </div>
                 </div>
               )}
+                </>
+              )}
 
             </div>
           )}
 
-          {activeTab === 'Winners' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xs font-bold text-gray-800">Winners Report</h3>
-                  <span className="text-[10px] text-gray-400 mt-0.5 font-bold">
-                    {new Date(selectedDate).toLocaleDateString('en-US')} • {selectedGame}
+          {activeTab === 'Winners' && (() => {
+            const winnersList = allBids.filter(b => {
+              const market = (b.marketName || b.mechanic || '').toUpperCase().trim();
+              const status = (b.status || '').toLowerCase().trim();
+              const matchGame = !selectedGame || market === selectedGame.toUpperCase().trim();
+              return matchGame && (status === 'won' || status === 'win');
+            });
+
+            return (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-bold text-gray-800">Winners Report</h3>
+                    <span className="text-[10px] text-gray-400 mt-0.5 font-bold">
+                      {selectedDate} • {selectedGame || 'All Markets'}
+                    </span>
+                  </div>
+                  <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-3 py-1 rounded-full">
+                    Total Winners: {winnersList.length}
                   </span>
                 </div>
-                <div className="bg-gray-100 p-0.5 rounded-lg flex items-center gap-1 text-[9px] font-bold text-gray-500">
-                  <span className="bg-white px-2.5 py-1 rounded-md text-gray-900 shadow-3xs cursor-pointer">Cards</span>
-                  <span className="px-2.5 py-1 cursor-pointer">Table</span>
-                </div>
-              </div>
 
-              {/* Dotted border empty state matching Losers style */}
-              <div className="border border-dashed border-gray-300 rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-3">
-                <div className="text-gray-300">
-                  <Trophy size={32} className="stroke-[1.5] text-yellow-500" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-gray-800">No Winners Found</h4>
-                  <p className="text-[10px] text-gray-400 font-semibold mt-1">
-                    No winners found for {selectedGame} on {new Date(selectedDate).toLocaleDateString('en-US')}.
-                  </p>
-                </div>
+                {winnersList.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {winnersList.map((bid, idx) => (
+                      <div key={bid._id || idx} className="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-3.5 space-y-2 text-left">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-gray-900">📱 {bid.userMobile || bid.user_id?.mobile || 'User'}</span>
+                          <span className="bg-emerald-600 text-white font-black text-[10px] px-2.5 py-0.5 rounded-full">WIN</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-semibold text-gray-700">
+                          <span>Market: {bid.marketName || 'Main'} ({bid.session || 'Open'})</span>
+                          <span className="font-bold">Digit: {bid.digit || bid.pana || bid.jodi}</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-extrabold border-t border-emerald-200 pt-1.5">
+                          <span className="text-gray-500">Bet: ₹{bid.points}</span>
+                          <span className="text-emerald-700">Payout: ₹{bid.winAmount || Number(bid.points) * 9.5}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="border border-dashed border-gray-300 rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-3">
+                    <div className="text-gray-300">
+                      <Trophy size={32} className="stroke-[1.5] text-yellow-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-gray-800">No Winners Found</h4>
+                      <p className="text-[10px] text-gray-400 font-semibold mt-1">
+                        No winning bids declared for {selectedGame || 'selected market'} on {selectedDate}.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
-          {activeTab === 'Losers' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xs font-bold text-gray-800">Losers Report</h3>
-                  <span className="text-[10px] text-gray-400 mt-0.5 font-bold">8/13/2026 • SITA MORNING</span>
-                </div>
-                <div className="bg-gray-100 p-0.5 rounded-lg flex items-center gap-1 text-[9px] font-bold text-gray-500">
-                  <span className="bg-white px-2.5 py-1 rounded-md text-gray-900 shadow-3xs cursor-pointer">Cards</span>
-                  <span className="px-2.5 py-1 cursor-pointer">Table</span>
-                </div>
-              </div>
+          {activeTab === 'Losers' && (() => {
+            const losersList = allBids.filter(b => {
+              const market = (b.marketName || b.mechanic || '').toUpperCase().trim();
+              const status = (b.status || '').toLowerCase().trim();
+              const matchGame = !selectedGame || market === selectedGame.toUpperCase().trim();
+              return matchGame && (status === 'lost' || status === 'loss');
+            });
 
-              {/* Dotted border empty state matching Screenshot 3 */}
-              <div className="border border-dashed border-gray-300 rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-3">
-                <div className="text-gray-300">
-                  <BarChart2 size={32} className="stroke-[1.5]" />
+            return (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-bold text-gray-800">Losers Report</h3>
+                    <span className="text-[10px] text-gray-400 mt-0.5 font-bold">
+                      {selectedDate} • {selectedGame || 'All Markets'}
+                    </span>
+                  </div>
+                  <span className="bg-red-100 text-red-800 text-[10px] font-bold px-3 py-1 rounded-full">
+                    Total Losers: {losersList.length}
+                  </span>
                 </div>
-                <div>
-                  <h4 className="text-xs font-bold text-gray-800">No Losers Found</h4>
-                  <p className="text-[10px] text-gray-400 font-semibold mt-1">
-                    No losers found for SITA MORNING on 8/13/2026.
-                  </p>
-                </div>
+
+                {losersList.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {losersList.map((bid, idx) => (
+                      <div key={bid._id || idx} className="bg-red-50/50 border border-red-200 rounded-2xl p-3.5 space-y-2 text-left">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-gray-900">📱 {bid.userMobile || bid.user_id?.mobile || 'User'}</span>
+                          <span className="bg-red-500 text-white font-black text-[10px] px-2.5 py-0.5 rounded-full">LOSS</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-semibold text-gray-700">
+                          <span>Market: {bid.marketName || 'Main'} ({bid.session || 'Open'})</span>
+                          <span className="font-bold">Digit: {bid.digit || bid.pana || bid.jodi}</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-extrabold border-t border-red-200 pt-1.5">
+                          <span className="text-gray-500">Bet Amount: ₹{bid.points}</span>
+                          <span className="text-red-600">Loss: ₹{bid.points}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="border border-dashed border-gray-300 rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-3">
+                    <div className="text-gray-300">
+                      <BarChart2 size={32} className="stroke-[1.5]" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-gray-800">No Losers Found</h4>
+                      <p className="text-[10px] text-gray-400 font-semibold mt-1">
+                        No losing bids recorded for {selectedGame || 'selected market'} on {selectedDate}.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {activeTab === 'History' && (
             <div className="space-y-4">

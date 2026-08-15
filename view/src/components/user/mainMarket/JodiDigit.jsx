@@ -49,7 +49,7 @@ export const JodiDigit = ({
         
         {/* Row 1: Select Jodi Input */}
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-gray-500">Select Jodi</span>
+          <span className="text-xs font-semibold text-gray-600">Select Jodi (00-99)</span>
           <div className="w-44">
             <input
               type="text"

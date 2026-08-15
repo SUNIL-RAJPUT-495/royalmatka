@@ -4,6 +4,8 @@ import { useTheme } from '../../context/ThemeContext';
 import { FaArrowLeft, FaPlay, FaChartLine } from 'react-icons/fa';
 import { IoNotificationsOutline, IoStarOutline, IoTimeOutline, IoGridOutline } from 'react-icons/io5';
 import { fetchGame } from '../../utils/api';
+import Axios from '../../utils/axios';
+import SummaryApi from '../../common/SummerAPI';
 
 const DEFAULT_GALI_MARKETS = [
   { id: 'gali-1', name: 'DESAWAR', result: '* *', time: '4:00 AM', status: 'closed', is_closed: true },
@@ -16,41 +18,56 @@ const DEFAULT_GALI_MARKETS = [
   { id: 'gali-8', name: 'CHARMINAR', result: '* *', time: '2:00 PM', status: 'closed', is_closed: true }
 ];
 
+const parseTimeToMinutes = (timeStr) => {
+  if (!timeStr) return 99999;
+  const cleanStr = String(timeStr).trim().toUpperCase();
+  const match = cleanStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+  if (!match) return 99999;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3] ? match[3].toUpperCase() : 'AM';
+
+  if (period === 'PM' && hours !== 12) {
+    hours += 12;
+  } else if (period === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  return hours * 60 + minutes;
+};
+
 export const UserJackpotGali = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
-  const [markets, setMarkets] = useState(DEFAULT_GALI_MARKETS);
+  const [markets, setMarkets] = useState([]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
 
     const loadMarkets = async () => {
       try {
-        const res = await fetchGame();
-        if (res && Array.isArray(res) && res.length > 0) {
-          const galiFromDb = res.filter(
-            (g) =>
-              g.game_type === 'gali' ||
-              g.isGali ||
-              ['DESAWAR', 'FARIDABAD', 'GAZIYABAD', 'GALI', 'DELHI BAZAR', 'SHRI GANESH'].some(
-                (name) => g.name?.toUpperCase().includes(name)
-              )
-          );
-          if (galiFromDb.length > 0) {
-            setMarkets(
-              galiFromDb.map((g) => ({
-                id: g._id || g.id,
-                name: g.name,
-                result: g.result || '* *',
-                time: g.close_time || g.open_time || '8:00 PM',
-                status: g.is_closed ? 'closed' : 'running',
-                is_closed: !!g.is_closed
-              }))
-            );
-          }
+        const res = await Axios({
+          url: SummaryApi.getGaliMarkets?.url || '/api/market/get-gali-markets',
+          method: SummaryApi.getGaliMarkets?.method || 'get'
+        });
+        if (res?.data?.data && Array.isArray(res.data.data)) {
+          const list = res.data.data.map((g) => ({
+            id: g._id || g.id,
+            name: g.name,
+            result: g.jodi_result || '* *',
+            time: g.time || '8:00 PM',
+            status: g.is_closed ? 'closed' : 'running',
+            is_closed: !!g.is_closed
+          }));
+          list.sort((a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time));
+          setMarkets(list);
+        } else {
+          setMarkets([]);
         }
       } catch (err) {
-        console.warn('Using default Gali markets fallback:', err);
+        console.warn('Error loading Gali markets:', err);
+        setMarkets([]);
       }
     };
     loadMarkets();
@@ -58,7 +75,7 @@ export const UserJackpotGali = () => {
 
   const handlePlayMarket = (market) => {
     if (market.status === 'closed' || market.is_closed) return;
-    navigate(`/play-game/${encodeURIComponent(market.name)}`);
+    navigate(`/play-game/${encodeURIComponent(market.name)}?type=gali`);
   };
 
   const isGreenTheme = currentTheme?.id?.includes('green') || currentTheme?.headerBgColor === '#447668';
@@ -156,8 +173,14 @@ export const UserJackpotGali = () => {
         </div>
 
         {/* 2-Column Grid of Gali Markets */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-3.5">
-          {markets.map((market) => {
+        {markets.length === 0 ? (
+          <div className="bg-white rounded-2xl p-6 text-center border border-gray-150 shadow-3xs space-y-1">
+            <p className="text-sm font-bold text-gray-700">No Jackpot Gali markets available right now.</p>
+            <p className="text-xs text-gray-400 font-medium">Please check back later or add markets from Admin Panel.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:gap-3.5">
+            {markets.map((market) => {
             const isClosed = market.status === 'closed' || market.is_closed;
 
             return (
@@ -219,6 +242,7 @@ export const UserJackpotGali = () => {
             );
           })}
         </div>
+        )}
       </div>
     </div>
   );

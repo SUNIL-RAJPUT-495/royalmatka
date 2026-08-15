@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import { fetchGame } from '../../utils/api';
 import {
   FaArrowLeft,
   FaChartLine,
@@ -102,6 +103,24 @@ export const UserCharts = () => {
   const [viewMode, setViewMode] = useState('list');
   const [selectedMarket, setSelectedMarket] = useState('MILAN MORNING');
   const [isMainGamesOpen, setIsMainGamesOpen] = useState(true);
+  const [marketsList, setMarketsList] = useState(SAMPLE_MARKETS);
+
+  useEffect(() => {
+    const loadLiveMarkets = async () => {
+      try {
+        const res = await fetchGame();
+        if (Array.isArray(res) && res.length > 0) {
+          const liveNames = res.map(g => (g.market_name || g.name || '').toUpperCase()).filter(Boolean);
+          if (liveNames.length > 0) {
+            setMarketsList(liveNames);
+          }
+        }
+      } catch (err) {
+        console.warn('Error loading live markets for charts:', err);
+      }
+    };
+    loadLiveMarkets();
+  }, []);
 
   const openJodiChart = (marketName) => {
     setSelectedMarket(marketName);
@@ -175,7 +194,7 @@ export const UserCharts = () => {
                 <FaTh size={14} />
                 <span className="font-bold text-sm">Main Games</span>
                 <span className="bg-white/20 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  27
+                  {marketsList.length}
                 </span>
               </div>
               <div>
@@ -186,7 +205,7 @@ export const UserCharts = () => {
             {/* List of Markets with 2 Theme Buttons each */}
             {isMainGamesOpen && (
               <div className="p-3.5 space-y-3 bg-[#f8f9fa]">
-                {SAMPLE_MARKETS.map((market) => (
+                {marketsList.map((market) => (
                   <div
                     key={market}
                     className="bg-white rounded-2xl p-4 border border-gray-150 shadow-2xs space-y-3"

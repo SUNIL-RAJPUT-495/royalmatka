@@ -3,30 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { FaArrowLeft, FaPlay, FaChartLine } from 'react-icons/fa';
 import { IoNotificationsOutline, IoStarOutline, IoTimeOutline, IoGridOutline, IoFlashSharp } from 'react-icons/io5';
+import Axios from '../../utils/axios';
 
-const DEFAULT_JACKPOT_MARKETS = [
-  { id: 'jp-1', name: '10:30 AM', result: '* *', time: '10:30 AM', status: 'closed', is_closed: true },
-  { id: 'jp-2', name: '11:30 AM', result: '* *', time: '11:30 AM', status: 'closed', is_closed: true },
-  { id: 'jp-3', name: '12:30 PM', result: '* *', time: '12:30 PM', status: 'closed', is_closed: true },
-  { id: 'jp-4', name: '1:30 PM', result: '* *', time: '1:30 PM', status: 'closed', is_closed: true },
-  { id: 'jp-5', name: '2:30 PM', result: '* *', time: '2:30 PM', status: 'closed', is_closed: true },
-  { id: 'jp-6', name: '3:30 PM', result: '* *', time: '3:30 PM', status: 'running', is_closed: false },
-  { id: 'jp-7', name: '4:30 PM', result: '* *', time: '4:30 PM', status: 'running', is_closed: false },
-  { id: 'jp-8', name: '5:30 PM', result: '* *', time: '5:30 PM', status: 'running', is_closed: false },
-  { id: 'jp-9', name: '6:30 PM', result: '* *', time: '6:30 PM', status: 'running', is_closed: false },
-  { id: 'jp-10', name: '7:30 PM', result: '* *', time: '7:30 PM', status: 'running', is_closed: false },
-  { id: 'jp-11', name: '8:30 PM', result: '* *', time: '8:30 PM', status: 'running', is_closed: false },
-  { id: 'jp-12', name: '9:30 PM', result: '* *', time: '9:30 PM', status: 'running', is_closed: false },
-  { id: 'jp-13', name: '10:30 PM', result: '* *', time: '10:30 PM', status: 'running', is_closed: false }
-];
+const DEFAULT_JACKPOT_MARKETS = [];
 
 export const UserJackpot = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
-  const [markets] = useState(DEFAULT_JACKPOT_MARKETS);
+  const [markets, setMarkets] = useState(DEFAULT_JACKPOT_MARKETS);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    Axios.get('/api/market/get-jackpot-markets').then(res => {
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        setMarkets(res.data.data);
+      } else {
+        setMarkets([]);
+      }
+    }).catch(() => {
+      setMarkets([]);
+    });
   }, []);
 
   const handlePlayMarket = (market) => {
@@ -129,69 +125,77 @@ export const UserJackpot = () => {
         </div>
 
         {/* 2-Column Grid of Jackpot Markets */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-3.5">
-          {markets.map((market) => {
-            const isClosed = market.status === 'closed' || market.is_closed;
+        {markets.length === 0 ? (
+          <div className="col-span-2 bg-white rounded-2xl p-8 border border-gray-150 text-center shadow-xs space-y-2 py-12">
+            <IoStarOutline className="w-10 h-10 text-gray-300 mx-auto" />
+            <h3 className="text-sm font-bold text-gray-800">No Markets Available</h3>
+            <p className="text-xs text-gray-400 font-medium">There are currently no Jackpot markets available.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:gap-3.5">
+            {markets.map((market, idx) => {
+              const isClosed = market.status === 'closed' || market.is_closed;
 
-            return (
-              <div
-                key={market.id || market.name}
-                onClick={() => !isClosed && handlePlayMarket(market)}
-                className={`bg-white rounded-2xl p-3.5 shadow-xs border-l-[4px] flex flex-col justify-between relative transition-all duration-200 select-none border border-gray-100 ${
-                  isClosed
-                    ? 'opacity-95'
-                    : 'cursor-pointer hover:shadow-md active:scale-[0.98]'
-                }`}
-                style={{ borderLeftColor: accentBorderColor }}
-              >
-                <div>
-                  <h2 className="text-xs sm:text-[13px] font-bold uppercase text-gray-900 tracking-wide truncate">
-                    {market.name}
-                  </h2>
+              return (
+                <div
+                  key={market._id || market.id || idx}
+                  onClick={() => !isClosed && handlePlayMarket(market)}
+                  className={`bg-white rounded-2xl p-3.5 shadow-xs border-l-[4px] flex flex-col justify-between relative transition-all duration-200 select-none border border-gray-100 ${
+                    isClosed
+                      ? 'opacity-95'
+                      : 'cursor-pointer hover:shadow-md active:scale-[0.98]'
+                  }`}
+                  style={{ borderLeftColor: accentBorderColor }}
+                >
+                  <div>
+                    <h2 className="text-xs sm:text-[13px] font-bold uppercase text-gray-900 tracking-wide truncate">
+                      {market.name}
+                    </h2>
 
-                  <div className={`font-bold text-base sm:text-[17px] tracking-widest leading-tight my-1 ${resultTextColor}`}>
-                    {market.result || '* *'}
-                  </div>
-
-                  <div className="flex items-center gap-1 text-[11px] font-medium text-gray-500 mt-1">
-                    <IoTimeOutline size={13} className="text-gray-400 shrink-0" />
-                    <span>{market.time}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-3 mt-1">
-                  {isClosed ? (
-                    <span className="bg-[#fee2e2]/80 text-[#ef4444] font-bold text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-red-100">
-                      CLOSED
-                    </span>
-                  ) : (
-                    <span className={`font-bold text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${runningBadgeClass}`}>
-                      RUNNING
-                    </span>
-                  )}
-
-                  {isClosed ? (
-                    <div className="w-8 h-8 rounded-full bg-gray-100/90 flex items-center justify-center text-gray-400 border border-gray-200/50 shadow-2xs shrink-0">
-                      <IoTimeOutline size={15} />
+                    <div className={`font-bold text-base sm:text-[17px] tracking-widest leading-tight my-1 ${resultTextColor}`}>
+                      {market.result || '* *'}
                     </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePlayMarket(market);
-                      }}
-                      className={`w-8 h-8 rounded-full active:scale-90 flex items-center justify-center border shadow-2xs transition-all cursor-pointer shrink-0 ${playBtnClass}`}
-                      title="Play Market"
-                    >
-                      <FaPlay size={9} className="ml-0.5" />
-                    </button>
-                  )}
+
+                    <div className="flex items-center gap-1 text-[11px] font-medium text-gray-500 mt-1">
+                      <IoTimeOutline size={13} className="text-gray-400 shrink-0" />
+                      <span>{market.time}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 mt-1">
+                    {isClosed ? (
+                      <span className="bg-[#fee2e2]/80 text-[#ef4444] font-bold text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-red-100">
+                        CLOSED
+                      </span>
+                    ) : (
+                      <span className={`font-bold text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${runningBadgeClass}`}>
+                        RUNNING
+                      </span>
+                    )}
+
+                    {isClosed ? (
+                      <div className="w-8 h-8 rounded-full bg-gray-100/90 flex items-center justify-center text-gray-400 border border-gray-200/50 shadow-2xs shrink-0">
+                        <IoTimeOutline size={15} />
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePlayMarket(market);
+                        }}
+                        className={`w-8 h-8 rounded-full active:scale-90 flex items-center justify-center border shadow-2xs transition-all cursor-pointer shrink-0 ${playBtnClass}`}
+                        title="Play Market"
+                      >
+                        <FaPlay size={9} className="ml-0.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

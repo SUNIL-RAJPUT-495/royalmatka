@@ -347,6 +347,7 @@ export const loginOtp = async (req, res) => {
           }
           dbUser.lastLoginIp = clientIp;
           dbUser.lastLoginDate = new Date();
+          dbUser.isForceLoggedOut = false;
           await dbUser.save();
           userObj = {
             id: dbUser._id,
@@ -384,10 +385,16 @@ export const loginOtp = async (req, res) => {
         }
       }
 
+      const tokenVal = jwt.sign(
+        { id: userObj.id, mobile: userObj.mobile, role: "user" },
+        process.env.JWT_SECRET || "royal_matka_super_secret_jwt_key_1008",
+        { expiresIn: "30d" }
+      );
+
       return res.status(200).json({
         success: true,
         message: "OTP Login Successful! 🎉",
-        token: "jwt_user_token_" + Date.now(),
+        token: tokenVal,
         user: userObj
       });
     }
@@ -558,11 +565,8 @@ export const getUserProfile = async (req, res) => {
           });
         }
         if (user.isForceLoggedOut) {
-          return res.status(401).json({
-            success: false,
-            isForceLoggedOut: true,
-            message: "Your account has been logged out by administrator. Please login again."
-          });
+          user.isForceLoggedOut = false;
+          await user.save();
         }
         const withdrawable = user.wallet?.withdrowalable || user.balance || 0;
         const bonus = user.wallet?.bonusBalance || 0;

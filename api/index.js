@@ -15,6 +15,7 @@ import aviatorRoutes from "./services/aviator/routes/aviator.routes.js";
 import marketRoutes from "./services/matka/routes/market.routes.js";
 import paymentRoutes from "./services/auth/routes/payment.routes.js";
 import bidRoutes from "./services/matka/routes/bid.routes.js";
+import settingsRoutes from "./services/matka/routes/settings.routes.js";
 import GameEngine from "./services/aviator/game/GameEngine.js";
 
 dotenv.config();
@@ -49,6 +50,7 @@ app.use("/api/aviator", aviatorRoutes);
 app.use("/api/market", marketRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/bid", bidRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // Test Route
 app.get("/", (req, res) => {

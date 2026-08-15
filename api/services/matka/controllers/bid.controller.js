@@ -1,5 +1,35 @@
-import Bid from "../models/Bid.js";
+import Market from "../models/Market.js";
+import Bid, { getISTDateString } from "../models/Bid.js";
 import User from "../../auth/models/User.js";
+import GaliMarket from "../models/GaliMarket.js";
+
+// Helper to check if market session time (e.g. "09:40 AM" or "10:40 PM") has passed in IST
+export const isTimePassedIST = (timeStr) => {
+  if (!timeStr) return false;
+  try {
+    const now = new Date();
+    const istTimeString = now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+    const istNow = new Date(istTimeString);
+
+    let cleanTime = String(timeStr).trim().toUpperCase();
+    const match = cleanTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/);
+    if (!match) return false;
+
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const period = match[3] || "AM";
+
+    if (period === "PM" && hours !== 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
+
+    const currentTotalMinutes = istNow.getHours() * 60 + istNow.getMinutes();
+    const targetTotalMinutes = hours * 60 + minutes;
+
+    return currentTotalMinutes >= targetTotalMinutes;
+  } catch (err) {
+    return false;
+  }
+};
 
 /**
  * @desc Place bids in bulk for Main Market
@@ -29,6 +59,79 @@ export const placeBid = async (req, res) => {
         success: false,
         message: "At least one bid item is required."
       });
+    }
+
+    // Backend Market Time & Status Verification
+    const targetMarket = await Market.findOne({
+      market_name: new RegExp(`^${String(marketName).trim()}$`, "i")
+    });
+
+    if (targetMarket) {
+      if (targetMarket.is_closed) {
+        return res.status(400).json({
+          success: false,
+          message: `Bidding for market '${marketName}' is currently closed.`
+        });
+      }
+
+      const isOpenTimePassed = isTimePassedIST(targetMarket.open_time);
+      const isCloseTimePassed = isTimePassedIST(targetMarket.close_time);
+
+      if (isOpenTimePassed && isCloseTimePassed) {
+        return res.status(400).json({
+          success: false,
+          message: `Bidding for market '${marketName}' is closed for today (${targetMarket.close_time}).`
+        });
+      }
+
+      // Check each bid session
+      for (const b of bids) {
+        const sess = (b.session || "Open").toLowerCase();
+        const mode = String(gameMode).toLowerCase();
+
+        if (sess === "open" && isOpenTimePassed) {
+          return res.status(400).json({
+            success: false,
+            message: `Open session bidding for '${marketName}' has closed (${targetMarket.open_time}).`
+          });
+        }
+        if (sess === "close" && isCloseTimePassed) {
+          return res.status(400).json({
+            success: false,
+            message: `Close session bidding for '${marketName}' has closed (${targetMarket.close_time}).`
+          });
+        }
+        // Jodi / Sangam require Open time to be valid
+        if ((mode.includes("jodi") || mode.includes("sangam") || mode.includes("brackets")) && isOpenTimePassed) {
+          return res.status(400).json({
+            success: false,
+            message: `Jodi & Sangam bidding for '${marketName}' closes after Open time (${targetMarket.open_time}).`
+          });
+        }
+      }
+    }
+
+    // Backend Gali Market Time & Status Verification
+    const galiMarket = await GaliMarket.findOne({
+      name: new RegExp(`^${String(marketName).trim()}$`, "i")
+    });
+
+    const isGaliMarket = Boolean(
+      galiMarket || 
+      req.body.type === 'gali' || 
+      ['left-digit', 'right-digit', 'jodi-digit', 'jodi-bulk', 'digit-based'].includes(String(gameMode).toLowerCase())
+    );
+
+    if (galiMarket) {
+      const timePassed = isTimePassedIST(galiMarket.time);
+      const hasResult = galiMarket.jodi_result && galiMarket.jodi_result !== '**';
+
+      if (galiMarket.is_closed || timePassed || hasResult) {
+        return res.status(400).json({
+          success: false,
+          message: `Bidding for Gali market '${galiMarket.name}' is closed (${galiMarket.time}). Bids cannot be placed!`
+        });
+      }
     }
 
     // Calculate total points required for all bids
@@ -88,6 +191,8 @@ export const placeBid = async (req, res) => {
       });
     }
 
+    const currentISTDate = getISTDateString();
+
     // Prepare bid documents to insert
     const bidDocs = bids.map((item) => ({
       userId: updatedUser._id,
@@ -95,15 +200,16 @@ export const placeBid = async (req, res) => {
       userMobile: updatedUser.mobile,
       marketName: String(marketName).toUpperCase(),
       gameMode: gameMode,
+      bidDate: item.bidDate || currentISTDate,
       session: item.session || "Open",
-      digit: item.digit || "",
-      pana: item.pana || "",
-      jodi: item.jodi || "",
-      openPana: item.openPana || "",
-      closePana: item.closePana || "",
-      openDigit: item.openDigit || "",
-      closeDigit: item.closeDigit || "",
-      type: item.type || "",
+      digit: String(item.digit || item.jodi || item.pana || item.number || "").trim(),
+      pana: String(item.pana || "").trim(),
+      jodi: String(item.jodi || item.digit || "").trim(),
+      openPana: String(item.openPana || "").trim(),
+      closePana: String(item.closePana || "").trim(),
+      openDigit: String(item.openDigit || "").trim(),
+      closeDigit: String(item.closeDigit || "").trim(),
+      type: isGaliMarket ? "gali" : (item.type || ""),
       points: Number(item.points) || 0,
       status: "Pending",
       winAmount: 0
@@ -195,6 +301,7 @@ export const getAllBids = async (req, res) => {
 
     return res.status(200).json({
       success: true,
+      data: bids,
       bids: bids
     });
   } catch (error) {
