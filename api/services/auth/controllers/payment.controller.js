@@ -393,36 +393,66 @@ export const getAllTransactionsAdmin = async (req, res) => {
       const allUsers = await User.find({}).lean();
       const userMap = new Map();
       allUsers.forEach(u => {
-        userMap.set(u._id.toString(), u);
-        if (u.mobile) userMap.set(u.mobile.toString(), u);
+        if (u._id) userMap.set(u._id.toString(), u);
+        if (u.mobile) userMap.set(u.mobile.toString().trim(), u);
       });
 
       const formatted = transactions.map(tx => {
         const doc = tx.toObject();
 
         let userObj = doc.userId;
-        if (!userObj || typeof userObj === 'string' || !userObj.name) {
-          const rawId = typeof doc.userId === 'string' ? doc.userId : doc.userId?._id?.toString();
+        let matchedUser = null;
+
+        if (userObj && typeof userObj === 'object' && userObj._id) {
+          matchedUser = userMap.get(userObj._id.toString()) || userObj;
+        }
+
+        if (!matchedUser) {
+          const rawId = typeof doc.userId === 'string'
+            ? doc.userId
+            : (doc.userId?._id?.toString() || doc.userId?.toString());
           if (rawId && userMap.has(rawId.toString())) {
-            const matched = userMap.get(rawId.toString());
-            userObj = {
-              _id: matched._id,
-              name: matched.name || matched.mobile || 'User',
-              mobile: matched.mobile || 'N/A',
-              email: matched.email || 'N/A',
-              wallet: matched.wallet || { withdrowalable: matched.balance || 0 },
-              balance: matched.balance || 0
-            };
-          } else {
-            userObj = {
-              name: userObj?.name || 'User',
-              mobile: userObj?.mobile || 'N/A',
-              email: userObj?.email || 'N/A',
-              wallet: userObj?.wallet || { withdrowalable: 0 },
-              balance: userObj?.balance || 0
-            };
+            matchedUser = userMap.get(rawId.toString());
           }
         }
+
+        if (!matchedUser && doc.accountDetails) {
+          const matchedByAcc = allUsers.find(u => u.mobile && doc.accountDetails.includes(u.mobile));
+          if (matchedByAcc) matchedUser = matchedByAcc;
+        }
+
+        const name = (matchedUser?.name && matchedUser.name !== 'N/A')
+          ? matchedUser.name
+          : (userObj?.name && userObj.name !== 'N/A')
+          ? userObj.name
+          : (doc.userName || doc.customer_name || matchedUser?.mobile || userObj?.mobile || 'User');
+
+        const mobile = (matchedUser?.mobile && matchedUser.mobile !== 'N/A')
+          ? matchedUser.mobile
+          : (userObj?.mobile && userObj.mobile !== 'N/A')
+          ? userObj.mobile
+          : (doc.mobile || doc.customer_mobile || '');
+
+        const email = (matchedUser?.email && matchedUser.email !== 'N/A')
+          ? matchedUser.email
+          : (userObj?.email && userObj.email !== 'N/A')
+          ? userObj.email
+          : '';
+
+        const wallet = matchedUser?.wallet || userObj?.wallet || { withdrowalable: matchedUser?.balance || userObj?.balance || 0 };
+        const balance = Math.max(
+          Number(matchedUser?.balance || userObj?.balance || 0),
+          Number((wallet?.withdrowalable || 0) + (wallet?.bonusBalance || 0))
+        );
+
+        userObj = {
+          _id: matchedUser?._id || userObj?._id || doc.userId,
+          name: name,
+          mobile: mobile,
+          email: email,
+          wallet: wallet,
+          balance: balance
+        };
 
         let paymentSource = "Manual QR / UPI";
         const m = (doc.method || "").toLowerCase();
@@ -596,32 +626,58 @@ export const getAllWithdrawalsAdmin = async (req, res) => {
       const allUsers = await User.find({}).lean();
       const userMap = new Map();
       allUsers.forEach(u => {
-        userMap.set(u._id.toString(), u);
-        if (u.mobile) userMap.set(u.mobile.toString(), u);
+        if (u._id) userMap.set(u._id.toString(), u);
+        if (u.mobile) userMap.set(u.mobile.toString().trim(), u);
       });
 
       const formatted = transactions.map(tx => {
         const doc = tx.toObject();
 
         let userObj = doc.userId;
-        if (!userObj || typeof userObj === 'string' || !userObj.name) {
-          const rawId = typeof doc.userId === 'string' ? doc.userId : doc.userId?._id?.toString();
+        let matchedUser = null;
+
+        if (userObj && typeof userObj === 'object' && userObj._id) {
+          matchedUser = userMap.get(userObj._id.toString()) || userObj;
+        }
+
+        if (!matchedUser) {
+          const rawId = typeof doc.userId === 'string'
+            ? doc.userId
+            : (doc.userId?._id?.toString() || doc.userId?.toString());
           if (rawId && userMap.has(rawId.toString())) {
-            const matched = userMap.get(rawId.toString());
-            userObj = {
-              _id: matched._id,
-              name: matched.name || matched.mobile || 'User',
-              mobile: matched.mobile || 'N/A',
-              email: matched.email || 'N/A'
-            };
-          } else {
-            userObj = {
-              name: userObj?.name || 'User',
-              mobile: userObj?.mobile || 'N/A',
-              email: userObj?.email || 'N/A'
-            };
+            matchedUser = userMap.get(rawId.toString());
           }
         }
+
+        const name = (matchedUser?.name && matchedUser.name !== 'N/A')
+          ? matchedUser.name
+          : (userObj?.name && userObj.name !== 'N/A')
+          ? userObj.name
+          : (doc.userName || doc.customer_name || matchedUser?.mobile || userObj?.mobile || 'User');
+
+        const mobile = (matchedUser?.mobile && matchedUser.mobile !== 'N/A')
+          ? matchedUser.mobile
+          : (userObj?.mobile && userObj.mobile !== 'N/A')
+          ? userObj.mobile
+          : (doc.mobile || doc.customer_mobile || '');
+
+        const email = (matchedUser?.email && matchedUser.email !== 'N/A')
+          ? matchedUser.email
+          : (userObj?.email && userObj.email !== 'N/A')
+          ? userObj.email
+          : '';
+
+        userObj = {
+          _id: matchedUser?._id || userObj?._id || doc.userId,
+          name: name,
+          mobile: mobile,
+          email: email,
+          wallet: matchedUser?.wallet || userObj?.wallet || { withdrowalable: matchedUser?.balance || userObj?.balance || 0 },
+          balance: Math.max(
+            Number(matchedUser?.balance || userObj?.balance || 0),
+            Number((matchedUser?.wallet?.withdrowalable || 0) + (matchedUser?.wallet?.bonusBalance || 0))
+          )
+        };
 
         return {
           ...doc,

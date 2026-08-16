@@ -289,6 +289,44 @@ const SummaryApi = {
         method: "get"
     },
 
+    // Contact & Support Management
+    getContact: {
+        url: baseURL + "/api/contact/get-settings",
+        method: "get"
+    },
+    updateContact: {
+        url: baseURL + "/api/contact/update-settings",
+        method: "post"
+    },
+
+    // How To Play Management
+    getHowToPlay: {
+        url: baseURL + "/api/settings/how-to-play",
+        method: "get"
+    },
+    updateHowToPlay: {
+        url: baseURL + "/api/settings/how-to-play",
+        method: "post"
+    },
+
+    // Bonus & Transaction Settings
+    getTransactionSettings: {
+        url: baseURL + "/api/settings/get-settings",
+        method: "get"
+    },
+    updateTransactionSettings: {
+        url: baseURL + "/api/settings/update-settings",
+        method: "post"
+    },
+    getBonusStats: {
+        url: baseURL + "/api/settings/bonus-stats",
+        method: "get"
+    },
+    getReferralStats: {
+        url: baseURL + "/api/settings/get-referral-stats",
+        method: "get"
+    },
+
     // Bids Management
     placeBid: {
         url: baseURL + "/api/bid/place-bid",

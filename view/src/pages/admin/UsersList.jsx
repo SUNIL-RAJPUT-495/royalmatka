@@ -181,26 +181,29 @@ export const UsersList = () => {
                 <th className="p-3.5">Mobile No</th>
                 <th className="p-3.5">Wallet Balance</th>
                 <th className="p-3.5">Status</th>
-                <th className="p-3.5">Role</th>
                 <th className="p-3.5 text-right pr-4">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-150">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="p-10 text-center text-gray-400 text-xs font-semibold bg-gray-50/50">
+                  <td colSpan={6} className="p-10 text-center text-gray-400 text-xs font-semibold bg-gray-50/50">
                     Loading user entries...
                   </td>
                 </tr>
               ) : currentRows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-10 text-center text-gray-400 text-xs font-semibold bg-gray-50/50">
+                  <td colSpan={6} className="p-10 text-center text-gray-400 text-xs font-semibold bg-gray-50/50">
                     No users found matching search criteria.
                   </td>
                 </tr>
               ) : (
                 currentRows.map((user, idx) => {
-                  const balance = Number(user.balance !== undefined ? user.balance : (user.wallet?.withdrowalable || 0) + (user.wallet?.bonusBalance || 0));
+                  const balField = Number(user.balance || 0);
+                  const wbField = Number(user.walletBalance || 0);
+                  const wWithdraw = Number(user.wallet?.withdrowalable || 0);
+                  const wBonus = Number(user.wallet?.bonusBalance || 0);
+                  const balance = Math.max(balField, wbField, wWithdraw + wBonus);
                   const isBlocked = user.status === 'Blocked' || user.status === 'Inactive';
                   
                   return (
@@ -231,9 +234,6 @@ export const UsersList = () => {
                         }`}>
                           {user.status || 'Active'}
                         </span>
-                      </td>
-                      <td className="p-3.5 uppercase text-[10px] font-bold text-gray-500">
-                        {user.role || 'User'}
                       </td>
                       <td className="p-3.5 text-right pr-4">
                         <div className="flex items-center justify-end gap-1.5">

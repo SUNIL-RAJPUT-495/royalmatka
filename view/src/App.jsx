@@ -26,6 +26,7 @@ import { UserBetPage } from "./pages/user/UserBetPage";
 import { UserJackpotGali } from "./pages/user/UserJackpotGali";
 import { UserJackpot } from "./pages/user/UserJackpot";
 import { UserStarline } from "./pages/user/UserStarline";
+import { UserShare } from "./pages/user/UserShare";
 import Aviator from "./services/aviator/pages/Aviator";
 import { AviatorAdminControl } from "./pages/admin/AviatorAdminControl";
 import { AdminLayout } from "./layout/AdminLayout";
@@ -117,6 +118,9 @@ function App() {
               <Route path="/passbook" element={<UserPassbook />} />
               <Route path="/transaction-history" element={<UserPassbook />} />
               <Route path="/game-rates" element={<UserGameRates />} />
+              <Route path="/share" element={<UserShare />} />
+              <Route path="/referral" element={<UserShare />} />
+              <Route path="/refer-and-earn" element={<UserShare />} />
               <Route path="/JackpotGali" element={<UserJackpotGali />} />
               <Route path="/jackpot-gali" element={<UserJackpotGali />} />
               <Route path="/gali-bazar" element={<UserJackpotGali />} />
@@ -185,6 +189,7 @@ function App() {
               <Route path="view-user" element={<Navigate to="/systum/users" replace />} />
               <Route path="bonus" element={<BonusManagementPage />} />
               <Route path="referal" element={<AdminReferralsPage />} />
+              <Route path="referral" element={<AdminReferralsPage />} />
               <Route path="AdminReferralsPage" element={<AdminReferralsPage />} />
               <Route path="commission" element={<CommissionManagement />} />
               <Route path="admin-comission" element={<CommissionManagement />} />

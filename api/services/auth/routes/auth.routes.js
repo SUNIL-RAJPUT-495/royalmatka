@@ -28,7 +28,8 @@ import {
   getAccountDeletionRequests,
   approveAccountDeletionRequest,
   rejectAccountDeletionRequest,
-  deleteAccountDeletionRequest
+  deleteAccountDeletionRequest,
+  getAdminDashboardStats
 } from "../controllers/auth.controller.js";
 
 const router = express.Router();
@@ -63,6 +64,7 @@ router.post("/admin-change-password", adminChangePassword);
 router.post("/admin-self-change-password", adminSelfChangePassword);
 router.post("/force-logout", forceLogoutUser);
 router.delete("/delete-admin/:id", deleteAdmin);
+router.get("/admin-dashboard-stats", getAdminDashboardStats);
 
 // Welcome Popup Config Routes
 router.get("/get-welcome-popup", getWelcomePopupConfig);

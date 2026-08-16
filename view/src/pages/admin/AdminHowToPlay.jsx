@@ -1,39 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSave, FaPlus, FaTrashAlt, FaChevronDown, FaChevronUp, FaBookOpen } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import AxiosAdmin from '../../utils/axiosAdmin';
+import SummaryApi from '../../common/SummerAPI';
 import { ConfirmModal } from '../../components/admin/ConfirmModal';
 
 export const AdminHowToPlay = () => {
-  // Load initial settings or use defaults
-  const [pageTitle, setPageTitle] = useState(() => {
-    const saved = localStorage.getItem('how_to_play_title');
-    return saved || 'How to Play';
-  });
-
-  const [sections, setSections] = useState(() => {
-    const saved = localStorage.getItem('how_to_play_sections');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.warn(e);
-      }
-    }
-    return [
-      {
-        id: 1,
-        title: 'Introduction',
-        videoUrl: 'https://www.youtube.com/watch?v=example',
-        instructions: 'Welcome to our platform. Follow these simple steps to learn how to place bids and check game results.',
-        files: [],
-        isOpen: false
-      }
-    ];
-  });
+  const [pageTitle, setPageTitle] = useState('How to Play');
+  const [sections, setSections] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Modal Control States
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [sectionToDelete, setSectionToDelete] = useState(null); // { id, title }
+
+  useEffect(() => {
+    fetchHowToPlay();
+  }, []);
+
+  const fetchHowToPlay = async () => {
+    try {
+      const res = await AxiosAdmin({
+        url: SummaryApi.getHowToPlay.url,
+        method: SummaryApi.getHowToPlay.method
+      });
+      if (res.data?.success) {
+        if (res.data.title) setPageTitle(res.data.title);
+        if (Array.isArray(res.data.sections)) setSections(res.data.sections);
+      }
+    } catch (error) {
+      toast.error('Failed to load How To Play content');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Toggle Accordion State
   const toggleSection = (id) => {
@@ -44,7 +45,7 @@ export const AdminHowToPlay = () => {
     );
   };
 
-  // Add New Section (it should be closed by default)
+  // Add New Section
   const handleAddSection = () => {
     const newSec = {
       id: Date.now(),
@@ -52,7 +53,7 @@ export const AdminHowToPlay = () => {
       videoUrl: '',
       instructions: '',
       files: [],
-      isOpen: false
+      isOpen: true
     };
     setSections((prev) => [...prev, newSec]);
     toast.success('New section added!');
@@ -77,18 +78,41 @@ export const AdminHowToPlay = () => {
   const handleConfirmDelete = () => {
     if (sectionToDelete) {
       setSections((prev) => prev.filter((sec) => sec.id !== sectionToDelete.id));
-      toast.success('Section deleted successfully');
+      toast.success('Section deleted');
     }
     setIsDeleteModalOpen(false);
     setSectionToDelete(null);
   };
 
-  // Save all content
-  const handleSaveAll = () => {
-    localStorage.setItem('how_to_play_title', pageTitle);
-    localStorage.setItem('how_to_play_sections', JSON.stringify(sections));
-    toast.success('How To Play content saved successfully!');
+  // Save all content to DB
+  const handleSaveAll = async () => {
+    setIsSaving(true);
+    try {
+      const res = await AxiosAdmin({
+        url: SummaryApi.updateHowToPlay.url,
+        method: SummaryApi.updateHowToPlay.method,
+        data: {
+          title: pageTitle,
+          sections: sections
+        }
+      });
+      if (res.data?.success) {
+        toast.success(res.data.message || 'How To Play content saved successfully!');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to save content');
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa]">
+        <div className="animate-spin h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 space-y-6 select-none font-sans bg-[#f8f9fa] min-h-screen text-gray-800">
@@ -97,7 +121,7 @@ export const AdminHowToPlay = () => {
       <div className="max-w-3xl mx-auto space-y-6">
         
         {/* Page Title Header */}
-        <div className="flex items-center gap-3 border-b border-gray-200 pb-4 shrink-0">
+        <div className="flex items-center gap-3 border-b border-gray-200 pb-4 shrink-0 text-left">
           <div className="bg-blue-600 p-2.5 rounded-2xl shadow-md text-white">
             <FaBookOpen size={20} />
           </div>
@@ -105,14 +129,14 @@ export const AdminHowToPlay = () => {
             <h1 className="text-lg font-bold text-gray-900 tracking-tight leading-none">
               How To Play Settings
             </h1>
-            <p className="text-xs text-gray-505 font-medium mt-1.5 uppercase tracking-wider">
+            <p className="text-xs text-gray-500 font-medium mt-1.5 uppercase tracking-wider">
               Edit instructions, video tutorials, and guides for players
             </p>
           </div>
         </div>
 
         {/* Main Form Box Container */}
-        <div className="bg-white rounded-3xl p-5 md:p-6 border border-gray-200 shadow-sm space-y-6">
+        <div className="bg-white rounded-3xl p-5 md:p-6 border border-gray-200 shadow-sm space-y-6 text-left">
           <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-3">
             Manage How To Play Content
           </h2>
@@ -127,21 +151,21 @@ export const AdminHowToPlay = () => {
               value={pageTitle}
               onChange={(e) => setPageTitle(e.target.value)}
               placeholder="How to Play"
-              className="w-full text-xs font-medium text-gray-800 placeholder-gray-400 bg-white border border-gray-300 rounded-2xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors shadow-2xs"
+              className="w-full text-xs font-semibold text-gray-800 placeholder-gray-400 bg-white border border-gray-300 rounded-2xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors shadow-2xs"
             />
           </div>
 
           {/* Sections Header */}
           <div className="space-y-3 pt-2">
             <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
-              Sections
+              Sections ({sections.length})
             </h3>
 
             {/* List of Accordions */}
             <div className="space-y-3">
               {sections.map((sec, idx) => (
                 <div 
-                  key={sec.id} 
+                  key={sec.id || idx} 
                   className="border border-gray-200 rounded-2xl overflow-hidden shadow-2xs bg-white transition-all duration-300"
                 >
                   {/* Accordion Toggle Bar */}
@@ -150,7 +174,7 @@ export const AdminHowToPlay = () => {
                     className="bg-gray-50/75 hover:bg-gray-50 px-4 py-3.5 flex items-center justify-between cursor-pointer select-none transition-colors border-b border-gray-100"
                   >
                     <span className="text-xs font-semibold text-gray-800 flex items-center gap-2">
-                      <span className="text-gray-400">Section {idx + 1}:</span>
+                      <span className="text-gray-400 font-bold">Section {idx + 1}:</span>
                       <span>{sec.title || 'Untitled Section'}</span>
                     </span>
                     
@@ -162,7 +186,7 @@ export const AdminHowToPlay = () => {
                           e.stopPropagation();
                           handleRemoveSectionClick(sec.id, sec.title);
                         }}
-                        className="p-1.5 text-red-500 hover:text-red-750 bg-red-50/50 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                        className="p-1.5 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors cursor-pointer"
                         title="Delete Section"
                       >
                         <FaTrashAlt size={10} />
@@ -178,7 +202,7 @@ export const AdminHowToPlay = () => {
 
                   {/* Accordion Content Block */}
                   {sec.isOpen && (
-                    <div className="p-4 space-y-4 bg-white/50">
+                    <div className="p-4 space-y-4 bg-white">
                       
                       {/* Section Title */}
                       <div className="space-y-1">
@@ -190,7 +214,7 @@ export const AdminHowToPlay = () => {
                           value={sec.title}
                           onChange={(e) => handleSectionChange(sec.id, 'title', e.target.value)}
                           placeholder="e.g. Introduction"
-                          className="w-full text-xs font-medium text-gray-800 placeholder-gray-400 bg-white border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-blue-500"
+                          className="w-full text-xs font-semibold text-gray-800 placeholder-gray-400 bg-white border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-blue-500"
                         />
                       </div>
 
@@ -204,7 +228,7 @@ export const AdminHowToPlay = () => {
                           value={sec.videoUrl}
                           onChange={(e) => handleSectionChange(sec.id, 'videoUrl', e.target.value)}
                           placeholder="https://www.youtube.com/watch?v=..."
-                          className="w-full text-xs font-medium text-gray-800 placeholder-gray-400 bg-white border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-blue-500"
+                          className="w-full text-xs font-semibold text-gray-800 placeholder-gray-400 bg-white border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-blue-500"
                         />
                       </div>
 
@@ -222,25 +246,6 @@ export const AdminHowToPlay = () => {
                         />
                       </div>
 
-                      {/* Upload Box */}
-                      <div className="space-y-1.5">
-                        <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider">
-                          Upload Photos, Videos, PDFs for this section
-                        </label>
-                        <div className="flex flex-col gap-1">
-                          <input 
-                            type="file" 
-                            id={`file-${sec.id}`}
-                            multiple
-                            onChange={() => toast.success('Mock file selected')}
-                            className="text-xs text-gray-550 font-medium cursor-pointer file:mr-3 file:py-1.5 file:px-3.5 file:rounded-xl file:border-0 file:text-[11px] file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" 
-                          />
-                          <span className="text-[9px] text-gray-400 font-medium">
-                            Supported formats: images, videos, PDFs.
-                          </span>
-                        </div>
-                      </div>
-
                     </div>
                   )}
                 </div>
@@ -251,7 +256,7 @@ export const AdminHowToPlay = () => {
             <button
               type="button"
               onClick={handleAddSection}
-              className="w-full border-2 border-dashed border-gray-300 hover:border-blue-500/80 rounded-2xl py-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-gray-550 hover:text-blue-600 bg-gray-50/30 hover:bg-gray-50/80 cursor-pointer transition-all active:scale-[0.99]"
+              className="w-full border-2 border-dashed border-gray-300 hover:border-blue-500/80 rounded-2xl py-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-blue-600 bg-gray-50/30 hover:bg-gray-50/80 cursor-pointer transition-all active:scale-[0.99]"
             >
               <FaPlus size={10} />
               <span>Add New Section</span>
@@ -262,10 +267,11 @@ export const AdminHowToPlay = () => {
           <button
             type="button"
             onClick={handleSaveAll}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs tracking-wider py-4 rounded-2xl shadow-md flex items-center justify-center gap-2 hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer uppercase mt-6"
+            disabled={isSaving}
+            className="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-xs tracking-wider py-4 rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer uppercase mt-6 disabled:opacity-70"
           >
             <FaSave size={13} />
-            <span>Save All Content</span>
+            <span>{isSaving ? 'Saving Content...' : 'Save All Content'}</span>
           </button>
 
         </div>

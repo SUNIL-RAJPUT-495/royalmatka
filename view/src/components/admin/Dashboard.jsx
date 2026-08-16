@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   FiCalendar, FiRefreshCw, FiUsers, FiDollarSign, FiCreditCard, FiActivity,
-  FiTrendingUp, FiClock, FiGift, FiBarChart2, FiDownload, FiSearch, FiFilter
+  FiTrendingUp, FiClock, FiGift, FiBarChart2, FiDownload, FiSearch, FiFilter,
+  FiPhone, FiEye
 } from "react-icons/fi";
 import { BiMoneyWithdraw } from "react-icons/bi";
+import { FaWallet } from "react-icons/fa";
 import SummaryApi from '../../common/SummerAPI';
 import AxiosAdmin from '../../utils/axiosAdmin';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +23,8 @@ export const Dashboard = () => {
   const [transactions, setTransactions] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [userStatusFilter, setUserStatusFilter] = useState('All');
 
   const fetchData = async () => {
     setLoading(true);
@@ -194,86 +198,158 @@ export const Dashboard = () => {
         </>
       )}
 
-      {/* 3. Conditional Rendering: Agar tab 'users' hai toh Naya Design dikhega */}
-      {activeTab === 'users' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col min-h-[250px]">
+      {/* 3. Conditional Rendering: Users tab */}
+      {activeTab === 'users' && (() => {
+        const filteredDashboardUsers = users.filter((u) => {
+          const term = userSearchTerm.toLowerCase().trim();
+          const nameMatch = u.name ? u.name.toLowerCase().includes(term) : false;
+          const mobileMatch = u.mobile ? u.mobile.includes(term) : false;
+          const matchesSearch = term === '' || nameMatch || mobileMatch;
+          const matchesStatus = userStatusFilter === 'All' || u.status === userStatusFilter;
+          return matchesSearch && matchesStatus;
+        });
 
-          {/* Header Bar */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-            <h2 className="text-xl font-bold text-gray-900">User Management</h2>
+        return (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col min-h-[300px]">
 
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              {/* Search Box */}
-              <div className="relative w-full md:w-64">
-                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  type="text"
-                  placeholder="Search users..."
-                  className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-                />
+            {/* Header Bar */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <FiUsers className="text-blue-600" /> User Management
+                </h2>
+                <p className="text-xs text-gray-500 font-medium mt-1">
+                  Manage registered user accounts and view wallet balances.
+                </p>
               </div>
 
-              {/* Filter Dropdown */}
-              <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap">
-                <span>All Users</span>
-                <FiFilter className="text-gray-400" size={16} />
-              </button>
+              <div className="flex items-center gap-3 w-full md:w-auto flex-wrap sm:flex-nowrap">
+                {/* Search Box */}
+                <div className="relative w-full md:w-64">
+                  <FiSearch className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={15} />
+                  <input
+                    type="text"
+                    placeholder="Search name or mobile..."
+                    value={userSearchTerm}
+                    onChange={(e) => setUserSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-2xs"
+                  />
+                </div>
+
+                {/* Status Filter Dropdown */}
+                <div className="relative">
+                  <select
+                    value={userStatusFilter}
+                    onChange={(e) => setUserStatusFilter(e.target.value)}
+                    className="px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs appearance-none pr-8"
+                  >
+                    <option value="All">All Status</option>
+                    <option value="Active">Active</option>
+                    <option value="Blocked">Blocked</option>
+                  </select>
+                  <FiFilter className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={13} />
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Content Body */}
-          <div className="flex-1 overflow-x-auto mt-4">
-            {users.length === 0 && !loading ? (
-              <div className="flex items-center justify-center p-12">
-                <p className="text-gray-500 text-base">No users found matching your search criteria</p>
-              </div>
-            ) : (
-              <table className="w-full text-left text-sm text-gray-600">
-                <thead className="bg-gray-50 border-b border-gray-100 text-gray-700">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold">Name</th>
-                    <th className="px-4 py-3 font-semibold">Mobile</th>
-                    <th className="px-4 py-3 font-semibold">Wallet</th>
-                    <th className="px-4 py-3 font-semibold">Role</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
-                    <th className="px-4 py-3 font-semibold">Options</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {users.map(u => (
-                    <tr key={u._id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-800">{u.name}</td>
-                      <td className="px-4 py-3">{u.mobile}</td>
-                      <td className="px-4 py-3 font-bold text-gray-800">₹{u.walletBalance}</td>
-                      <td className="px-4 py-3"><span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">{u.role}</span></td>
-                      <td className="px-4 py-3"><span className={`px-2 py-1 rounded text-xs ${u.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{u.status}</span></td>
-                      <td className="px-4 py-3">
-                        <button onClick={() => navigate(`/admin/view-user/${u._id}`)} className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
-                          View
-                        </button>
-                      </td>
+            {/* Content Body / Users Table */}
+            <div className="flex-1 overflow-x-auto rounded-xl border border-gray-150 shadow-2xs">
+              {loading ? (
+                <div className="flex flex-col items-center justify-center p-12 bg-gray-50/50">
+                  <div className="w-8 h-8 border-3 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-3"></div>
+                  <p className="text-gray-500 text-xs font-semibold">Loading users list...</p>
+                </div>
+              ) : filteredDashboardUsers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-12 bg-gray-50/50">
+                  <FiUsers size={32} className="text-gray-300 mb-2" />
+                  <p className="text-gray-500 text-xs font-semibold">No users found matching criteria</p>
+                </div>
+              ) : (
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-gray-50 border-b border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3.5">User</th>
+                      <th className="px-4 py-3.5">Mobile</th>
+                      <th className="px-4 py-3.5">Wallet Balance</th>
+                      <th className="px-4 py-3.5">Status</th>
+                      <th className="px-4 py-3.5 text-right">Options</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {filteredDashboardUsers.map(u => {
+                      const balField = Number(u.balance || 0);
+                      const wbField = Number(u.walletBalance || 0);
+                      const wWithdraw = Number(u.wallet?.withdrowalable || 0);
+                      const wBonus = Number(u.wallet?.bonusBalance || 0);
+                      const totalMoney = Math.max(balField, wbField, wWithdraw + wBonus);
 
-          {/* Footer Pagination */}
-          <div className="flex justify-between items-center mt-8 pt-4 border-t border-gray-100">
-            <p className="text-sm text-gray-500">Showing <span className="font-semibold text-gray-700">0</span> of <span className="font-semibold text-gray-700">0</span> users</p>
-            <div className="flex gap-2">
-              <button className="px-4 py-1.5 text-sm font-medium text-gray-400 bg-gray-50 border border-gray-200 rounded-lg cursor-not-allowed">
-                Previous
-              </button>
-              <button className="px-4 py-1.5 text-sm font-medium text-gray-400 bg-gray-50 border border-gray-200 rounded-lg cursor-not-allowed">
-                Next
-              </button>
+                      const isBlocked = u.status === 'Blocked';
+
+                      return (
+                        <tr key={u._id} className="hover:bg-blue-50/30 transition-colors">
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm shadow-2xs shrink-0">
+                                {u.name ? u.name.charAt(0).toUpperCase() : 'U'}
+                              </div>
+                              <div>
+                                <div className="font-bold text-gray-900 text-xs">{u.name || 'User'}</div>
+                                <div className="text-[10px] text-gray-400 font-medium">
+                                  ID: {u._id?.substring(u._id?.length - 6) || 'N/A'}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center gap-1.5 font-semibold text-gray-700 font-mono">
+                              <FiPhone size={12} className="text-gray-400" />
+                              <span>{u.mobile || 'N/A'}</span>
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-3.5">
+                            <div className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-700 font-bold border border-emerald-100 shadow-3xs">
+                              <FaWallet size={12} className="text-emerald-600" />
+                              <span>₹{totalMoney.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-3.5">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              isBlocked ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
+                            }`}>
+                              {u.status || 'Active'}
+                            </span>
+                          </td>
+
+                          <td className="px-4 py-3.5 text-right">
+                            <button
+                              onClick={() => navigate(`/systum/view-user/${u._id}`)}
+                              className="px-3.5 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-600 hover:text-white transition-all cursor-pointer shadow-3xs active:scale-95 inline-flex items-center gap-1"
+                            >
+                              <FiEye size={12} />
+                              <span>View</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
             </div>
-          </div>
 
-        </div>
-      )}
+            {/* Footer Pagination Bar */}
+            <div className="flex flex-col sm:flex-row justify-between items-center mt-5 pt-4 border-t border-gray-150 gap-3">
+              <p className="text-xs text-gray-500 font-medium">
+                Showing <span className="font-bold text-gray-800">{filteredDashboardUsers.length > 0 ? 1 : 0}</span> to <span className="font-bold text-gray-800">{filteredDashboardUsers.length}</span> of <span className="font-bold text-gray-800">{users.length}</span> users
+              </p>
+            </div>
+
+          </div>
+        );
+      })()}
       {activeTab === 'transactions' && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col min-h-[250px]">
 

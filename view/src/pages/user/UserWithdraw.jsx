@@ -57,9 +57,28 @@ export const UserWithdraw = () => {
     primaryBank && (primaryBank.accountNumber || primaryBank.bankName)
   );
 
+  const [minWithdrawal, setMinWithdrawal] = useState(500);
+
+  useEffect(() => {
+    const fetchSystemSettings = async () => {
+      try {
+        const res = await Axios({
+          url: SummaryApi.getTransactionSettings.url,
+          method: SummaryApi.getTransactionSettings.method
+        });
+        if (res.data?.data?.minWithdrawal) {
+          setMinWithdrawal(Number(res.data.data.minWithdrawal));
+        }
+      } catch (err) {
+        console.warn('Using default min withdrawal (500)');
+      }
+    };
+    fetchSystemSettings();
+  }, []);
+
   const numAmount = Number(amount);
   const isValidMethod = method === 'bank' ? hasBankDetails : Boolean(upiId && upiId.trim().length >= 3);
-  const isValidAmount = numAmount > 0 && isValidMethod;
+  const isValidAmount = numAmount >= minWithdrawal && isValidMethod;
 
   const exposureAmount = Number(user.wallet?.exposureAmount !== undefined ? user.wallet.exposureAmount : (user.exposureAmount || 0));
 
@@ -68,8 +87,8 @@ export const UserWithdraw = () => {
       setShowExposureModal(true);
       return;
     }
-    if (numAmount < 100) {
-      toast.error('Minimum withdrawal amount is ₹100');
+    if (numAmount < minWithdrawal) {
+      toast.error(`Minimum withdrawal amount is ₹${minWithdrawal}`);
       return;
     }
     if (withdrawableBalance > 0 && numAmount > withdrawableBalance) {
@@ -208,7 +227,7 @@ export const UserWithdraw = () => {
                   2
                 </span>
                 <p className="leading-tight font-medium text-gray-800">
-                  Minimum withdrawal amount is ₹1000.
+                  Minimum withdrawal amount is ₹{minWithdrawal}.
                 </p>
               </div>
 

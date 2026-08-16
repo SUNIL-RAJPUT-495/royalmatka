@@ -75,7 +75,7 @@ export const AdminSideBar = ({ closeSidebar }) => {
             items: [
                 { icons: MdGames, itemsDetails: "Add Game", link: "AddGame" },
                 { icons: GiBackwardTime, itemsDetails: "Main Market Bids", link: "main-market-bids" },
-                { icons: FaTrophy, itemsDetails: "Matka Results", link: "matka-results" },
+               // { icons: FaTrophy, itemsDetails: "Matka Results", link: "matka-results" },
                 { icons: FaCheckCircle, itemsDetails: "Declare Results", link: "ResultDecleare" },
                 { icons: FaPercent, itemsDetails: "Game Rates", link: "game-rates" },
             ]
@@ -116,7 +116,7 @@ export const AdminSideBar = ({ closeSidebar }) => {
                 { icons: FaCreditCard, itemsDetails: "Payments", link: "Payment" },
                 { icons: BiMoneyWithdraw, itemsDetails: "Withdrawals", link: "Withdraw" },
                 { icons: FaMoneyBillWave, itemsDetails: "All Withdrawals", link: "all-withdrawals" },
-                { icons: FaHandHoldingUsd, itemsDetails: "Commission", link: "commission" },
+              //  { icons: FaHandHoldingUsd, itemsDetails: "Commission", link: "commission" },
                 { icons: IoBagHandle, itemsDetails: "Referrals", link: "referal" },
                 { icons: FaChartPie, itemsDetails: "Bonus Management", link: "bonus" },
             ]

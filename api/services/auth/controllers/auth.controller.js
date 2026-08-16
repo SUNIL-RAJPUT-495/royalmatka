@@ -1,11 +1,14 @@
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import Admin from "../models/Admin.js";
 import WelcomePopupConfig from "../models/WelcomePopup.js";
 import AppThemeConfig from "../models/AppTheme.js";
 import PaymentTransaction from "../models/PaymentTransaction.js";
 import DeletionRequest from "../models/DeletionRequest.js";
+import PaymentSettings from "../models/PaymentSettings.js";
 import GameRate from "../../matka/models/GameRate.js";
+import Bid from "../../matka/models/Bid.js";
 import BetManager from "../../aviator/game/BetManager.js";
 import mongoose from "mongoose";
 
@@ -68,6 +71,18 @@ export const sendOtp = async (req, res) => {
           message: "Mobile number not found. Please register first."
         });
       }
+
+      // Check if Admin has turned OFF Login OTP Verification
+      const pSettings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
+      if (pSettings && pSettings.isOtpEnabled === false) {
+        return res.status(200).json({
+          success: true,
+          isOtpEnabled: false,
+          isOtpBypassed: true,
+          message: "OTP verification is turned OFF by Admin. Proceeding directly!",
+          otp: "1234"
+        });
+      }
     }
 
     const otp = generate4DigitOtp();
@@ -80,6 +95,7 @@ export const sendOtp = async (req, res) => {
 
     return res.status(200).json({
       success: true,
+      isOtpEnabled: true,
       message: `OTP sent successfully to +91 ${cleanMobile}`,
       otp: otp
     });
@@ -96,6 +112,17 @@ export const verifyOtp = async (req, res) => {
         success: false,
         message: "Mobile number and OTP are required"
       });
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      const pSettings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
+      if (pSettings && pSettings.isOtpEnabled === false) {
+        return res.status(200).json({
+          success: true,
+          isOtpEnabled: false,
+          message: "Mobile verified successfully! 🎉"
+        });
+      }
     }
 
     const cleanMobile = mobile.trim();
@@ -322,18 +349,27 @@ export const loginUser = async (req, res) => {
 export const loginOtp = async (req, res) => {
   try {
     const { mobile, otp } = req.body;
-    if (!mobile || !otp) {
+    if (!mobile) {
       return res.status(400).json({
         success: false,
-        message: "Mobile number and OTP are required"
+        message: "Mobile number is required"
       });
     }
 
     const cleanMobile = mobile.trim();
     const clientIp = getClientIp(req);
+
+    let isOtpBypassed = false;
+    if (mongoose.connection.readyState === 1) {
+      const pSettings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
+      if (pSettings && pSettings.isOtpEnabled === false) {
+        isOtpBypassed = true;
+      }
+    }
+
     const stored = otpStore.get(cleanMobile);
 
-    if ((stored && stored.otp === otp.toString()) || otp.toString() === "1234" || otp.toString() === "9127") {
+    if (isOtpBypassed || (stored && stored.otp === otp?.toString()) || otp?.toString() === "1234" || otp?.toString() === "9127") {
       let userObj = { name: "User " + cleanMobile.slice(-4), mobile: cleanMobile, balance: 0, lastLoginIp: clientIp, lastLoginDate: new Date() };
 
       if (mongoose.connection.readyState === 1) {
@@ -386,11 +422,18 @@ export const loginOtp = async (req, res) => {
         }
       }
 
-      const tokenVal = jwt.sign(
-        { id: userObj.id, mobile: userObj.mobile, role: "user" },
-        process.env.JWT_SECRET || "royal_matka_super_secret_jwt_key_1008",
-        { expiresIn: "30d" }
-      );
+      let tokenVal = "jwt_user_token_" + Date.now();
+      try {
+        if (typeof jwt !== "undefined" && jwt && jwt.sign) {
+          tokenVal = jwt.sign(
+            { id: userObj.id || userObj._id, mobile: userObj.mobile, role: "user" },
+            process.env.JWT_SECRET || "royal_matka_super_secret_jwt_key_1008",
+            { expiresIn: "30d" }
+          );
+        }
+      } catch (jwtErr) {
+        console.warn("JWT sign error, fallback token used:", jwtErr);
+      }
 
       return res.status(200).json({
         success: true,
@@ -793,7 +836,20 @@ export const updateUserWallet = async (req, res) => {
 export const getAllUsers = async (req, res) => {
   try {
     if (mongoose.connection.readyState === 1) {
-      const users = await User.find({ role: { $ne: "Admin" } }).sort({ createdAt: -1 });
+      const rawUsers = await User.find({ role: { $ne: "Admin" } }).sort({ createdAt: -1 }).lean();
+      const users = rawUsers.map(user => {
+        const balField = Number(user.balance || 0);
+        const wbField = Number(user.walletBalance || 0);
+        const wWithdraw = Number(user.wallet?.withdrowalable || 0);
+        const wBonus = Number(user.wallet?.bonusBalance || 0);
+        const totalMoney = Math.max(balField, wbField, wWithdraw + wBonus);
+
+        return {
+          ...user,
+          balance: totalMoney,
+          walletBalance: totalMoney
+        };
+      });
       return res.status(200).json({
         success: true,
         users: users
@@ -1337,6 +1393,89 @@ export const deleteAccountDeletionRequest = async (req, res) => {
     return res.status(200).json({ success: true, message: "Request record deleted." });
   } catch (error) {
     console.error("Error in deleteAccountDeletionRequest:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getAdminDashboardStats = async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const totalUsers = await User.countDocuments();
+
+      // Aggregate deposits
+      const depositAgg = await PaymentTransaction.aggregate([
+        { $match: { type: { $regex: /^deposit$/i }, status: { $regex: /^(approved|completed|success)$/i } } },
+        { $group: { _id: null, total: { $sum: "$amount" } } }
+      ]);
+      const totalDeposits = depositAgg[0]?.total || 0;
+
+      // Aggregate withdrawals
+      const withdrawalAgg = await PaymentTransaction.aggregate([
+        { $match: { type: { $regex: /^withdrawal$/i }, status: { $regex: /^(approved|completed|success)$/i } } },
+        { $group: { _id: null, total: { $sum: "$amount" } } }
+      ]);
+      const totalWithdrawals = withdrawalAgg[0]?.total || 0;
+
+      // Aggregate pending withdrawals count
+      const pendingWithdrawalsCount = await PaymentTransaction.countDocuments({
+        type: { $regex: /^withdrawal$/i },
+        status: { $regex: /^pending$/i }
+      });
+
+      // Total Bets (from bids)
+      let totalBets = 0;
+      let totalWinnings = 0;
+      try {
+        const bidAgg = await Bid.aggregate([
+          {
+            $group: {
+              _id: null,
+              totalBets: { $sum: "$points" },
+              totalWinnings: {
+                $sum: {
+                  $cond: [{ $eq: ["$status", "Won"] }, "$winningPoints", 0]
+                }
+              }
+            }
+          }
+        ]);
+        totalBets = bidAgg[0]?.totalBets || 0;
+        totalWinnings = bidAgg[0]?.totalWinnings || 0;
+      } catch (err) {
+        console.warn("Bid aggregate warning:", err);
+      }
+
+      const adminProfitLoss = totalDeposits - totalWithdrawals;
+
+      const stats = {
+        totalUsers,
+        totalDeposits,
+        totalWithdrawals,
+        totalBets,
+        totalWinnings,
+        adminProfitLoss,
+        pendingWithdrawalsCount,
+        totalBonuses: totalUsers * 50
+      };
+
+      return res.status(200).json({ success: true, stats });
+    }
+
+    return res.status(200).json({
+      success: true,
+      stats: {
+        totalUsers: 10,
+        totalDeposits: 5000,
+        totalWithdrawals: 1000,
+        totalBets: 8000,
+        totalWinnings: 3000,
+        adminProfitLoss: 4000,
+        pendingWithdrawalsCount: 1,
+        totalBonuses: 500
+      }
+    });
+  } catch (error) {
+    console.error("getAdminDashboardStats Error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };

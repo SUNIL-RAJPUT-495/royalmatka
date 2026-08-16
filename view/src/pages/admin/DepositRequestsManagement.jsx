@@ -289,12 +289,24 @@ export const DepositRequestsManagement = () => {
                       <tr key={deposit._id || deposit.id} className="hover:bg-gray-50/50 transition-colors">
                         {/* User Details */}
                         <td className="px-5 py-4">
-                          <div className="font-bold text-gray-900">
-                            {deposit.userId?.name || (typeof deposit.userId === 'object' ? deposit.userId?.mobile : '') || deposit.username || 'User'}
+                          <div className="font-bold text-gray-900 text-xs">
+                            {deposit.userId?.name && deposit.userId.name !== 'N/A'
+                              ? deposit.userId.name
+                              : (deposit.userId?.mobile && deposit.userId.mobile !== 'N/A' ? deposit.userId.mobile : deposit.username || 'User')}
                           </div>
-                          <div className="text-[10px] text-gray-450 mt-0.5">
-                            {deposit.userId?.mobile ? `📞 ${deposit.userId.mobile}` : deposit.userId?.email || deposit.mobile || 'N/A'}
-                          </div>
+                          {deposit.userId?.mobile && deposit.userId.mobile !== 'N/A' ? (
+                            <div className="text-[10px] text-gray-500 font-semibold font-mono mt-0.5">
+                              📞 {deposit.userId.mobile}
+                            </div>
+                          ) : deposit.mobile && deposit.mobile !== 'N/A' ? (
+                            <div className="text-[10px] text-gray-500 font-semibold font-mono mt-0.5">
+                              📞 {deposit.mobile}
+                            </div>
+                          ) : (
+                            <div className="text-[10px] text-gray-400 font-medium mt-0.5">
+                              {deposit.userId?.email && deposit.userId.email !== 'N/A' ? deposit.userId.email : 'No Mobile'}
+                            </div>
+                          )}
                         </td>
 
                         {/* Payment Source */}
@@ -418,14 +430,28 @@ export const DepositRequestsManagement = () => {
               {/* User Details */}
               <div className="bg-gray-50 p-3.5 rounded-2xl border border-gray-200 space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">User Info</span>
-                <div className="text-sm font-bold text-gray-900">{selectedDeposit.userId?.name || 'N/A'}</div>
-                <div className="text-xs text-gray-500">📞 Mobile: {selectedDeposit.userId?.mobile || 'N/A'}</div>
-                <div className="text-xs text-gray-500">✉️ Email: {selectedDeposit.userId?.email || 'N/A'}</div>
-                {selectedDeposit.userId?.wallet && (
-                  <div className="text-xs font-bold text-emerald-600 mt-1">
-                    💰 Current Wallet Balance: ₹{(selectedDeposit.userId.wallet.withdrowalable || 0).toLocaleString('en-IN')}
+                <div className="text-sm font-bold text-gray-900">
+                  {selectedDeposit.userId?.name && selectedDeposit.userId.name !== 'N/A'
+                    ? selectedDeposit.userId.name
+                    : (selectedDeposit.userId?.mobile || selectedDeposit.mobile || 'User')}
+                </div>
+                {selectedDeposit.userId?.mobile && selectedDeposit.userId.mobile !== 'N/A' && (
+                  <div className="text-xs text-gray-600 font-semibold font-mono">
+                    📞 Mobile: {selectedDeposit.userId.mobile}
                   </div>
                 )}
+                {selectedDeposit.userId?.email && selectedDeposit.userId.email !== 'N/A' && (
+                  <div className="text-xs text-gray-500">
+                    ✉️ Email: {selectedDeposit.userId.email}
+                  </div>
+                )}
+                <div className="text-xs font-bold text-emerald-600 mt-1">
+                  💰 Current Wallet Balance: ₹{Number(
+                    selectedDeposit.userId?.balance ||
+                    selectedDeposit.userId?.walletBalance ||
+                    (selectedDeposit.userId?.wallet?.withdrowalable || 0) + (selectedDeposit.userId?.wallet?.bonusBalance || 0)
+                  ).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
               </div>
 
               {/* Payment Details */}

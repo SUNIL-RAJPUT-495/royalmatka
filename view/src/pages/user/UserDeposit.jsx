@@ -34,10 +34,22 @@ export const UserDeposit = () => {
           method: SummaryApi.getPaymentSettings.method
         });
         if (res.data?.settings) {
-          setSettings(res.data.settings);
+          setSettings(prev => ({ ...prev, ...res.data.settings }));
         }
       } catch (err) {
-        console.warn('Using default deposit settings');
+        console.warn('Using default payment settings');
+      }
+
+      try {
+        const txnRes = await Axios({
+          url: SummaryApi.getTransactionSettings.url,
+          method: SummaryApi.getTransactionSettings.method
+        });
+        if (txnRes.data?.data?.minDeposit) {
+          setSettings(prev => ({ ...prev, minAmount: Number(txnRes.data.data.minDeposit) }));
+        }
+      } catch (err) {
+        console.warn('Using default transaction settings');
       }
     };
     fetchSettings();

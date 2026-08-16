@@ -323,8 +323,24 @@ export const WithdrawalRequestsPage = () => {
                           </div>
                         </td>
                         <td className="px-5 py-4">
-                          <div className="font-bold text-gray-900">{withdraw.userId?.name || 'Unknown User'}</div>
-                          <div className="text-[10px] text-gray-450 mt-0.5">{withdraw.userId?.mobile || 'No Mobile'}</div>
+                          <div className="font-bold text-gray-900 text-xs">
+                            {withdraw.userId?.name && withdraw.userId.name !== 'N/A'
+                              ? withdraw.userId.name
+                              : (withdraw.userId?.mobile && withdraw.userId.mobile !== 'N/A' ? withdraw.userId.mobile : withdraw.mobile || 'User')}
+                          </div>
+                          {withdraw.userId?.mobile && withdraw.userId.mobile !== 'N/A' ? (
+                            <div className="text-[10px] text-gray-500 font-semibold font-mono mt-0.5">
+                              📞 {withdraw.userId.mobile}
+                            </div>
+                          ) : withdraw.mobile && withdraw.mobile !== 'N/A' ? (
+                            <div className="text-[10px] text-gray-500 font-semibold font-mono mt-0.5">
+                              📞 {withdraw.mobile}
+                            </div>
+                          ) : (
+                            <div className="text-[10px] text-gray-400 font-medium mt-0.5">
+                              {withdraw.userId?.email && withdraw.userId.email !== 'N/A' ? withdraw.userId.email : 'No Mobile'}
+                            </div>
+                          )}
                         </td>
                         <td className="px-5 py-4">
                           <span className="font-bold text-[9px] text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded uppercase block w-fit mb-1">{withdraw.method}</span>
@@ -481,8 +497,16 @@ export const WithdrawalRequestsPage = () => {
               <div className="bg-gray-50 p-3 rounded-2xl border border-gray-200 flex justify-between items-center text-xs">
                 <div>
                   <span className="text-gray-400 font-bold uppercase text-[9px] block">User</span>
-                  <span className="font-extrabold text-gray-900">{selectedWithdrawal.userId?.name || 'User'}</span>
-                  <span className="font-mono text-gray-600 text-[11px] block">{selectedWithdrawal.userId?.mobile || 'N/A'}</span>
+                  <span className="font-extrabold text-gray-900 text-sm block">
+                    {selectedWithdrawal.userId?.name && selectedWithdrawal.userId.name !== 'N/A'
+                      ? selectedWithdrawal.userId.name
+                      : (selectedWithdrawal.userId?.mobile || selectedWithdrawal.mobile || 'User')}
+                  </span>
+                  {(selectedWithdrawal.userId?.mobile || selectedWithdrawal.mobile) && (
+                    <span className="font-mono text-gray-600 font-bold text-xs block mt-0.5">
+                      📞 {selectedWithdrawal.userId?.mobile || selectedWithdrawal.mobile}
+                    </span>
+                  )}
                 </div>
                 <div className="text-right">
                   <span className="text-gray-400 font-bold uppercase text-[9px] block">Amount</span>

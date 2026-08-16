@@ -344,29 +344,62 @@ export const UpiSettings = () => {
             Turn OTP verification on or off for user login & signup. When OFF, users log in directly without receiving an OTP.
           </p>
 
-          <div className="p-4 rounded-xl border border-gray-150 flex items-center justify-between bg-white shadow-2xs">
+          <div className="p-4 rounded-xl border border-gray-200 flex items-center justify-between bg-white shadow-2xs">
             <div>
-              <span className={`text-xs font-bold ${isOtpEnabled ? 'text-green-600' : 'text-gray-500'}`}>
+              <span className={`text-xs font-extrabold flex items-center gap-1.5 ${isOtpEnabled ? 'text-emerald-600' : 'text-gray-500'}`}>
+                <span className={`w-2 h-2 rounded-full ${isOtpEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
                 OTP is currently {isOtpEnabled ? 'ON' : 'OFF'}
               </span>
               <span className="text-[10px] text-gray-400 font-semibold block mt-0.5">
                 {isOtpEnabled ? 'Users must verify an OTP to log in / sign up.' : 'Users log in instantly without OTP.'}
               </span>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setIsOtpEnabled(!isOtpEnabled);
-                toast.success(`OTP Verification turned ${!isOtpEnabled ? 'ON' : 'OFF'}`);
-              }}
-              className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-1 cursor-pointer ${
-                isOtpEnabled ? 'bg-[#22c55e]' : 'bg-gray-250'
-              }`}
-            >
-              <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${isOtpEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-            </button>
+
+            <div className="flex items-center gap-3">
+              <span className={`text-xs font-extrabold ${isOtpEnabled ? 'text-emerald-600' : 'text-gray-400'}`}>
+                {isOtpEnabled ? 'ON' : 'OFF'}
+              </span>
+              <button
+                type="button"
+                onClick={async () => {
+                  const nextVal = !isOtpEnabled;
+                  setIsOtpEnabled(nextVal);
+                  toast.success(`OTP Verification turned ${nextVal ? 'ON' : 'OFF'}`);
+                  try {
+                    await Axios({
+                      url: SummaryApi.updatePaymentSettings.url,
+                      method: SummaryApi.updatePaymentSettings.method,
+                      data: {
+                        upiId: newUpiId,
+                        displayName: newDisplayName,
+                        qrCodeUrl: qrCodeUrl,
+                        activeFundSystem: activeFundSystem,
+                        minAmount: Number(minAmount),
+                        maxAmount: Number(maxAmount),
+                        quickAmounts: quickAmountString.split(',').map(v => Number(v.trim())).filter(v => !isNaN(v)),
+                        isOtpEnabled: nextVal
+                      }
+                    });
+                  } catch (err) {
+                    console.error('Error saving OTP setting:', err);
+                  }
+                }}
+                className={`w-12 h-6.5 rounded-full transition-all relative flex items-center px-1 cursor-pointer border ${
+                  isOtpEnabled 
+                    ? 'bg-[#22c55e] border-emerald-600' 
+                    : 'bg-gray-300 border-gray-400'
+                }`}
+                title={`Click to turn OTP ${isOtpEnabled ? 'OFF' : 'ON'}`}
+              >
+                <div className={`w-4.5 h-4.5 rounded-full bg-white shadow-md transition-transform ${
+                  isOtpEnabled ? 'translate-x-5.5' : 'translate-x-0'
+                }`} />
+              </button>
+            </div>
           </div>
         </div>
+
+
 
         {/* 4. Add-Fund System */}
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">

@@ -109,25 +109,41 @@ export const SideBar = ({
           </div>
 
           {/* User Info Row */}
-          <div className="flex items-center gap-3.5 mb-3.5">
-            {/* White Rounded Square Avatar with Initial */}
-            <div
-              className="w-13 h-13 rounded-2xl bg-white flex items-center justify-center font-bold text-xl shadow-md shrink-0"
-              style={{ color: currentTheme.headerBgColor }}
-            >
-              {user.name ? user.name.charAt(0).toUpperCase() : 'S'}
-            </div>
+          {(() => {
+            const currentUser = user || {};
+            const name = currentUser.name || 'User';
+            const mobile = currentUser.mobile || '';
+            const initial = name ? name.charAt(0).toUpperCase() : 'U';
+            const balanceVal = Number(
+              currentUser.balance !== undefined 
+                ? currentUser.balance 
+                : (currentUser.walletBalance !== undefined 
+                  ? currentUser.walletBalance 
+                  : ((currentUser.wallet?.withdrowalable || 0) + (currentUser.wallet?.bonusBalance || 0)))
+            ).toFixed(2);
 
-            {/* Name, ID and Balance Pill */}
-            <div>
-              <h3 className="font-bold text-base leading-tight text-white">{user.name || 'User'}</h3>
-              <p className="text-xs text-white/80 font-normal mt-0.5">ID: {user.mobile || ''}</p>
-              <div className="inline-flex items-center gap-1 bg-white/20 px-2.5 py-0.5 rounded-full text-[11px] font-semibold mt-1 border border-white/25">
-                <HiOutlineSparkles size={11} className="text-yellow-300" />
-                <span>₹ {Number(user.balance !== undefined ? user.balance : (user.walletBalance !== undefined ? user.walletBalance : 0)).toFixed(2)}</span>
+            return (
+              <div className="flex items-center gap-3.5 mb-3.5">
+                {/* White Rounded Square Avatar with Initial */}
+                <div
+                  className="w-13 h-13 rounded-2xl bg-white flex items-center justify-center font-bold text-xl shadow-md shrink-0"
+                  style={{ color: currentTheme?.headerBgColor || '#ea580c' }}
+                >
+                  {initial}
+                </div>
+
+                {/* Name, ID and Balance Pill */}
+                <div>
+                  <h3 className="font-bold text-base leading-tight text-white">{name}</h3>
+                  <p className="text-xs text-white/80 font-normal mt-0.5">{mobile ? `ID: ${mobile}` : ''}</p>
+                  <div className="inline-flex items-center gap-1 bg-white/20 px-2.5 py-0.5 rounded-full text-[11px] font-semibold mt-1 border border-white/25">
+                    <HiOutlineSparkles size={11} className="text-yellow-300" />
+                    <span>₹ {balanceVal}</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* 2 Quick Header Action Buttons: Profile & Settings */}
           <div className="grid grid-cols-2 gap-2.5">

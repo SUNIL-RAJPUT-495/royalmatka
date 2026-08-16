@@ -53,6 +53,29 @@ export const UserAuth = () => {
 
   const otpInputsRef = useRef([]);
 
+  // Payment settings state for OTP toggle
+  const [isOtpEnabled, setIsOtpEnabled] = useState(true);
+
+  // Fetch Payment Settings to check if OTP is ON or OFF
+  useEffect(() => {
+    const fetchPaymentSettings = async () => {
+      try {
+        const res = await Axios({
+          url: SummaryApi.getPaymentSettings.url,
+          method: SummaryApi.getPaymentSettings.method
+        });
+        if (res.data?.settings) {
+          const otpActive = res.data.settings.isOtpEnabled !== false;
+          setIsOtpEnabled(otpActive);
+          if (!otpActive) setLoginMethod("password");
+        }
+      } catch (err) {
+        console.warn("Using default OTP setting (ON)");
+      }
+    };
+    fetchPaymentSettings();
+  }, []);
+
   // Sync mode with route changes
   useEffect(() => {
     if (location.pathname === "/register" || location.pathname === "/signup") {
@@ -130,6 +153,13 @@ export const UserAuth = () => {
       return;
     }
 
+    if (!isOtpEnabled) {
+      // Admin turned OFF OTP -> Proceed directly to Step 3 (Create Account)
+      toast.success("Proceeding to create account!");
+      setRegStep(3);
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await Axios({
@@ -139,16 +169,20 @@ export const UserAuth = () => {
       });
 
       if (res.data?.success) {
-        toast.success(res.data.message || "OTP sent successfully!");
-        if (res.data.otp) {
-          setGeneratedDemoOtp(res.data.otp);
-          // Auto fill demo OTP for smooth user testing
-          const digits = res.data.otp.toString().split("");
-          setOtp([digits[0] || "", digits[1] || "", digits[2] || "", digits[3] || ""]);
+        if (res.data.isOtpBypassed || res.data.isOtpEnabled === false) {
+          toast.success(res.data.message || "OTP is OFF by Admin. Proceeding to create account!");
+          setRegStep(3);
+        } else {
+          toast.success(res.data.message || "OTP sent successfully!");
+          if (res.data.otp) {
+            setGeneratedDemoOtp(res.data.otp);
+            const digits = res.data.otp.toString().split("");
+            setOtp([digits[0] || "", digits[1] || "", digits[2] || "", digits[3] || ""]);
+          }
+          setRegStep(2);
+          setTimer(271);
+          setIsTimerActive(true);
         }
-        setRegStep(2);
-        setTimer(271);
-        setIsTimerActive(true);
       } else {
         toast.error(res.data?.message || "Failed to send OTP.");
       }
@@ -258,6 +292,30 @@ export const UserAuth = () => {
           data: { mobile, type: "login" }
         });
         if (res.data?.success) {
+          if (res.data.isOtpBypassed || res.data.isOtpEnabled === false) {
+            toast.success("OTP is OFF by Admin. Logging in directly! 🎉");
+            const loginRes = await Axios({
+              url: SummaryApi.loginOtp.url,
+              method: SummaryApi.loginOtp.method,
+              data: { mobile, otp: "1234" }
+            });
+            if (loginRes.data?.success) {
+              if (loginRes.data.token) {
+                localStorage.setItem("royal_matka_user", loginRes.data.token);
+                localStorage.setItem("user_token", loginRes.data.token);
+                localStorage.setItem("token", loginRes.data.token);
+                localStorage.setItem("access_token", loginRes.data.token);
+              }
+              if (loginRes.data.user) localStorage.setItem("user_data", JSON.stringify(loginRes.data.user));
+              setTimeout(() => {
+                window.location.href = "/";
+              }, 1000);
+            } else {
+              toast.error(loginRes.data?.message || "Login failed.");
+            }
+            return;
+          }
+
           toast.success(res.data.message || "OTP sent for login!");
           if (res.data.otp) {
             setGeneratedDemoOtp(res.data.otp);
@@ -408,7 +466,9 @@ export const UserAuth = () => {
               <form onSubmit={handleRegisterSendOtp} className="space-y-4">
                 <div className="text-center">
                   <h2 className="text-xl font-bold text-gray-900">Enter Mobile Number</h2>
-                  <p className="text-xs text-gray-500 mt-1">We'll send you an OTP to verify</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {isOtpEnabled ? "We'll send you an OTP to verify" : "Enter mobile number to create account"}
+                  </p>
                 </div>
 
                 <div className="relative">
@@ -433,7 +493,7 @@ export const UserAuth = () => {
                   style={{ backgroundColor: themeColor }}
                   className="w-full hover:opacity-90 active:scale-[0.99] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
                 >
-                  <span>{loading ? "Sending..." : "Send OTP"}</span>
+                  <span>{loading ? "Processing..." : isOtpEnabled ? "Send OTP" : "Continue to Create Account"}</span>
                   <FaArrowRight size={12} />
                 </button>
               </form>
@@ -517,10 +577,12 @@ export const UserAuth = () => {
             {regStep === 3 && (
               <form onSubmit={handleRegisterCreateAccount} className="space-y-3.5">
                 {/* GREEN SUCCESS BANNER */}
-                <div className="bg-[#eefbf3] border border-[#bdf0d0] text-[#16a34a] rounded-xl p-2.5 flex items-center justify-center gap-2 text-xs font-semibold">
-                  <FaCheckCircle className="text-sm shrink-0" />
-                  <span>Mobile verified successfully!</span>
-                </div>
+                {isOtpEnabled && (
+                  <div className="bg-[#eefbf3] border border-[#bdf0d0] text-[#16a34a] rounded-xl p-2.5 flex items-center justify-center gap-2 text-xs font-semibold">
+                    <FaCheckCircle className="text-sm shrink-0" />
+                    <span>Mobile verified successfully!</span>
+                  </div>
+                )}
 
                 <div className="text-center">
                   <h2 className="text-xl font-bold text-gray-900">Create Account</h2>
@@ -636,33 +698,35 @@ export const UserAuth = () => {
                   />
                 </div>
 
-                {/* LOGIN METHOD SELECTOR TABS */}
-                <div className="bg-gray-100 p-1 rounded-xl flex items-center gap-1 text-xs font-bold">
-                  <button
-                    type="button"
-                    onClick={() => setLoginMethod("password")}
-                    style={loginMethod === "password" ? { backgroundColor: themeColor, color: "#ffffff" } : {}}
-                    className={`flex-1 py-2.5 rounded-lg transition-all cursor-pointer ${
-                      loginMethod === "password"
-                        ? "shadow-2xs"
-                        : "text-gray-500 hover:text-gray-800"
-                    }`}
-                  >
-                    🔑 Password Login
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLoginMethod("otp")}
-                    style={loginMethod === "otp" ? { backgroundColor: themeColor, color: "#ffffff" } : {}}
-                    className={`flex-1 py-2.5 rounded-lg transition-all cursor-pointer ${
-                      loginMethod === "otp"
-                        ? "shadow-2xs"
-                        : "text-gray-500 hover:text-gray-800"
-                    }`}
-                  >
-                    📲 OTP Login
-                  </button>
-                </div>
+                {/* LOGIN METHOD SELECTOR TABS (Only shown if OTP is ON) */}
+                {isOtpEnabled && (
+                  <div className="bg-gray-100 p-1 rounded-xl flex items-center gap-1 text-xs font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setLoginMethod("password")}
+                      style={loginMethod === "password" ? { backgroundColor: themeColor, color: "#ffffff" } : {}}
+                      className={`flex-1 py-2.5 rounded-lg transition-all cursor-pointer ${
+                        loginMethod === "password"
+                          ? "shadow-2xs"
+                          : "text-gray-500 hover:text-gray-800"
+                      }`}
+                    >
+                      🔑 Password Login
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLoginMethod("otp")}
+                      style={loginMethod === "otp" ? { backgroundColor: themeColor, color: "#ffffff" } : {}}
+                      className={`flex-1 py-2.5 rounded-lg transition-all cursor-pointer ${
+                        loginMethod === "otp"
+                          ? "shadow-2xs"
+                          : "text-gray-500 hover:text-gray-800"
+                      }`}
+                    >
+                      📲 OTP Login
+                    </button>
+                  </div>
+                )}
 
                 <button
                   type="submit"
@@ -670,7 +734,7 @@ export const UserAuth = () => {
                   style={{ backgroundColor: themeColor }}
                   className="w-full hover:opacity-90 active:scale-[0.99] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
                 >
-                  <span>{loading ? "Processing..." : loginMethod === "otp" ? "Send OTP →" : "Continue →"}</span>
+                  <span>{loading ? "Processing..." : (isOtpEnabled && loginMethod === "otp") ? "Send OTP →" : "Continue →"}</span>
                 </button>
               </form>
             )}
@@ -716,21 +780,23 @@ export const UserAuth = () => {
                 </button>
 
                 <div className="flex items-center justify-between text-xs pt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLoginMethod("otp");
-                      handleLoginContinue({ preventDefault: () => {} });
-                    }}
-                    style={{ color: themeColor }}
-                    className="font-bold hover:underline cursor-pointer"
-                  >
-                    Login via OTP instead
-                  </button>
+                  {isOtpEnabled && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginMethod("otp");
+                        handleLoginContinue({ preventDefault: () => {} });
+                      }}
+                      style={{ color: themeColor }}
+                      className="font-bold hover:underline cursor-pointer"
+                    >
+                      Login via OTP instead
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setLoginStep(1)}
-                    className="text-gray-500 hover:text-gray-800 cursor-pointer"
+                    className={`text-gray-500 hover:text-gray-800 cursor-pointer ${!isOtpEnabled ? 'w-full text-center' : ''}`}
                   >
                     ← Change Number
                   </button>
@@ -738,8 +804,8 @@ export const UserAuth = () => {
               </form>
             )}
 
-            {/* STEP 2B: LOGIN WITH OTP */}
-            {loginStep === 2 && loginMethod === "otp" && (
+            {/* STEP 2B: LOGIN WITH OTP (Only when OTP is enabled) */}
+            {loginStep === 2 && loginMethod === "otp" && isOtpEnabled && (
               <form onSubmit={handleLoginOtpSubmit} className="space-y-5">
                 <div className="text-center">
                   <h2 className="text-xl font-bold text-gray-900">Verify OTP Login</h2>

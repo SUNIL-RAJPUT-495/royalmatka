@@ -1,34 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { FaArrowLeft, FaPlay } from 'react-icons/fa';
-import { IoVideocamOutline, IoBookOutline } from 'react-icons/io5';
+import { IoVideocamOutline } from 'react-icons/io5';
+import Axios from '../../utils/axios';
+import SummaryApi from '../../common/SummerAPI';
 
 export const UserHowToPlay = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
 
-  // Load title from local storage
-  const [pageTitle] = useState(() => {
-    return localStorage.getItem('how_to_play_title') || 'How to Play';
-  });
+  const [pageTitle, setPageTitle] = useState('How to Play');
+  const [sections, setSections] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Load sections from local storage
-  const [sections] = useState(() => {
-    const saved = localStorage.getItem('how_to_play_sections');
-    if (saved) {
+  useEffect(() => {
+    const fetchContent = async () => {
       try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.warn(e);
+        const res = await Axios({
+          url: SummaryApi.getHowToPlay.url,
+          method: SummaryApi.getHowToPlay.method
+        });
+        if (res.data?.success) {
+          if (res.data.title) setPageTitle(res.data.title);
+          if (Array.isArray(res.data.sections)) setSections(res.data.sections);
+        }
+      } catch (err) {
+        console.warn('Could not fetch How To Play content');
+      } finally {
+        setLoading(false);
       }
-    }
-    return [];
-  });
+    };
+    fetchContent();
+  }, []);
 
   return (
-    <div className="w-full select-none pb-12 font-sans bg-[#f8f9fa] min-h-screen">
-      {/* 1. TOP ORANGE HEADER */}
+    <div className="w-full select-none pb-12 font-sans bg-[#f8f9fa] min-h-screen text-left">
+      {/* 1. TOP HEADER */}
       <div
         className="p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300 mb-4 sticky top-0 z-30"
         style={{ backgroundColor: currentTheme.headerBgColor }}
@@ -47,8 +55,12 @@ export const UserHowToPlay = () => {
         </div>
       </div>
 
-      <div className="px-4 space-y-4">
-        {sections.length > 0 ? (
+      <div className="px-4 space-y-4 max-w-lg mx-auto">
+        {loading ? (
+          <div className="py-12 flex justify-center items-center">
+            <div className="animate-spin h-8 w-8 border-3 border-orange-500 border-t-transparent rounded-full"></div>
+          </div>
+        ) : sections.length > 0 ? (
           sections.map((sec, idx) => (
             <div 
               key={sec.id || idx} 
@@ -66,7 +78,7 @@ export const UserHowToPlay = () => {
 
               {/* Instructions */}
               {sec.instructions && (
-                <p className="text-xs font-semibold text-gray-600 leading-relaxed">
+                <p className="text-xs font-semibold text-gray-600 leading-relaxed whitespace-pre-line">
                   {sec.instructions}
                 </p>
               )}
@@ -79,18 +91,18 @@ export const UserHowToPlay = () => {
                   rel="noopener noreferrer" 
                   className="flex items-center justify-between p-3.5 bg-orange-50/50 hover:bg-orange-50 border border-orange-100/70 rounded-2xl transition-all cursor-pointer active:scale-[0.99] group"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-xs">
+                  <div className="flex items-center gap-2.5 overflow-hidden">
+                    <div className="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-xs shrink-0">
                       <FaPlay size={10} className="ml-0.5" />
                     </div>
-                    <div>
+                    <div className="overflow-hidden">
                       <p className="text-xs font-bold text-gray-800 leading-none">Watch Tutorial Video</p>
-                      <p className="text-[10px] text-gray-400 font-semibold mt-1 truncate max-w-[200px]">
+                      <p className="text-[10px] text-gray-400 font-semibold mt-1 truncate">
                         {sec.videoUrl}
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-black text-orange-500 hover:translate-x-1 transition-transform">▶</span>
+                  <span className="text-[10px] font-black text-orange-500 group-hover:translate-x-1 transition-transform shrink-0 ml-2">▶</span>
                 </a>
               )}
 
@@ -103,8 +115,8 @@ export const UserHowToPlay = () => {
               <IoVideocamOutline size={48} />
             </div>
 
-            <p className="text-xs font-semibold text-gray-655 leading-relaxed max-w-xs">
-              No How To Play content available yet. Please ask the admin to configure this page.
+            <p className="text-xs font-semibold text-gray-500 leading-relaxed max-w-xs">
+              No How To Play content available yet.
             </p>
           </div>
         )}
