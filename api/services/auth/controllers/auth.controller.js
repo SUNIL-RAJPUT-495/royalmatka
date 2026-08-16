@@ -4,6 +4,7 @@ import Admin from "../models/Admin.js";
 import WelcomePopupConfig from "../models/WelcomePopup.js";
 import AppThemeConfig from "../models/AppTheme.js";
 import PaymentTransaction from "../models/PaymentTransaction.js";
+import DeletionRequest from "../models/DeletionRequest.js";
 import GameRate from "../../matka/models/GameRate.js";
 import BetManager from "../../aviator/game/BetManager.js";
 import mongoose from "mongoose";
@@ -1174,6 +1175,168 @@ export const updateAppTheme = async (req, res) => {
     }
     return res.status(200).json({ success: true, message: "Theme applied globally!" });
   } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const requestAccountDeletion = async (req, res) => {
+  try {
+    const { userId, mobile, reason } = req.body;
+    let targetUser = null;
+
+    if (mongoose.connection.readyState === 1) {
+      if (userId) {
+        targetUser = await User.findById(userId);
+      }
+      if (!targetUser && mobile) {
+        targetUser = await User.findOne({ mobile: String(mobile).trim() });
+      }
+
+      if (!targetUser) {
+        return res.status(404).json({ success: false, message: "User account not found." });
+      }
+
+      const existingReq = await DeletionRequest.findOne({
+        $or: [{ user: targetUser._id }, { mobile: targetUser.mobile }],
+        status: "Pending"
+      });
+
+      if (existingReq) {
+        return res.status(400).json({
+          success: false,
+          message: "Deletion request is already pending review by admin.",
+          alreadyPending: true
+        });
+      }
+
+      const newRequest = await DeletionRequest.create({
+        user: targetUser._id,
+        userId: targetUser._id.toString(),
+        name: targetUser.name || "User",
+        mobile: targetUser.mobile,
+        reason: reason || "User requested account deletion",
+        status: "Pending",
+        requestedAt: new Date()
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Account deletion request submitted successfully! Admin will review your request.",
+        request: newRequest
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Account deletion request submitted successfully!"
+    });
+  } catch (error) {
+    console.error("Error in requestAccountDeletion:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getAccountDeletionRequests = async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const requests = await DeletionRequest.find({}).sort({ createdAt: -1 }).lean();
+      return res.status(200).json({ success: true, requests });
+    }
+    return res.status(200).json({ success: true, requests: [] });
+  } catch (error) {
+    console.error("Error in getAccountDeletionRequests:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const approveAccountDeletionRequest = async (req, res) => {
+  try {
+    const { requestId } = req.body;
+    if (!requestId) {
+      return res.status(400).json({ success: false, message: "Request ID is required" });
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      const requestObj = await DeletionRequest.findById(requestId);
+      if (!requestObj) {
+        return res.status(404).json({ success: false, message: "Deletion request not found." });
+      }
+
+      let userDeleted = false;
+      if (requestObj.user) {
+        await User.findByIdAndDelete(requestObj.user);
+        userDeleted = true;
+      }
+      if (!userDeleted && requestObj.userId) {
+        await User.findByIdAndDelete(requestObj.userId);
+        userDeleted = true;
+      }
+      if (!userDeleted && requestObj.mobile) {
+        await User.deleteOne({ mobile: String(requestObj.mobile).trim() });
+        userDeleted = true;
+      }
+
+      requestObj.status = "Approved";
+      requestObj.actionDate = new Date();
+      requestObj.processedBy = "Admin";
+      await requestObj.save();
+
+      return res.status(200).json({
+        success: true,
+        message: `Account deletion approved! User (${requestObj.mobile}) has been permanently deleted from database. 🗑️`,
+        request: requestObj
+      });
+    }
+
+    return res.status(200).json({ success: true, message: "Account deletion request approved." });
+  } catch (error) {
+    console.error("Error in approveAccountDeletionRequest:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const rejectAccountDeletionRequest = async (req, res) => {
+  try {
+    const { requestId } = req.body;
+    if (!requestId) {
+      return res.status(400).json({ success: false, message: "Request ID is required" });
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      const requestObj = await DeletionRequest.findById(requestId);
+      if (!requestObj) {
+        return res.status(404).json({ success: false, message: "Deletion request not found." });
+      }
+
+      requestObj.status = "Rejected";
+      requestObj.actionDate = new Date();
+      requestObj.processedBy = "Admin";
+      await requestObj.save();
+
+      return res.status(200).json({
+        success: true,
+        message: `Deletion request for ${requestObj.mobile} has been rejected.`,
+        request: requestObj
+      });
+    }
+
+    return res.status(200).json({ success: true, message: "Deletion request rejected." });
+  } catch (error) {
+    console.error("Error in rejectAccountDeletionRequest:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteAccountDeletionRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (mongoose.connection.readyState === 1) {
+      await DeletionRequest.findByIdAndDelete(id);
+      return res.status(200).json({ success: true, message: "Deletion request record deleted successfully! 🗑️" });
+    }
+    return res.status(200).json({ success: true, message: "Request record deleted." });
+  } catch (error) {
+    console.error("Error in deleteAccountDeletionRequest:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };

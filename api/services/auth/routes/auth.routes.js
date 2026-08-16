@@ -23,7 +23,12 @@ import {
   getWelcomePopupConfig,
   updateWelcomePopupConfig,
   getAppTheme,
-  updateAppTheme
+  updateAppTheme,
+  requestAccountDeletion,
+  getAccountDeletionRequests,
+  approveAccountDeletionRequest,
+  rejectAccountDeletionRequest,
+  deleteAccountDeletionRequest
 } from "../controllers/auth.controller.js";
 
 const router = express.Router();
@@ -38,6 +43,13 @@ router.get("/get-user-profile", getUserProfile);
 router.post("/add-bank-account", addBankAccount);
 router.post("/add-upi-id", addUpiId);
 router.post("/update-wallet", updateUserWallet);
+
+// Account Deletion Routes
+router.post("/request-deletion", requestAccountDeletion);
+router.get("/get-deletion-requests", getAccountDeletionRequests);
+router.post("/approve-deletion-request", approveAccountDeletionRequest);
+router.post("/reject-deletion-request", rejectAccountDeletionRequest);
+router.delete("/delete-deletion-request/:id", deleteAccountDeletionRequest);
 
 // Admin User Management Routes
 router.get("/get-all-users", getAllUsers);
@@ -61,3 +73,4 @@ router.get("/get-app-theme", getAppTheme);
 router.post("/update-app-theme", updateAppTheme);
 
 export default router;
+

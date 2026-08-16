@@ -185,6 +185,28 @@ const SummaryApi = {
         method: "post"
     },
 
+    // Account Deletion Requests
+    requestAccountDeletion: {
+        url: baseURL + "/api/user/request-deletion",
+        method: "post"
+    },
+    getAccountDeletionRequests: {
+        url: baseURL + "/api/user/get-deletion-requests",
+        method: "get"
+    },
+    approveAccountDeletionRequest: {
+        url: baseURL + "/api/user/approve-deletion-request",
+        method: "post"
+    },
+    rejectAccountDeletionRequest: {
+        url: baseURL + "/api/user/reject-deletion-request",
+        method: "post"
+    },
+    deleteAccountDeletionRequest: {
+        url: baseURL + "/api/user/delete-deletion-request",
+        method: "delete"
+    },
+
     // Markets & Games
     addGame: {
         url: baseURL + "/api/market/add-market",
