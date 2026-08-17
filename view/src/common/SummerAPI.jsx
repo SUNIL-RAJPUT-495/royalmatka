@@ -1,5 +1,5 @@
-export const baseURL = "http://localhost:5010";
-//export const baseURL = "https://royalmatkaapi.growva.tech";
+//export const baseURL = "http://localhost:5010";
+export const baseURL = "https://royalmatkaapi.growva.tech";
 
 const SummaryApi = {
     // Aviator Socket & Admin Endpoints
