@@ -1,6 +1,7 @@
 class GameState {
     constructor() {
         this.history = [];
+        this.nextRoundBets = new Map();
         this.reset();
     }
 
@@ -27,9 +28,18 @@ class GameState {
         this.totalBetAmount = 0;
 
         this.totalCashout = 0;
+
+        this.targetProfitPercent = 25;
+
+        this.maxPayout = Infinity;
     }
 
     getState() {
+        const houseProfit = this.totalBetAmount - this.totalCashout;
+        const profitPercent = this.totalBetAmount > 0
+            ? Number(((houseProfit / this.totalBetAmount) * 100).toFixed(2))
+            : 0;
+
         return {
             roundId: this.roundId,
             status: this.status,
@@ -41,9 +51,13 @@ class GameState {
             totalPlayers: this.totalPlayers,
             totalBetAmount: this.totalBetAmount,
             totalCashout: this.totalCashout,
+            targetProfitPercent: this.targetProfitPercent,
+            maxPayout: this.maxPayout,
+            houseProfit,
+            profitPercent,
             history: this.history
         };
     }
 }
 
-export default new GameState();
+export default new GameState();

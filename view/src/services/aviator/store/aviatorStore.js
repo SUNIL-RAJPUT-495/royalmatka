@@ -181,37 +181,36 @@ const INITIAL_BALANCE = getInitialUserBalance();
 const PRESET_AMOUNTS = isUSD ? [1, 2, 5, 10] : [100, 200, 500, 1000];
 const SIMULATED_BET_AMOUNTS = isUSD ? [1, 2, 5, 10, 20, 50, 100] : [100, 200, 500, 1000, 2000, 5000, 10000];
 
-// Helper to generate crash multiplier (Admin Guaranteed Profit Algorithm - 25% House Edge)
-const generateCrashMultiplier = (placedBetTotal = 0) => {
-  const profitMargin = 0.25; // 25% Admin Profit Margin
+// Helper to generate crash multiplier (Strict Admin Profit Protection Algorithm)
+const generateCrashMultiplier = (placedBetTotal = 0, adminProfitPercent = 25) => {
+  const profitMargin = Math.min(0.95, Math.max(0.05, adminProfitPercent / 100));
   let crashPoint = 1.20;
 
   if (placedBetTotal > 0) {
     const maxAllowedPayout = placedBetTotal * (1 - profitMargin);
+    const maxCapMultiplier = Math.max(1.00, parseFloat((maxAllowedPayout / placedBetTotal).toFixed(2)));
     const rand = Math.random();
 
-    if (rand < 0.35) {
-      // 35% chance: Early crash 1.00x - 1.15x (Immediate Admin Profit)
-      crashPoint = parseFloat((1.00 + Math.random() * 0.15).toFixed(2));
-    } else if (rand < 0.75) {
-      // 40% chance: Controlled crash 1.16x - 1.85x
-      crashPoint = parseFloat((1.16 + Math.random() * 0.69).toFixed(2));
-    } else if (rand < 0.95) {
-      // 20% chance: Moderate crash 1.86x - 2.80x
-      crashPoint = parseFloat((1.86 + Math.random() * 0.94).toFixed(2));
+    if (rand < 0.45) {
+      // 45% chance: Early crash 1.00x - 1.12x (Guaranteed Admin Profit)
+      crashPoint = parseFloat((1.00 + Math.random() * 0.12).toFixed(2));
+    } else if (rand < 0.85) {
+      // 40% chance: Controlled crash 1.13x - 1.45x
+      crashPoint = parseFloat((1.13 + Math.random() * 0.32).toFixed(2));
     } else {
-      // 5% chance: Small stretch 2.81x - 4.50x
-      crashPoint = parseFloat((2.81 + Math.random() * 1.69).toFixed(2));
+      // 15% chance: Small stretch 1.46x - 2.10x
+      crashPoint = parseFloat((1.46 + Math.random() * 0.64).toFixed(2));
     }
 
-    const maxCap = Math.max(1.00, parseFloat((maxAllowedPayout / placedBetTotal).toFixed(2)));
-    crashPoint = Math.min(crashPoint, maxCap);
+    const safeCap = Math.max(1.00, Math.min(maxCapMultiplier > 1.00 ? maxCapMultiplier : 1.12));
+    crashPoint = Math.min(crashPoint, safeCap);
   } else {
+    // No user bet placed -> Big random flight (5x, 15x, 30x, 50x, 100x)
     const rand = Math.random();
-    if (rand < 0.25) crashPoint = parseFloat((1.00 + Math.random() * 0.18).toFixed(2));
-    else if (rand < 0.70) crashPoint = parseFloat((1.19 + Math.random() * 1.50).toFixed(2));
-    else if (rand < 0.92) crashPoint = parseFloat((2.70 + Math.random() * 3.30).toFixed(2));
-    else crashPoint = parseFloat((6.00 + Math.random() * 15.00).toFixed(2));
+    if (rand < 0.20) crashPoint = parseFloat((1.20 + Math.random() * 1.80).toFixed(2));
+    else if (rand < 0.55) crashPoint = parseFloat((3.50 + Math.random() * 11.50).toFixed(2));
+    else if (rand < 0.85) crashPoint = parseFloat((15.00 + Math.random() * 30.00).toFixed(2));
+    else crashPoint = parseFloat((45.00 + Math.random() * 75.00).toFixed(2));
   }
 
   return Number(Math.max(1.00, crashPoint).toFixed(2));
@@ -340,9 +339,19 @@ export const useAviatorStore = create((set, get) => {
 
       // Emit to backend socket if connected
       if (socket.connected) {
+        let savedUser = null;
+        try {
+          const savedUserStr = localStorage.getItem('user_data') || localStorage.getItem('user');
+          if (savedUserStr) savedUser = JSON.parse(savedUserStr);
+        } catch (e) {}
+
         socket.emit("place_bet", {
           amount: card.amount,
-          autoCashout: card.autoCashOut ? card.autoCashOutMultiplier : null
+          autoCashout: card.autoCashOut ? card.autoCashOutMultiplier : null,
+          userId: savedUser?._id || savedUser?.id || savedUser?.mobile || 'user_' + Date.now(),
+          username: savedUser?.name || savedUser?.mobile || 'User',
+          mobile: savedUser?.mobile || '',
+          betIndex: index
         });
       }
 

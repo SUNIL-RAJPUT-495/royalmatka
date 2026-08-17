@@ -30,12 +30,13 @@ class GameEngine {
     // =============================
     async startWaiting() {
         gameState.reset();
-        gameState.crashAt = await CrashEngine.generate();
+        BetManager.activateNextRoundBets();
+        gameState.crashAt = await CrashEngine.generate(BetManager.getAllBets());
         gameState.status = "WAITING";
         gameState.countdown = 5;
 
         console.log("\n==============================");
-        console.log(`⏳ Waiting For Next Round... Target Crash: ${gameState.crashAt}x`);
+        console.log(`⏳ Waiting For Next Round... Active Bets: ₹${gameState.totalBetAmount} | Target Crash: ${gameState.crashAt}x`);
         console.log("==============================\n");
 
         SocketManager.emit("game:status", {
@@ -70,8 +71,10 @@ class GameEngine {
         gameState.endedAt = null;
         gameState.multiplier = MultiplierEngine.reset();
 
-        // Check if crash multiplier override exists or generate fresh
-        const freshCrash = await CrashEngine.generate();
+        // Pass active bets to CrashEngine to calculate strict Admin profit crash cap
+        const activeBets = BetManager.getAllBets();
+        const realBetsTotal = activeBets.reduce((sum, b) => sum + (Number(b.amount || b.betAmount) || 0), 0);
+        const freshCrash = await CrashEngine.generate(activeBets);
         if (freshCrash) {
             gameState.crashAt = freshCrash;
         }
@@ -80,7 +83,7 @@ class GameEngine {
         await RoundManager.createRound();
 
         console.log("\n=======================================");
-        console.log(`🎮 Round Started | Round ID: ${gameState.roundId} | Crash At: ${gameState.crashAt}x`);
+        console.log(`🎮 Round Started | Round ID: ${gameState.roundId} | Total Bets Placed: ₹${realBetsTotal} (${activeBets.length} bets) | Target Crash: ${gameState.crashAt}x`);
         console.log("=======================================\n");
 
         SocketManager.emit("game:start", {
@@ -162,7 +165,8 @@ class GameEngine {
     // Admin Controls
     // =============================
     async forceCrashNow() {
-        if (gameState.status === "RUNNING") {
+        const s = (gameState.status || "").toUpperCase();
+        if (s === "RUNNING" || s === "FLYING") {
             console.log("⚠️ Admin triggered INSTANT CRASH!");
             clearInterval(this.gameInterval);
             await this.endRound();

@@ -136,19 +136,25 @@ export const BetCard = ({ index }) => {
             <span className="text-xs tracking-wider opacity-90 font-medium">Cash Out</span>
             <span className="text-base font-black leading-snug">{isUSD ? `$${potentialWinnings}` : `₹${potentialWinnings}`}</span>
           </button>
+        ) : card.isQueued ? (
+          <button
+            onClick={handleButtonClick}
+            className="w-full bg-gradient-to-b from-[#e50914] to-[#b80710] hover:from-[#d00812] hover:to-[#9e050d] active:scale-[0.98] text-white font-extrabold rounded-2xl flex flex-col items-center justify-center cursor-pointer transition shadow-lg py-2 px-3 uppercase border border-red-500/30"
+          >
+            <span className="text-base font-black leading-tight tracking-wide">Cancel</span>
+            <span className="text-[10px] font-bold opacity-90 mt-0.5 tracking-tight text-white/90">Waiting for next round</span>
+          </button>
         ) : (
           <button
             onClick={handleButtonClick}
             className={`w-full rounded-2xl flex flex-col items-center justify-center font-extrabold cursor-pointer active:scale-[0.98] transition-all shadow-lg py-2 px-3 uppercase ${
               card.isPlaced
                 ? "bg-[#cb011a] hover:bg-[#b00114] text-white"
-                : card.isQueued
-                ? "bg-[#58595a] hover:bg-[#48494a] text-white"
                 : "bg-[#2cba00] hover:bg-[#249e00] text-white"
             }`}
           >
             <span className="text-lg leading-tight font-black">
-              {card.isPlaced || card.isQueued ? "Cancel" : "Bet"}
+              {card.isPlaced ? "Cancel" : "Bet"}
             </span>
             <span className="text-xs font-semibold opacity-90 mt-0.5">
               {card.isPlaced ? "Waiting..." : displayAmount}

@@ -3,6 +3,7 @@ import GameRiskSettings from "../models/GameRiskSettings.js";
 import GameEngine from "../game/GameEngine.js";
 import CrashEngine from "../game/CrashEngine.js";
 import mongoose from "mongoose";
+import Bid from "../../matka/models/Bid.js";
 
 export const getSettings = async (req, res) => {
   try {
@@ -95,9 +96,15 @@ export const updateSettings = async (req, res) => {
       riskSettings = CrashEngine.riskSettings;
     }
 
+    // Update CrashEngine in-memory cache IMMEDIATELY so new profit % takes effect instantly!
+    CrashEngine.settings = settings;
+    CrashEngine.riskSettings = riskSettings;
+
+    console.log(`⚙️ Admin Target Profit Percent Updated to ${targetProfitPercent}%! Live engine updated.`);
+
     return res.json({
       success: true,
-      message: "Settings updated successfully",
+      message: `Settings updated successfully to ${targetProfitPercent}% profit`,
       data: { settings, riskSettings },
     });
   } catch (error) {
@@ -157,10 +164,47 @@ export const forceCrashNow = async (req, res) => {
 
 export const getStats = async (req, res) => {
   try {
-    const stats = GameEngine.getAdminStats();
+    const liveState = GameEngine.getAdminStats();
+
+    let lifetimeBets = 0;
+    let lifetimePayouts = 0;
+
+    if (mongoose.connection.readyState === 1) {
+      const aggResult = await Bid.aggregate([
+        { $match: { marketName: "AVIATOR CASINO" } },
+        {
+          $group: {
+            _id: null,
+            totalBets: { $sum: "$points" },
+            totalPayouts: { $sum: "$winAmount" }
+          }
+        }
+      ]).catch(() => []);
+
+      if (aggResult && aggResult.length > 0) {
+        lifetimeBets = Number(aggResult[0].totalBets) || 0;
+        lifetimePayouts = Number(aggResult[0].totalPayouts) || 0;
+      }
+    }
+
+    const lifetimeProfit = Math.max(0, lifetimeBets - lifetimePayouts);
+    const lifetimeMargin = lifetimeBets > 0 ? Math.round((lifetimeProfit / lifetimeBets) * 100) : 100;
+
+    const currentPlayers = liveState.players || [];
+    const currentRoundBetTotal = currentPlayers.reduce((sum, p) => sum + (Number(p.amount || p.betAmount) || 0), 0);
+    const currentRoundPayoutTotal = currentPlayers.reduce((sum, p) => sum + (Number(p.wonAmount) || 0), 0);
+
     return res.json({
       success: true,
-      data: stats,
+      data: {
+        ...liveState,
+        lifetimeBets,
+        lifetimePayouts,
+        lifetimeProfit,
+        lifetimeMargin,
+        currentRoundBetTotal,
+        currentRoundPayoutTotal
+      },
     });
   } catch (error) {
     return res.status(500).json({

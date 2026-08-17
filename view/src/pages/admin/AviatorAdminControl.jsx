@@ -78,16 +78,18 @@ export const AviatorAdminControl = () => {
 
   const historyList = (apiStats?.history && apiStats.history.length > 0) ? apiStats.history : storeData.history;
 
-  const totalBetAmount = apiStats?.totalBetAmount !== undefined 
-    ? apiStats.totalBetAmount 
+  const totalLifetimeBets = apiStats?.lifetimeBets !== undefined ? apiStats.lifetimeBets : 0;
+  const totalLifetimePayouts = apiStats?.lifetimePayouts !== undefined ? apiStats.lifetimePayouts : 0;
+  const lifetimeProfit = apiStats?.lifetimeProfit !== undefined ? apiStats.lifetimeProfit : Math.max(0, totalLifetimeBets - totalLifetimePayouts);
+  const lifetimeMargin = apiStats?.lifetimeMargin !== undefined ? apiStats.lifetimeMargin : (totalLifetimeBets > 0 ? Math.round((lifetimeProfit / totalLifetimeBets) * 100) : 100);
+
+  const currentRoundBets = apiStats?.currentRoundBetTotal !== undefined 
+    ? apiStats.currentRoundBetTotal 
     : liveBetsList.reduce((sum, b) => sum + (Number(b.amount || b.betAmount) || 0), 0);
 
-  const totalCashedOut = apiStats?.totalCashout !== undefined 
-    ? apiStats.totalCashout 
+  const currentRoundPayouts = apiStats?.currentRoundPayoutTotal !== undefined 
+    ? apiStats.currentRoundPayoutTotal 
     : liveBetsList.reduce((sum, b) => sum + (Number(b.wonAmount || b.payout) || 0), 0);
-
-  const adminProfit = Math.max(0, totalBetAmount - totalCashedOut);
-  const profitPercentage = totalBetAmount > 0 ? Math.round((adminProfit / totalBetAmount) * 100) : 100;
 
   // Handle setting next crash multiplier
   const handleSetNextCrash = async (valToSet) => {
@@ -182,7 +184,7 @@ export const AviatorAdminControl = () => {
               <IoSparkles className="text-amber-500" size={18} />
             </div>
             <p className="text-xs text-gray-400 font-medium mt-0.5">
-              Live Flight & Profit Control System
+              Live Flight & Admin Profit Control System
             </p>
           </div>
         </div>
@@ -192,7 +194,7 @@ export const AviatorAdminControl = () => {
           <div className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-2xl border border-gray-200">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status:</span>
             <span className={`px-2.5 py-1 rounded-xl text-xs font-bold uppercase tracking-wider ${
-              status === 'flying' 
+              status === 'flying' || status === 'running'
                 ? 'bg-emerald-500 text-white animate-pulse' 
                 : status === 'waiting' 
                 ? 'bg-amber-500 text-white' 
@@ -228,34 +230,34 @@ export const AviatorAdminControl = () => {
           </div>
         </div>
 
-        {/* Total Bets */}
+        {/* Current Round Total Bets */}
         <div className="bg-white rounded-3xl p-5 border border-gray-200 shadow-3xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Bets Placed</span>
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Current Round Bets</span>
             <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
               <FaMoneyBillWave size={15} />
             </div>
           </div>
           <div className="mt-2">
-            <span className="text-2xl font-black text-gray-900 tracking-tight">₹{totalBetAmount.toLocaleString('en-IN')}</span>
+            <span className="text-2xl font-black text-gray-900 tracking-tight">₹{currentRoundBets.toLocaleString('en-IN')}</span>
             <span className="text-[10px] text-gray-400 block font-medium mt-0.5">
-              {liveBetsList.length} Active Players in Round
+              {liveBetsList.length} Players | Lifetime: ₹{totalLifetimeBets.toLocaleString('en-IN')}
             </span>
           </div>
         </div>
 
-        {/* Total Cashed Out */}
+        {/* Total Lifetime Cashed Out */}
         <div className="bg-white rounded-3xl p-5 border border-gray-200 shadow-3xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Cashed Out</span>
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Payouts Won</span>
             <div className="p-2 rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
               <FaTrophy size={15} />
             </div>
           </div>
           <div className="mt-2">
-            <span className="text-2xl font-black text-purple-700 tracking-tight">₹{totalCashedOut.toLocaleString('en-IN')}</span>
+            <span className="text-2xl font-black text-purple-700 tracking-tight">₹{totalLifetimePayouts.toLocaleString('en-IN')}</span>
             <span className="text-[10px] text-gray-400 block font-medium mt-0.5">
-              Total Won Payouts
+              Current Round Payout: ₹{currentRoundPayouts}
             </span>
           </div>
         </div>
@@ -270,13 +272,13 @@ export const AviatorAdminControl = () => {
           </div>
           <div className="mt-2">
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-black text-emerald-600 tracking-tight">₹{adminProfit.toLocaleString('en-IN')}</span>
+              <span className="text-2xl font-black text-emerald-600 tracking-tight">₹{lifetimeProfit.toLocaleString('en-IN')}</span>
               <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                {profitPercentage}% Margin
+                {lifetimeMargin}% Margin
               </span>
             </div>
             <span className="text-[10px] text-gray-400 block font-medium mt-0.5">
-              House Edge Profit
+              Lifetime House Edge Profit
             </span>
           </div>
         </div>
@@ -362,7 +364,7 @@ export const AviatorAdminControl = () => {
               </label>
               <button
                 type="button"
-                disabled={loadingAction || status !== 'flying'}
+                disabled={loadingAction || (status !== 'flying' && status !== 'running')}
                 onClick={handleCrashNow}
                 className="w-full bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 active:scale-95 text-white font-bold py-3.5 px-4 rounded-2xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
@@ -370,7 +372,7 @@ export const AviatorAdminControl = () => {
                 <span>CRASH FLIGHT NOW 💥</span>
               </button>
               <span className="text-[10px] text-gray-400 block text-center font-normal">
-                {status === 'flying' ? '⚠️ Will immediately end flight at current multiplier' : 'Flight must be flying to crash'}
+                {(status === 'flying' || status === 'running') ? '⚠️ Will immediately end flight at current multiplier' : 'Flight must be flying to crash'}
               </span>
             </div>
           </div>

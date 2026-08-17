@@ -31,7 +31,7 @@ class CrashEngine {
 
     async loadSettings() {
         if (mongoose.connection.readyState !== 1) {
-            return this.settings || { minCrash: 1.01, maxCrash: 100, autoMode: true };
+            return this.settings || { minCrash: 1.01, maxCrash: 100, autoMode: true, targetProfitPercent: 25 };
         }
 
         try {
@@ -43,7 +43,7 @@ class CrashEngine {
                 settings = await GameSettings.create({
                     game: "AVIATOR",
                     isActive: true,
-                    targetProfitPercent: 15,
+                    targetProfitPercent: 25,
                     minCrash: 1.01,
                     maxCrash: 100,
                     autoMode: true,
@@ -53,8 +53,44 @@ class CrashEngine {
             this.settings = settings;
             return settings;
         } catch (error) {
-            return this.settings || { minCrash: 1.01, maxCrash: 100, autoMode: true };
+            return this.settings || { minCrash: 1.01, maxCrash: 100, autoMode: true, targetProfitPercent: 25 };
         }
+    }
+
+    computeWorstCasePayout(crashPoint, activeBets) {
+        if (!Array.isArray(activeBets) || activeBets.length === 0) return 0;
+        return activeBets.reduce((sum, b) => {
+            const amt = Number(b.amount || b.betAmount) || 0;
+            const auto = b.autoCashout ? Number(b.autoCashout) : null;
+
+            if (auto && auto <= crashPoint) {
+                return sum + amt * auto;
+            }
+
+            return sum + amt * crashPoint;
+        }, 0);
+    }
+
+    computeMaxSafeCrash(activeBets, maxPayout) {
+        if (!Array.isArray(activeBets) || activeBets.length === 0 || maxPayout <= 0) {
+            return 1.00;
+        }
+
+        let low = 1.00;
+        let high = 100;
+
+        for (let i = 0; i < 50; i++) {
+            const mid = (low + high) / 2;
+            const payout = this.computeWorstCasePayout(mid, activeBets);
+
+            if (payout <= maxPayout) {
+                low = mid;
+            } else {
+                high = mid;
+            }
+        }
+
+        return Number(Math.max(1.00, low).toFixed(2));
     }
 
     async generate(activeBets = []) {
@@ -76,46 +112,54 @@ class CrashEngine {
             return Number(forced.toFixed(2));
         }
 
-        // 3. Admin Profit House Edge Algorithm (Guaranteed Admin Profit)
+        // 3. Admin Profit Margin Algorithm (100% Admin Profit Protection)
         const settings = await this.loadSettings();
-        const profitMargin = (settings?.targetProfitPercent || 25) / 100; // Default 25% Admin Profit
+        const targetProfitPercent = Number(settings?.targetProfitPercent ?? 25);
+        const profitMargin = Math.min(0.95, Math.max(0.05, targetProfitPercent / 100));
 
-        // Calculate total bets placed by real users
-        const totalBetAmount = Array.isArray(activeBets) 
-            ? activeBets.reduce((sum, b) => sum + (Number(b.amount) || 0), 0)
+        // Calculate total real user bets
+        const realBetsTotal = Array.isArray(activeBets) 
+            ? activeBets.reduce((sum, b) => sum + (Number(b.amount || b.betAmount) || 0), 0)
             : 0;
 
         let crashPoint = 1.20;
 
-        if (totalBetAmount > 0) {
-            // Admin Profit Ceiling: Max total payout = Total Bets * (1 - profitMargin)
-            const maxAllowedPayout = totalBetAmount * (1 - profitMargin);
-            
+        if (realBetsTotal > 0) {
+            const maxAllowedPayout = realBetsTotal * (1 - profitMargin);
+            const maxSafeCrash = this.computeMaxSafeCrash(activeBets, maxAllowedPayout);
+            const maxCapMultiplier = Math.max(1.00, parseFloat((maxAllowedPayout / realBetsTotal).toFixed(2)));
+
             const rand = Math.random();
-            if (rand < 0.35) {
-                // 35% chance: Early crash at 1.00x - 1.15x (Immediate House Profit)
+            if (rand < 0.45) {
+                // 45% early crash (1.00x - 1.15x) -> Immediate Admin Profit
                 crashPoint = parseFloat((1.00 + Math.random() * 0.15).toFixed(2));
-            } else if (rand < 0.75) {
-                // 40% chance: Low crash at 1.16x - 1.85x
-                crashPoint = parseFloat((1.16 + Math.random() * 0.69).toFixed(2));
-            } else if (rand < 0.95) {
-                // 20% chance: Medium crash at 1.86x - 3.20x
-                crashPoint = parseFloat((1.86 + Math.random() * 1.34).toFixed(2));
+            } else if (rand < 0.85) {
+                // 40% controlled crash (1.16x - 1.45x)
+                crashPoint = parseFloat((1.16 + Math.random() * 0.29).toFixed(2));
             } else {
-                // 5% chance: Controlled stretch 3.21x - 5.50x
-                crashPoint = parseFloat((3.21 + Math.random() * 2.29).toFixed(2));
+                // 15% stretch crash (1.46x - 2.10x)
+                crashPoint = parseFloat((1.46 + Math.random() * 0.64).toFixed(2));
             }
 
-            // Enforce hard mathematical cap so payout NEVER exceeds maxAllowedPayout
-            const maxCap = Math.max(1.00, parseFloat((maxAllowedPayout / totalBetAmount).toFixed(2)));
-            crashPoint = Math.min(crashPoint, maxCap);
+            // Cap strictly at maxSafeCrash & maxCapMultiplier to guarantee Admin profit %
+            const safeCap = Math.max(1.00, Math.min(maxSafeCrash, maxCapMultiplier > 1.00 ? maxCapMultiplier : 1.15));
+            crashPoint = Math.min(crashPoint, safeCap);
         } else {
-            // No real bets placed
+            // No real user bets placed in this round -> High exciting multipliers (5x, 15x, 30x, 50x, 100x+)
             const rand = Math.random();
-            if (rand < 0.20) crashPoint = 1.00 + Math.random() * 0.20;
-            else if (rand < 0.65) crashPoint = 1.21 + Math.random() * 1.50;
-            else if (rand < 0.90) crashPoint = 2.71 + Math.random() * 3.50;
-            else crashPoint = 6.21 + Math.random() * 20.0;
+            if (rand < 0.20) {
+                // 20% low/med: 1.20x - 3.00x
+                crashPoint = parseFloat((1.20 + Math.random() * 1.80).toFixed(2));
+            } else if (rand < 0.55) {
+                // 35% medium high: 3.50x - 14.50x
+                crashPoint = parseFloat((3.50 + Math.random() * 11.00).toFixed(2));
+            } else if (rand < 0.85) {
+                // 30% big high: 15.00x - 45.00x
+                crashPoint = parseFloat((15.00 + Math.random() * 30.00).toFixed(2));
+            } else {
+                // 15% sky high: 45.00x - 120.00x
+                crashPoint = parseFloat((45.00 + Math.random() * 75.00).toFixed(2));
+            }
         }
 
         const min = settings?.minCrash || 1.00;
@@ -126,4 +170,4 @@ class CrashEngine {
     }
 }
 
-export default new CrashEngine();
+export default new CrashEngine();
