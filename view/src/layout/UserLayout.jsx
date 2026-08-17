@@ -20,6 +20,7 @@ export const UserLayout = () => {
 
   const isHomePage = location.pathname === '/' || location.pathname === '/home';
   const isBetPage = location.pathname.startsWith('/bet/');
+  const isSupportPage = location.pathname === '/support' || location.pathname === '/contact-us';
   const showNavbar = isHomePage;
 
   // Automatically scroll to top whenever page route changes (iOS Safari compatible)
@@ -111,12 +112,12 @@ export const UserLayout = () => {
       />
 
       {/* 3. MAIN PAGE CONTENT OUTLET */}
-      <main className={`flex-1 w-full max-w-lg mx-auto ${isBetPage ? 'pb-0' : 'pb-24'} ${isHomePage ? 'px-4 pt-3' : ''}`}>
+      <main className={`flex-1 w-full max-w-lg mx-auto ${(isBetPage || isSupportPage) ? 'pb-0' : 'pb-24'} ${isHomePage ? 'px-4 pt-3' : ''}`}>
         <Outlet context={{ user: userData, setUserData, onOpenSidebar: () => setIsSidebarOpen(true) }} />
       </main>
 
-      {/* 4. FIXED 5-BUTTON BOTTOM NAVIGATION BAR (FOOTER) - Hidden on Bet Pages */}
-      {!isBetPage && <UserBottomNav />}
+      {/* 4. FIXED 5-BUTTON BOTTOM NAVIGATION BAR (FOOTER) - Hidden on Bet & Support Pages */}
+      {!isBetPage && !isSupportPage && <UserBottomNav />}
 
       {/* 5. WELCOME POPUP MODAL (ONCE PER SESSION) */}
       <WelcomePopup />

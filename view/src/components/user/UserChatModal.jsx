@@ -90,7 +90,7 @@ export const UserChatModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#efeae2] sm:bg-black/60 sm:p-4 backdrop-blur-xs select-none">
+    <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-[#efeae2] sm:bg-black/60 sm:p-4 backdrop-blur-xs select-none">
       <div className="bg-[#efeae2] w-full h-full sm:h-[620px] sm:max-w-md sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border-0 sm:border border-gray-200 animate-in fade-in duration-200">
         
         {/* WhatsApp Style Top Bar */}
