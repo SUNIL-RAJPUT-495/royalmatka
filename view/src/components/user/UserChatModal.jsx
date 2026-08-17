@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { IoClose, IoSend, IoChatbubbleEllipses, IoPersonCircle } from 'react-icons/io5';
+import { IoClose, IoSend, IoPersonCircle, IoArrowBack, IoCheckmarkDone } from 'react-icons/io5';
+import { FaHeadset } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import SummaryApi from '../../common/SummerAPI';
 
@@ -89,46 +90,57 @@ export const UserChatModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs select-none">
-      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[85vh] h-[550px] border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#efeae2] sm:bg-black/60 sm:p-4 backdrop-blur-xs select-none">
+      <div className="bg-[#efeae2] w-full h-full sm:h-[620px] sm:max-w-md sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border-0 sm:border border-gray-200 animate-in fade-in duration-200">
         
-        {/* Modal Header */}
-        <div className="bg-gradient-to-r from-teal-700 via-teal-800 to-emerald-800 p-4 text-white flex items-center justify-between shadow-md shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-teal-200 border border-white/20">
-              <IoChatbubbleEllipses size={20} />
+        {/* WhatsApp Style Top Bar */}
+        <div className="bg-[#075e54] p-3 text-white flex items-center justify-between shadow-md shrink-0 border-b border-[#065047]">
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={onClose}
+              className="w-9 h-9 rounded-full hover:bg-white/10 active:scale-95 flex items-center justify-center text-white transition-all cursor-pointer -ml-1"
+              title="Back"
+            >
+              <IoArrowBack size={20} />
+            </button>
+
+            <div className="relative w-9 h-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white shrink-0 font-bold">
+              <FaHeadset size={16} />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#075e54]" />
             </div>
+
             <div>
-              <h3 className="font-bold text-sm leading-tight flex items-center gap-2">
-                Live Support Chat
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <h3 className="font-bold text-xs sm:text-sm leading-tight text-white flex items-center gap-1.5">
+                Royal Matka Support
               </h3>
-              <p className="text-[10px] text-teal-100 font-medium">
-                Ask any question or get help with deposit/withdrawal
+              <p className="text-[10px] text-emerald-200 font-medium leading-none mt-0.5">
+                online • 24/7 Live Agent
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white transition-all cursor-pointer"
+            className="w-8 h-8 rounded-full hover:bg-white/10 active:scale-95 flex items-center justify-center text-white/80 transition-all cursor-pointer"
           >
-            <IoClose size={18} />
+            <IoClose size={20} />
           </button>
         </div>
 
-        {/* Message Area */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50/70">
+        {/* WhatsApp Style Chat Wallpaper & Messages */}
+        <div className="flex-1 p-3.5 overflow-y-auto space-y-2.5 bg-[#efeae2] bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px]">
           {!userId ? (
-            <div className="text-center py-16 text-gray-500 text-xs font-semibold space-y-2">
-              <IoPersonCircle size={36} className="mx-auto text-gray-300" />
+            <div className="text-center py-20 text-gray-600 text-xs font-semibold space-y-2">
+              <IoPersonCircle size={40} className="mx-auto text-gray-400" />
               <p>Please log in to chat with customer support.</p>
             </div>
           ) : messages.length === 0 ? (
-            <div className="text-center py-16 text-gray-400 space-y-2">
-              <IoChatbubbleEllipses size={32} className="mx-auto text-teal-500/50" />
-              <p className="text-xs font-bold text-gray-700">How can we help you today?</p>
-              <p className="text-[10px] text-gray-400">Type your message below to start chatting with support.</p>
+            <div className="flex flex-col items-center justify-center py-20 text-center space-y-2">
+              <div className="bg-[#fff2c6] text-[#765d14] border border-[#ffe48c] px-3.5 py-1.5 rounded-xl text-[10px] font-bold shadow-2xs max-w-xs">
+                🔒 Messages are end-to-end encrypted with Royal Support.
+              </div>
+              <p className="text-xs font-bold text-gray-700 mt-4">How can we help you today?</p>
+              <p className="text-[10px] text-gray-500">Type your query below to start live conversation.</p>
             </div>
           ) : (
             messages.map((msg, idx) => {
@@ -139,18 +151,17 @@ export const UserChatModal = ({ isOpen, onClose }) => {
                   className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[78%] rounded-2xl px-4 py-2.5 text-xs font-medium shadow-3xs leading-relaxed ${
+                    className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-xs leading-relaxed shadow-3xs relative ${
                       isUser
-                        ? 'bg-teal-700 text-white rounded-tr-none'
-                        : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none'
+                        ? 'bg-[#d9fdd3] text-gray-900 rounded-tr-none border border-[#b7ebae]'
+                        : 'bg-white text-gray-900 rounded-tl-none border border-gray-200'
                     }`}
                   >
-                    <p className="whitespace-pre-wrap break-words">{msg.text}</p>
-                    <span className={`text-[8px] font-semibold block text-right mt-1 ${
-                      isUser ? 'text-teal-200' : 'text-gray-400'
-                    }`}>
-                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+                    <p className="whitespace-pre-wrap break-words font-medium">{msg.text}</p>
+                    <div className="flex items-center justify-end gap-1 mt-0.5 text-[9px] font-bold text-gray-400">
+                      <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      {isUser && <IoCheckmarkDone size={13} className="text-sky-600" />}
+                    </div>
                   </div>
                 </div>
               );
@@ -159,20 +170,20 @@ export const UserChatModal = ({ isOpen, onClose }) => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Bar */}
-        <form onSubmit={handleSend} className="p-3 border-t border-gray-150 bg-white flex items-center gap-2 shrink-0">
+        {/* WhatsApp Style Footer Input */}
+        <form onSubmit={handleSend} className="p-2.5 bg-[#f0f2f5] border-t border-gray-200 flex items-center gap-2 shrink-0">
           <input
             type="text"
             placeholder={userId ? "Type a message..." : "Log in to chat"}
             disabled={!userId || sending}
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
-            className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-semibold text-gray-900 placeholder:text-gray-400 outline-none focus:border-teal-600 focus:bg-white transition-all disabled:opacity-50"
+            className="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#075e54] shadow-3xs transition-all disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={!userId || sending || !messageText.trim()}
-            className="w-10 h-10 rounded-2xl bg-teal-700 hover:bg-teal-800 active:scale-95 text-white flex items-center justify-center transition-all disabled:opacity-40 cursor-pointer shrink-0 shadow-sm"
+            className="w-10 h-10 rounded-full bg-[#008069] hover:bg-[#075e54] active:scale-95 text-white flex items-center justify-center transition-all disabled:opacity-40 cursor-pointer shrink-0 shadow-md"
           >
             <IoSend size={15} />
           </button>
