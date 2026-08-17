@@ -42,6 +42,7 @@ const paymentTransactionSchema = new mongoose.Schema({
 paymentTransactionSchema.index({ type: 1, createdAt: -1 });
 paymentTransactionSchema.index({ status: 1, type: 1 });
 paymentTransactionSchema.index({ userId: 1, type: 1 });
+paymentTransactionSchema.index({ utrNumber: 1 });
 
 export const PaymentTransaction = mongoose.model("PaymentTransaction", paymentTransactionSchema);
 export default PaymentTransaction;

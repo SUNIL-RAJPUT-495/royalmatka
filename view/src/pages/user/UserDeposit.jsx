@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { FaArrowLeft, FaShieldAlt, FaInfoCircle, FaCopy, FaCheckCircle, FaQrcode, FaHashtag } from 'react-icons/fa';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import Axios from '../../utils/axios';
 import SummaryApi from '../../common/SummerAPI';
 
@@ -13,6 +13,8 @@ export const UserDeposit = () => {
   const [amount, setAmount] = useState('');
   const [utrNumber, setUtrNumber] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [copied, setCopied] = useState(false);
 
   // Settings from backend
@@ -74,6 +76,8 @@ export const UserDeposit = () => {
 
   // IMB Gateway Payment Handler
   const handleIMBPayment = async () => {
+    if (loading || isSubmitted) return;
+
     if (!isValidAmount) {
       toast.error(`Please enter an amount between ₹${minAmt} and ₹${maxAmt.toLocaleString()}`);
       return;
@@ -116,6 +120,9 @@ export const UserDeposit = () => {
 
   // Manual Deposit Request Handler
   const handleManualDeposit = async () => {
+    // 1. Strict guard against duplicate requests
+    if (loading || isSubmitted) return;
+
     if (!isValidAmount) {
       toast.error(`Please enter an amount between ₹${minAmt} and ₹${maxAmt.toLocaleString()}`);
       return;
@@ -126,6 +133,8 @@ export const UserDeposit = () => {
     }
 
     setLoading(true);
+    setIsSubmitted(true);
+
     try {
       const savedUserStr = localStorage.getItem('user_data');
       let savedUser = null;
@@ -142,14 +151,26 @@ export const UserDeposit = () => {
       });
 
       if (res.data?.success) {
-        toast.success(res.data.message || 'Deposit request submitted successfully! 🎉');
+        setShowSuccessModal(true);
+        toast.success('Your deposit request has been submitted to Admin for verification and approval!', {
+          duration: 4000,
+          style: {
+            borderRadius: '16px',
+            background: '#10b981',
+            color: '#fff',
+            fontWeight: 'bold',
+            fontSize: '13px'
+          }
+        });
         setTimeout(() => {
           navigate('/passbook');
-        }, 1200);
+        }, 2500);
       } else {
+        setIsSubmitted(false);
         toast.error(res.data?.message || 'Failed to submit deposit request');
       }
     } catch (error) {
+      setIsSubmitted(false);
       toast.error(error.response?.data?.message || 'Deposit request failed');
     } finally {
       setLoading(false);
@@ -157,7 +178,33 @@ export const UserDeposit = () => {
   };
 
   return (
-    <div className="w-full select-none pb-8 font-sans">
+    <div className="w-full select-none pb-8 font-sans relative">
+      {/* Toast Notification Provider */}
+      <Toaster position="top-center" reverseOrder={false} />
+
+      {/* SUCCESS MODAL POPUP */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[9999999] bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
+              <FaCheckCircle size={36} />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-gray-900">Deposit Request Submitted!</h3>
+              <p className="text-xs font-semibold text-gray-600 mt-2 leading-relaxed">
+                Your deposit request of <span className="font-extrabold text-emerald-600">₹{Number(amount).toLocaleString('en-IN')}</span> has been submitted to Admin for verification and approval!
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/passbook')}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-3.5 rounded-2xl text-xs shadow-md transition-all cursor-pointer"
+            >
+              View Passbook Status
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 1. TOP HEADER */}
       <div
         className="p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300 mb-4 sticky top-0 z-30"
@@ -322,16 +369,16 @@ export const UserDeposit = () => {
               {/* Submit Manual Deposit Button */}
               <button
                 type="button"
-                disabled={loading || !isValidAmount || utrNumber.length !== 12}
+                disabled={loading || isSubmitted || !isValidAmount || utrNumber.length !== 12}
                 onClick={handleManualDeposit}
                 className={`w-full py-3.5 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                  isValidAmount && utrNumber.length === 12
+                  isValidAmount && utrNumber.length === 12 && !isSubmitted
                     ? 'bg-[#f97316] hover:bg-orange-600 active:scale-98 text-white shadow-md cursor-pointer'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 }`}
               >
                 <FaShieldAlt size={13} />
-                <span>{loading ? 'Submitting...' : 'Submit Deposit Request'}</span>
+                <span>{loading || isSubmitted ? 'Submitting Request...' : 'Submit Deposit Request'}</span>
               </button>
             </div>
           )}
@@ -340,10 +387,10 @@ export const UserDeposit = () => {
           {settings.activeFundSystem === 'IMB' && (
             <button
               type="button"
-              disabled={loading || !isValidAmount}
+              disabled={loading || isSubmitted || !isValidAmount}
               onClick={handleIMBPayment}
               className={`w-full py-3.5 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                isValidAmount
+                isValidAmount && !isSubmitted
                   ? 'bg-[#f97316] hover:bg-orange-600 active:scale-98 text-white shadow-md cursor-pointer'
                   : 'bg-gray-150 text-gray-400 cursor-not-allowed'
               }`}

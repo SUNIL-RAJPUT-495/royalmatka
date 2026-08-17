@@ -223,7 +223,18 @@ export const createManualDeposit = async (req, res) => {
       return res.status(400).json({ success: false, message: "Valid UTR / Reference Transaction ID is required" });
     }
 
+    const cleanUtr = utrNumber.trim();
+
     if (mongoose.connection.readyState === 1) {
+      // 1. Duplicate UTR Number Validation
+      const existingTxn = await PaymentTransaction.findOne({ utrNumber: cleanUtr });
+      if (existingTxn) {
+        return res.status(400).json({
+          success: false,
+          message: "This UTR / Transaction Reference Number has already been submitted before! Duplicate UTR is not allowed."
+        });
+      }
+
       let query = {};
       if (userId) query._id = userId;
       else if (mobile) query.mobile = mobile;
@@ -240,7 +251,7 @@ export const createManualDeposit = async (req, res) => {
         amount: Number(amount),
         method: 'Manual UPI',
         transactionId: transactionId,
-        utrNumber: utrNumber.trim(),
+        utrNumber: cleanUtr,
         status: 'Pending'
       });
 
