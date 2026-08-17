@@ -4,6 +4,7 @@ import { FaBars, FaBell, FaTelegramPlane, FaArrowLeft } from 'react-icons/fa';
 import { IoFlashSharp, IoWalletOutline, IoChatbubbleEllipsesOutline, IoRefreshOutline } from 'react-icons/io5';
 import { HiOutlineSparkles } from 'react-icons/hi';
 import { useNavigate, useLocation } from 'react-router-dom';
+import UserChatModal from './UserChatModal';
 
 export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
   const { currentTheme } = useTheme();
@@ -17,6 +18,7 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
 
   const [lastUpdatedTime, setLastUpdatedTime] = useState(() => new Date().toLocaleTimeString());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const handleRefreshBalance = () => {
     setIsRefreshing(true);
@@ -186,20 +188,22 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
             </a>
 
             {/* 4. CHAT */}
-            <a
-              href="https://wa.me/"
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
+              onClick={() => setIsChatOpen(true)}
               className="bg-white hover:bg-gray-50 active:scale-95 text-gray-900 py-2 px-3 rounded-2xl font-bold text-xs shadow-sm flex items-center gap-2.5 transition-all cursor-pointer border border-white/80"
             >
               <div className="w-8 h-8 rounded-xl bg-emerald-50 text-[#25D366] flex items-center justify-center shrink-0 shadow-2xs">
                 <IoChatbubbleEllipsesOutline size={15} />
               </div>
               <span className="uppercase tracking-wide text-[11px] font-bold truncate">Chat</span>
-            </a>
+            </button>
           </div>
         </div>
       ) : null}
+
+      {/* USER LIVE SUPPORT CHAT MODAL */}
+      <UserChatModal isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </header>
   );
 };

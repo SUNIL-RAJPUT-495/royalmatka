@@ -1,0 +1,14 @@
+{
+  "appId": "com.royalmatka.app",
+  "appName": "Royal Matka",
+  "webDir": "dist",
+  "server": {
+    "url": "http://localhost:5173",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  }
+}

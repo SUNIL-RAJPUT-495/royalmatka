@@ -15,6 +15,7 @@ import { IoTimeOutline } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 import Axios from '../../utils/axios';
 import SummaryApi from '../../common/SummerAPI';
+import UserChatModal from '../../components/user/UserChatModal';
 
 export const UserContactUs = () => {
   const { currentTheme } = useTheme();
@@ -53,15 +54,57 @@ export const UserContactUs = () => {
     fetchContactData();
   }, []);
 
-  const handleSendMessage = (e) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!message.trim()) {
       toast.error('Please enter your message');
       return;
     }
-    toast.success('Message sent to support team!');
-    setMessage('');
-    setSubject('');
+
+    let userData = null;
+    try {
+      const savedUserStr = localStorage.getItem('user_data') || localStorage.getItem('user');
+      if (savedUserStr) userData = JSON.parse(savedUserStr);
+    } catch (err) {}
+
+    const userId = userData?._id || userData?.id;
+
+    if (!userId) {
+      toast.error('Please log in to send support messages');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const fullText = subject.trim() ? `[${subject.trim()}] ${message.trim()}` : message.trim();
+      const res = await fetch(SummaryApi.sendUserChatMessage.url, {
+        method: SummaryApi.sendUserChatMessage.method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          text: fullText,
+          senderName: userData?.name || 'User'
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Message sent to live support chat!');
+        setMessage('');
+        setSubject('');
+        setIsChatModalOpen(true); // Open live chat modal so user can view response
+      } else {
+        toast.error(data.message || 'Failed to send message');
+      }
+    } catch (err) {
+      console.error("Error sending support message:", err);
+      toast.error('Failed to send message');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Helper for WhatsApp click link
@@ -110,18 +153,28 @@ export const UserContactUs = () => {
 
       <div className="px-4 space-y-3.5 max-w-lg mx-auto">
         {/* 2. ORANGE 24/7 SUPPORT BANNER */}
-        <div className="bg-[#f97316] text-white rounded-2xl p-4 flex items-center gap-3.5 shadow-xs">
-          <div className="w-10 h-10 rounded-xl bg-white/20 border border-white/20 flex items-center justify-center text-white shrink-0 shadow-xs">
-            <FaHeadset size={18} />
+        <div className="bg-[#f97316] text-white rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/20 border border-white/20 flex items-center justify-center text-white shrink-0 shadow-xs">
+              <FaHeadset size={18} />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-white leading-tight">
+                24/7 Support Channel
+              </h4>
+              <p className="text-[10px] text-white/90 font-normal mt-0.5">
+                We're here to help anytime.
+              </p>
+            </div>
           </div>
-          <div>
-            <h4 className="text-xs font-bold text-white leading-tight">
-              24/7 Support Channel
-            </h4>
-            <p className="text-[11px] text-white/90 font-normal mt-0.5">
-              We're here to help you anytime with deposits, withdrawals & game queries.
-            </p>
-          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsChatModalOpen(true)}
+            className="bg-white text-[#f97316] hover:bg-orange-50 active:scale-95 px-3 py-1.5 rounded-xl font-bold text-[11px] transition-all cursor-pointer shrink-0 shadow-2xs"
+          >
+            Open Live Chat
+          </button>
         </div>
 
         {/* 3. TWO TABS CONTAINER */}
@@ -319,14 +372,18 @@ export const UserContactUs = () => {
 
             <button
               type="submit"
-              className="w-full bg-[#f97316] hover:bg-orange-600 active:scale-[0.99] text-white font-bold py-3 rounded-2xl shadow-xs flex items-center justify-center gap-2 cursor-pointer text-xs"
+              disabled={submitting}
+              className="w-full bg-[#f97316] hover:bg-orange-600 active:scale-[0.99] disabled:opacity-50 text-white font-bold py-3 rounded-2xl shadow-xs flex items-center justify-center gap-2 cursor-pointer text-xs transition-all"
             >
               <FaPaperPlane size={12} />
-              <span>Send Message</span>
+              <span>{submitting ? 'Sending...' : 'Send Message to Live Support'}</span>
             </button>
           </form>
         )}
       </div>
+
+      {/* LIVE SUPPORT CHAT MODAL */}
+      <UserChatModal isOpen={isChatModalOpen} onClose={() => setIsChatModalOpen(false)} />
     </div>
   );
 };

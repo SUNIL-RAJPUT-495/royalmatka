@@ -33,9 +33,9 @@ const saveAviatorBidToBackend = async (amount, status = 'Pending', winAmount = 0
     const savedUserStr = typeof window !== 'undefined' ? (localStorage.getItem('user_data') || localStorage.getItem('user')) : null;
     let savedUser = null;
     try { if (savedUserStr) savedUser = JSON.parse(savedUserStr); } catch (e) {}
-    if (!savedUser?.mobile) return;
+    if (!savedUser?.mobile) return null;
 
-    await Axios({
+    const res = await Axios({
       url: SummaryApi.placeBid.url,
       method: SummaryApi.placeBid.method,
       data: {
@@ -47,12 +47,44 @@ const saveAviatorBidToBackend = async (amount, status = 'Pending', winAmount = 0
           session: 'N/A',
           digit: `@${multiplier.toFixed(2)}x`,
           points: Number(amount),
-          type: status
+          type: status,
+          status: status,
+          winAmount: winAmount
         }]
       }
     });
+
+    if (res.data?.bids && res.data.bids.length > 0) {
+      return res.data.bids[0]._id;
+    }
+    return null;
   } catch (err) {
     console.warn('Aviator bid record error:', err);
+    return null;
+  }
+};
+
+const updateAviatorBidStatus = async (bidId, status = 'Lost', winAmount = 0, multiplier = 1.00, amount = 100) => {
+  try {
+    const savedUserStr = typeof window !== 'undefined' ? (localStorage.getItem('user_data') || localStorage.getItem('user')) : null;
+    let savedUser = null;
+    try { if (savedUserStr) savedUser = JSON.parse(savedUserStr); } catch (e) {}
+
+    await Axios({
+      url: SummaryApi.updateAviatorBid.url,
+      method: SummaryApi.updateAviatorBid.method,
+      data: {
+        bidId,
+        userId: savedUser?._id || savedUser?.id,
+        mobile: savedUser?.mobile || '',
+        status,
+        winAmount,
+        multiplier,
+        points: amount
+      }
+    });
+  } catch (err) {
+    console.warn('Aviator bid status update error:', err);
   }
 };
 
@@ -296,7 +328,15 @@ export const useAviatorStore = create((set, get) => {
 
       // 1. Instant deduction & record bid in backend database
       syncWalletWithBackend(card.amount, 'deduct');
-      saveAviatorBidToBackend(card.amount, 'Pending', 0, 1.00);
+      saveAviatorBidToBackend(card.amount, 'Pending', 0, 1.00).then((bidId) => {
+        if (bidId) {
+          set((state) => {
+            const updatedCards = [...state.betCards];
+            updatedCards[index] = { ...updatedCards[index], lastBidId: bidId };
+            return { betCards: updatedCards };
+          });
+        }
+      });
 
       // Emit to backend socket if connected
       if (socket.connected) {
@@ -360,7 +400,7 @@ export const useAviatorStore = create((set, get) => {
 
       // Sync win crediting & record winning bid with MongoDB backend
       syncWalletWithBackend(winAmt, 'credit');
-      saveAviatorBidToBackend(card.amount, 'Won', winAmt, cashOutMult);
+      updateAviatorBidStatus(card.lastBidId, 'Won', winAmt, cashOutMult, card.amount);
 
       if (socket.connected) {
         socket.emit("cashout");
@@ -532,6 +572,7 @@ export const useAviatorStore = create((set, get) => {
 
           const updatedCards = state.betCards.map((card, index) => {
             if (card.isPlaced && !card.isCashedOut) {
+              updateAviatorBidStatus(card.lastBidId, 'Lost', 0, crashMult, card.amount);
               const newRecord = {
                 id: `bet_${Date.now()}_${index}`,
                 amount: card.amount,
@@ -547,6 +588,7 @@ export const useAviatorStore = create((set, get) => {
             return {
               ...card,
               isPlaced: false,
+              lastBidId: null
             };
           });
 

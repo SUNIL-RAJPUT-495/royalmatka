@@ -194,26 +194,32 @@ export const placeBid = async (req, res) => {
     const currentISTDate = getISTDateString();
 
     // Prepare bid documents to insert
-    const bidDocs = bids.map((item) => ({
-      userId: updatedUser._id,
-      userName: updatedUser.name || "",
-      userMobile: updatedUser.mobile,
-      marketName: String(marketName).toUpperCase(),
-      gameMode: gameMode,
-      bidDate: item.bidDate || currentISTDate,
-      session: item.session || "Open",
-      digit: String(item.digit || item.jodi || item.pana || item.number || "").trim(),
-      pana: String(item.pana || "").trim(),
-      jodi: String(item.jodi || item.digit || "").trim(),
-      openPana: String(item.openPana || "").trim(),
-      closePana: String(item.closePana || "").trim(),
-      openDigit: String(item.openDigit || "").trim(),
-      closeDigit: String(item.closeDigit || "").trim(),
-      type: isGaliMarket ? "gali" : (item.type || ""),
-      points: Number(item.points) || 0,
-      status: "Pending",
-      winAmount: 0
-    }));
+    const bidDocs = bids.map((item) => {
+      const initialStatus = (item.status === 'Won' || item.status === 'Lost' || item.type === 'Won' || item.type === 'Lost')
+        ? (item.status || item.type)
+        : "Pending";
+
+      return {
+        userId: updatedUser._id,
+        userName: updatedUser.name || "",
+        userMobile: updatedUser.mobile,
+        marketName: String(marketName).toUpperCase(),
+        gameMode: gameMode,
+        bidDate: item.bidDate || currentISTDate,
+        session: item.session || "Open",
+        digit: String(item.digit || item.jodi || item.pana || item.number || "").trim(),
+        pana: String(item.pana || "").trim(),
+        jodi: String(item.jodi || item.digit || "").trim(),
+        openPana: String(item.openPana || "").trim(),
+        closePana: String(item.closePana || "").trim(),
+        openDigit: String(item.openDigit || "").trim(),
+        closeDigit: String(item.closeDigit || "").trim(),
+        type: isGaliMarket ? "gali" : (item.type || initialStatus),
+        points: Number(item.points) || 0,
+        status: initialStatus,
+        winAmount: Number(item.winAmount) || 0
+      };
+    });
 
     // Bulk insert bids
     const insertedBids = await Bid.insertMany(bidDocs);
@@ -331,6 +337,84 @@ export const deleteBid = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to delete bid."
+    });
+  }
+};
+
+/**
+ * @desc Update status & winAmount of an Aviator bid
+ * @route POST /api/bid/update-aviator-bid
+ * @access Public / Private
+ */
+export const updateAviatorBid = async (req, res) => {
+  try {
+    const { bidId, userId, mobile, status, winAmount, multiplier, points } = req.body;
+
+    let targetBid = null;
+
+    if (bidId) {
+      targetBid = await Bid.findById(bidId);
+    }
+
+    if (!targetBid && (userId || mobile)) {
+      // Find the latest pending Aviator bid for this user
+      const query = { marketName: 'AVIATOR CASINO' };
+      if (userId) query.userId = userId;
+      else if (mobile) query.userMobile = String(mobile).trim();
+
+      targetBid = await Bid.findOne(query).sort({ createdAt: -1 });
+    }
+
+    const nextStatus = status === 'Won' ? 'Won' : status === 'Lost' ? 'Lost' : 'Pending';
+    const nextWinAmount = Number(winAmount) || 0;
+    const nextDigit = multiplier ? `@${Number(multiplier).toFixed(2)}x` : undefined;
+
+    if (targetBid) {
+      targetBid.status = nextStatus;
+      targetBid.type = nextStatus;
+      targetBid.winAmount = nextWinAmount;
+      if (nextDigit) targetBid.digit = nextDigit;
+      if (nextDigit) targetBid.jodi = nextDigit;
+      await targetBid.save();
+
+      return res.status(200).json({
+        success: true,
+        bid: targetBid
+      });
+    } else if (mobile) {
+      // Create resolved Aviator bid if missing
+      const user = await User.findOne({ mobile: String(mobile).trim() });
+      const newBid = await Bid.create({
+        userId: user?._id || userId,
+        userName: user?.name || '',
+        userMobile: String(mobile).trim(),
+        marketName: 'AVIATOR CASINO',
+        gameMode: 'Aviator',
+        bidDate: getISTDateString(),
+        session: 'N/A',
+        digit: nextDigit || '@1.00x',
+        jodi: nextDigit || '@1.00x',
+        type: nextStatus,
+        points: Number(points) || 100,
+        status: nextStatus,
+        winAmount: nextWinAmount
+      });
+
+      return res.status(201).json({
+        success: true,
+        bid: newBid
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: "Bid or user details required to update Aviator bid."
+    });
+  } catch (error) {
+    console.error("Error in updateAviatorBid:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update Aviator bid."
     });
   }
 };

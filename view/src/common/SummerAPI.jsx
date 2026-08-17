@@ -332,6 +332,10 @@ const SummaryApi = {
         url: baseURL + "/api/bid/place-bid",
         method: "post"
     },
+    updateAviatorBid: {
+        url: baseURL + "/api/bid/update-aviator-bid",
+        method: "post"
+    },
     getUserBids: {
         url: baseURL + "/api/bid/get-user-bids",
         method: "get"
@@ -367,6 +371,32 @@ const SummaryApi = {
     getBonusStats: {
         url: baseURL + "/api/settings/bonus-stats",
         method: "get"
+    },
+
+    // Chat Management Endpoints
+    getChatThreads: {
+        url: baseURL + "/api/chat/admin/threads",
+        method: "get"
+    },
+    getAdminChatMessages: {
+        url: baseURL + "/api/chat/admin/messages",
+        method: "get"
+    },
+    sendAdminChatMessage: {
+        url: baseURL + "/api/chat/admin/send",
+        method: "post"
+    },
+    clearUserChat: {
+        url: baseURL + "/api/chat/admin/clear",
+        method: "delete"
+    },
+    getUserChatMessages: {
+        url: baseURL + "/api/chat/user/messages",
+        method: "get"
+    },
+    sendUserChatMessage: {
+        url: baseURL + "/api/chat/user/send",
+        method: "post"
     }
 };
 
