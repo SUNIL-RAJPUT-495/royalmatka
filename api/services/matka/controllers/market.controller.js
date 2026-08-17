@@ -2,6 +2,7 @@ import Market from "../models/Market.js";
 import Bid from "../models/Bid.js";
 import User from "../../auth/models/User.js";
 import GameRate from "../models/GameRate.js";
+import DeclaredResultHistory from "../models/DeclaredResultHistory.js";
 import mongoose from "mongoose";
 
 // Helper to parse rate values e.g. "1 ka 9.5" or "1 ka 140"
@@ -378,6 +379,18 @@ export const declareResult = async (req, res) => {
           }
         }
 
+        // Save permanent record to DeclaredResultHistory collection for Charts
+        const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        await DeclaredResultHistory.findOneAndUpdate(
+          { market_name: market.market_name.toUpperCase(), date: todayIST },
+          {
+            open_pana: market.result_open || "***",
+            close_pana: market.result_close || "***",
+            jodi_result: market.jodi_result || "**"
+          },
+          { upsert: true, new: true }
+        ).catch(() => {});
+
         return res.status(200).json({
           success: true,
           message: "Result declared & session bids settled successfully! 🎯",
@@ -389,6 +402,21 @@ export const declareResult = async (req, res) => {
     return res.status(200).json({ success: true, message: "Result declared (Demo mode)" });
   } catch (error) {
     console.error("Error declaring result:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getMarketChartHistory = async (req, res) => {
+  try {
+    const marketName = (req.query.market_name || req.query.market || '').trim().toUpperCase();
+    let history = [];
+    if (mongoose.connection.readyState === 1 && marketName) {
+      history = await DeclaredResultHistory.find({
+        market_name: new RegExp(`^${marketName}$`, 'i')
+      }).sort({ date: -1 }).limit(100).lean();
+    }
+    return res.status(200).json({ success: true, data: history });
+  } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };

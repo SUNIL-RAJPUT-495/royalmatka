@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { seedAdmin } from "../seedAdmin.js";
+import { seedChartDataIfEmpty } from "../services/matka/utils/chartSeeder.js";
 
 const connectDB = async () => {
   try {
@@ -13,8 +14,9 @@ const connectDB = async () => {
       dbName: "royalmatka"
     });
     console.log(`📡 MongoDB Connected Successfully: ${conn.connection.host}`);
-    // Auto seed admin account upon DB connection
+    // Auto seed admin account and chart history upon DB connection
     await seedAdmin();
+    await seedChartDataIfEmpty();
   } catch (error) {
     console.error(`🔴 MongoDB Connection Error: ${error.message}`);
   }

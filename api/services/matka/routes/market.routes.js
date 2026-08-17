@@ -7,6 +7,7 @@ import {
   updateMarketStatus,
   updateMarketDetails,
   declareResult,
+  getMarketChartHistory,
 } from "../controllers/market.controller.js";
 
 import {
@@ -35,6 +36,7 @@ const router = express.Router();
 router.get("/get-all-markets", getAllMarkets);
 router.get("/get-all-results", getAllMarkets);
 router.get("/get-market-results", getAllMarkets);
+router.get("/get-chart-history", getMarketChartHistory);
 router.post("/add-market", verifyAdmin, addMarket);
 router.post("/update-market", verifyAdmin, updateMarketDetails);
 router.delete("/delete-market", verifyAdmin, deleteMarket);

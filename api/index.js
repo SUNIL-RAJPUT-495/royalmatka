@@ -50,6 +50,7 @@ app.use("/api", limiter);
 app.use("/api/user", authRoutes);
 app.use("/api/aviator", aviatorRoutes);
 app.use("/api/market", marketRoutes);
+app.use("/api/matka", marketRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/bid", bidRoutes);
