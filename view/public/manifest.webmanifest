@@ -15,9 +15,44 @@
   "categories": ["games", "entertainment", "sports"],
   "prefer_related_applications": false,
   "related_applications": [],
+  "iarc_rating_id": "e84b3b5c-2e67-466a-93e1-30114006c019",
   "launch_handler": {
     "client_mode": "focus-existing"
   },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "note_taking": {
+    "new_note_url": "/support"
+  },
+  "share_target": {
+    "action": "/support",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "scope_extensions": [
+    {
+      "origin": "*.royalmatka.com"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": {
+        "text/plain": [".txt"]
+      }
+    }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+royalmatka",
+      "url": "/?protocol=%s"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Live Support Chat",
@@ -37,6 +72,24 @@
       "short_name": "History",
       "description": "View Matka bid history and winnings",
       "url": "/bids-history",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "widgets": [
+    {
+      "name": "Royal Matka Results Widget",
+      "short_name": "Matka Results",
+      "description": "View live Matka game results",
+      "tag": "matka-results",
+      "ms_ac_template": "/widgets/results.json",
+      "data": "/api/market/get-all-markets",
+      "type": "application/json",
       "icons": [
         {
           "src": "/pwa-192x192.png",
