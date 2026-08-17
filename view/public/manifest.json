@@ -49,16 +49,10 @@
       "origin": "https://royalmatkaapi.growva.tech"
     },
     {
+      "origin": "https://royalmatka.growva.tech"
+    },
+    {
       "origin": "https://royalmatka.com"
-    },
-    {
-      "origin": "royalmatkaapi.growva.tech"
-    },
-    {
-      "origin": "royalmatka.com"
-    },
-    {
-      "origin": "*.growva.tech"
     }
   ],
   "file_handlers": [
