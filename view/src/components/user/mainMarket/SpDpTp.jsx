@@ -9,7 +9,9 @@ export const SpDpTp = ({
   setSession, 
   setBidsList, 
   themeColor,
-  isOpenSessionOpen = true
+  isOpenSessionOpen = true,
+  isCloseSessionOpen = true,
+  isMarketClosed = false
 }) => {
   const [selectedTypes, setSelectedTypes] = useState(['SP', 'DP']); // Array of selected types, e.g. ['SP', 'DP']
   const [digitInput, setDigitInput] = useState('');

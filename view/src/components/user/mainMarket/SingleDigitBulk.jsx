@@ -6,7 +6,9 @@ export const SingleDigitBulk = ({
   setSession, 
   setBidsList, 
   themeColor,
-  isOpenSessionOpen = true
+  isOpenSessionOpen = true,
+  isCloseSessionOpen = true,
+  isMarketClosed = false
 }) => {
   const [selectedDigits, setSelectedDigits] = useState([]); // Array of selected digits, e.g. ['0', '1', '3', '4']
   const [points, setPoints] = useState('');

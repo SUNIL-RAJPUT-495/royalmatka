@@ -8,7 +8,9 @@ export const TriplePanaBulk = ({
   setSession, 
   setBidsList, 
   themeColor,
-  isOpenSessionOpen = true
+  isOpenSessionOpen = true,
+  isCloseSessionOpen = true,
+  isMarketClosed = false
 }) => {
   const [selectedPanas, setSelectedPanas] = useState([]); // Selected triple pana buttons, e.g. ['000', '222']
   const [points, setPoints] = useState('');

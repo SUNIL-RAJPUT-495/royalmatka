@@ -8,7 +8,9 @@ export const TriplePana = ({
   setSession, 
   setBidsList, 
   themeColor,
-  isOpenSessionOpen = true
+  isOpenSessionOpen = true,
+  isCloseSessionOpen = true,
+  isMarketClosed = false
 }) => {
   const [pana, setPana] = useState('');
   const [points, setPoints] = useState('');

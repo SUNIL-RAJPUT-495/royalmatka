@@ -536,6 +536,8 @@ export const UserBetPage = () => {
             setBidsList={setBidsList}
             themeColor={themeColor}
             isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+            isCloseSessionOpen={sessionStatus.isCloseSessionOpen}
+            isMarketClosed={sessionStatus.isMarketClosed}
           />
         )}
 
@@ -546,6 +548,8 @@ export const UserBetPage = () => {
             setBidsList={setBidsList}
             themeColor={themeColor}
             isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+            isCloseSessionOpen={sessionStatus.isCloseSessionOpen}
+            isMarketClosed={sessionStatus.isMarketClosed}
           />
         )}
 
@@ -556,6 +560,8 @@ export const UserBetPage = () => {
             setBidsList={setBidsList}
             themeColor={themeColor}
             isOpenSessionOpen={sessionStatus.isOpenSessionOpen}
+            isCloseSessionOpen={sessionStatus.isCloseSessionOpen}
+            isMarketClosed={sessionStatus.isMarketClosed}
           />
         )}
 

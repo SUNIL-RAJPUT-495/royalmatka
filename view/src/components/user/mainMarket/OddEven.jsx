@@ -9,7 +9,9 @@ export const OddEven = ({
   setSession, 
   setBidsList, 
   themeColor,
-  isOpenSessionOpen = true
+  isOpenSessionOpen = true,
+  isCloseSessionOpen = true,
+  isMarketClosed = false
 }) => {
   const [selectedType, setSelectedType] = useState('Odd'); // 'Odd' | 'Even'
   const [points, setPoints] = useState('');

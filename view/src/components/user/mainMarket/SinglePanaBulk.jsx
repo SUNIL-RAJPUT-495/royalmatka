@@ -19,7 +19,9 @@ export const SinglePanaBulk = ({
   setSession, 
   setBidsList, 
   themeColor,
-  isOpenSessionOpen = true
+  isOpenSessionOpen = true,
+  isCloseSessionOpen = true,
+  isMarketClosed = false
 }) => {
   const [selectedDigits, setSelectedDigits] = useState([]); // Selected digit buttons, e.g. ['1']
   const [points, setPoints] = useState('');

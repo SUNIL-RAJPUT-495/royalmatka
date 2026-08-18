@@ -34,7 +34,9 @@ export const DPMotor = ({
   setSession, 
   setBidsList, 
   themeColor,
-  isOpenSessionOpen = true
+  isOpenSessionOpen = true,
+  isCloseSessionOpen = true,
+  isMarketClosed = false
 }) => {
   const [digitsInput, setDigitsInput] = useState('');
   const [points, setPoints] = useState('');
