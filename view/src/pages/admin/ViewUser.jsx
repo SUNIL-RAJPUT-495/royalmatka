@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import AxiosAdmin from '../../utils/axiosAdmin';
 import SummaryApi from '../../common/SummerAPI';
 import toast from 'react-hot-toast';
@@ -57,6 +57,7 @@ const DataTable = ({ title, columns, data = [], emptyMessage = "No data availabl
 // Main Component Function
 export const ViewUser = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -65,12 +66,14 @@ export const ViewUser = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
     const [showChangePassModal, setShowChangePassModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [amount, setAmount] = useState('');
     const [remark, setRemark] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [changePassLoading, setChangePassLoading] = useState(false);
     const [forceLogoutLoading, setForceLogoutLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
     const [showRawPass, setShowRawPass] = useState(false);
 
     const fetchUser = useCallback(async () => {
@@ -195,6 +198,30 @@ export const ViewUser = () => {
         }
     };
 
+    const handleDeleteUser = async () => {
+        if (!user || !user._id) return;
+        setDeleteLoading(true);
+        try {
+            const res = await AxiosAdmin({
+                url: SummaryApi.deleteUserByAdmin?.url
+                    ? `${SummaryApi.deleteUserByAdmin.url}/${user._id}`
+                    : `/api/user/delete-user/${user._id}`,
+                method: SummaryApi.deleteUserByAdmin?.method || 'delete'
+            });
+            if (res.data.success) {
+                toast.success(res.data.message || `User ${user.name || user.mobile} deleted permanently! 🗑️`);
+                setShowDeleteModal(false);
+                navigate('/systum/users');
+            } else {
+                toast.error(res.data.message || "Failed to delete user");
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to delete user");
+        } finally {
+            setDeleteLoading(false);
+        }
+    };
+
     if (loading) return <div className="p-6 text-center text-gray-500 font-semibold">Loading User Details...</div>;
     if (!data || !data.user) return <div className="p-6 text-center text-red-500 font-semibold">User Not Found</div>;
 
@@ -316,6 +343,14 @@ export const ViewUser = () => {
                     >
                         <span>🔄 Refresh Profile</span>
                     </button>
+
+                    <button
+                        onClick={() => setShowDeleteModal(true)}
+                        className="bg-red-600 hover:bg-red-700 text-white rounded-xl px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95 transition-all"
+                        title="Delete User Permanently"
+                    >
+                        <span>🗑️ Delete User</span>
+                    </button>
                 </div>
             </div>
 
@@ -412,6 +447,13 @@ export const ViewUser = () => {
                                     className="w-full bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold py-2.5 rounded-2xl text-xs transition-all shadow-3xs cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
                                 >
                                     <span>🚪 Force Logout User</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setShowDeleteModal(true)}
+                                    className="w-full bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold py-2.5 rounded-2xl text-xs transition-all shadow-3xs cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                                >
+                                    <span>🗑️ Delete User Account</span>
                                 </button>
                             </div>
                         </div>
@@ -808,6 +850,51 @@ export const ViewUser = () => {
                                 disabled={changePassLoading}
                             >
                                 {changePassLoading ? 'Updating...' : 'Save Password 🔑'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete User Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+                    <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-gray-150 animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+                            <h2 className="text-base font-extrabold text-red-600 flex items-center gap-2">
+                                <span>🗑️</span> Delete User Account
+                            </h2>
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                className="text-gray-400 hover:text-gray-600 font-bold text-lg cursor-pointer"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="mb-4 text-left">
+                            <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-2xl text-xs mb-3 font-medium">
+                                ⚠️ <strong>Warning:</strong> This action will permanently remove <span className="font-bold">{user.name || 'this user'}</span> ({user.mobile}) from the database. This operation cannot be undone.
+                            </div>
+                            <p className="text-xs text-gray-600 font-semibold">
+                                Are you sure you want to proceed with deleting this user?
+                            </p>
+                        </div>
+
+                        <div className="flex justify-end gap-2.5 pt-2 border-t border-gray-100">
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                className="px-4 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer"
+                                disabled={deleteLoading}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDeleteUser}
+                                className="px-5 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
+                                disabled={deleteLoading}
+                            >
+                                {deleteLoading ? 'Deleting...' : 'Confirm Delete 🗑️'}
                             </button>
                         </div>
                     </div>

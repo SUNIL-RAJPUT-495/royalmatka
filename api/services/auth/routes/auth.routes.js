@@ -10,6 +10,7 @@ import {
   addBankAccount,
   addUpiId,
   updateUserWallet,
+  changeUserPassword,
   getAllUsers,
   getAdminViewUser,
   toggleUserStatus,
@@ -17,6 +18,7 @@ import {
   adminDeductFund,
   adminChangePassword,
   forceLogoutUser,
+  deleteUserByAdmin,
   getAdminList,
   deleteAdmin,
   adminSelfChangePassword,
@@ -44,6 +46,7 @@ router.get("/get-user-profile", getUserProfile);
 router.post("/add-bank-account", addBankAccount);
 router.post("/add-upi-id", addUpiId);
 router.post("/update-wallet", updateUserWallet);
+router.post("/change-password", changeUserPassword);
 
 // Account Deletion Routes
 router.post("/request-deletion", requestAccountDeletion);
@@ -63,6 +66,8 @@ router.post("/admin-deduct-fund", adminDeductFund);
 router.post("/admin-change-password", adminChangePassword);
 router.post("/admin-self-change-password", adminSelfChangePassword);
 router.post("/force-logout", forceLogoutUser);
+router.delete("/delete-user/:id", deleteUserByAdmin);
+router.post("/delete-user", deleteUserByAdmin);
 router.delete("/delete-admin/:id", deleteAdmin);
 router.get("/admin-dashboard-stats", getAdminDashboardStats);
 

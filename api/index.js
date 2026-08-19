@@ -18,6 +18,7 @@ import contactRoutes from "./services/auth/routes/contact.routes.js";
 import bidRoutes from "./services/matka/routes/bid.routes.js";
 import settingsRoutes from "./services/matka/routes/settings.routes.js";
 import chatRoutes from "./services/chat/routes/chat.routes.js";
+import notificationRoutes from "./services/auth/routes/notification.routes.js";
 import GameEngine from "./services/aviator/game/GameEngine.js";
 
 dotenv.config();
@@ -56,6 +57,8 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/bid", bidRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/notification", notificationRoutes);
+app.use("/api/user/notification", notificationRoutes);
 
 // Test Route
 app.get("/", (req, res) => {

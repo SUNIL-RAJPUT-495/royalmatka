@@ -63,8 +63,7 @@ export const UserProfile = () => {
 
   // Login & Security Modal state (Bottom Sheet)
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
-  const [securityTab, setSecurityTab] = useState('password');
-  const [currentMpin, setCurrentMpin] = useState('');
+  const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showValues, setShowValues] = useState(false);
@@ -73,51 +72,53 @@ export const UserProfile = () => {
 
   const openSecurityModal = () => {
     setErrorMessage('');
-    setCurrentMpin('');
+    setOldPassword('');
     setNewPassword('');
     setConfirmPassword('');
     setIsSecurityModalOpen(true);
   };
 
-  const handleUpdateSecurity = (e) => {
+  const handleUpdateSecurity = async (e) => {
     e.preventDefault();
     setErrorMessage('');
 
-    if (!currentMpin || currentMpin.trim() === '') {
-      setErrorMessage('Enter your current 4-digit MPIN to confirm.');
+    if (!newPassword || newPassword.length < 4) {
+      setErrorMessage('New password must be at least 4 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setErrorMessage('New password and confirm password do not match.');
       return;
     }
 
-    if (securityTab === 'password') {
-      if (!newPassword || newPassword.length < 4) {
-        setErrorMessage('New password must be at least 4 characters.');
-        return;
-      }
-      if (newPassword !== confirmPassword) {
-        setErrorMessage('New password and confirm password do not match.');
-        return;
-      }
-    } else {
-      if (!newPassword || newPassword.length !== 4) {
-        setErrorMessage('New MPIN must be exactly 4 digits.');
-        return;
-      }
-      if (newPassword !== confirmPassword) {
-        setErrorMessage('New MPIN and confirm MPIN do not match.');
-        return;
-      }
-    }
-
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
+      const response = await Axios({
+        url: SummaryApi.changeUserPassword.url,
+        method: SummaryApi.changeUserPassword.method,
+        data: {
+          userId: user._id || user.id,
+          mobile: user.mobile,
+          oldPassword: oldPassword,
+          newPassword: newPassword.trim()
+        }
+      });
+
+      if (response?.data?.success) {
+        toast.success(response.data.message || 'Password updated successfully! 🔑');
+        setIsSecurityModalOpen(false);
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        setErrorMessage(response?.data?.message || 'Failed to update password.');
+      }
+    } catch (err) {
+      console.error('Error updating password:', err);
+      setErrorMessage(err.response?.data?.message || 'Failed to update password.');
+    } finally {
       setIsSubmitting(false);
-      setIsSecurityModalOpen(false);
-      toast.success(
-        securityTab === 'password'
-          ? 'Password updated successfully!'
-          : 'MPIN updated successfully!'
-      );
-    }, 500);
+    }
   };
 
   const handleLogout = () => {
@@ -324,16 +325,16 @@ export const UserProfile = () => {
           </div>
         </div>
 
-        {/* 5. LOGIN & SECURITY CARD */}
+        {/* 5. CHANGE PASSWORD CARD */}
         <div
           onClick={openSecurityModal}
           className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs flex items-center justify-between cursor-pointer hover:bg-gray-50 active:scale-[0.99] transition-all"
         >
           <div className="flex items-center gap-3.5">
             <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center shadow-2xs">
-              <FaKey size={15} />
+              <FaLock size={15} />
             </div>
-            <span className="text-sm font-semibold text-gray-900">Login & Security</span>
+            <span className="text-sm font-semibold text-gray-900">Change Password</span>
           </div>
           <FaChevronRight size={12} className="text-gray-400" />
         </div>
@@ -364,7 +365,7 @@ export const UserProfile = () => {
         </div>
       </div>
 
-      {/* 7. LOGIN & SECURITY BOTTOM DRAWER MODAL */}
+      {/* 7. CHANGE PASSWORD BOTTOM DRAWER MODAL */}
       {isSecurityModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs transition-opacity duration-300"
@@ -380,47 +381,14 @@ export const UserProfile = () => {
               style={{ backgroundColor: currentTheme.headerBgColor }}
             >
               <div className="flex items-center gap-2">
-                <FaShieldAlt size={16} />
-                <h3 className="font-bold text-base">Login & Security</h3>
+                <FaLock size={16} />
+                <h3 className="font-bold text-base">Change Password</h3>
               </div>
               <button
                 onClick={() => setIsSecurityModalOpen(false)}
                 className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors cursor-pointer"
               >
                 <FaTimes size={13} />
-              </button>
-            </div>
-
-            {/* 2 Navigation Tabs */}
-            <div className="flex border-b border-gray-150 bg-gray-50/60">
-              <button
-                type="button"
-                onClick={() => {
-                  setSecurityTab('mpin');
-                  setErrorMessage('');
-                }}
-                className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors border-b-2 ${securityTab === 'mpin'
-                    ? 'border-[#f97316] text-[#f97316] bg-white'
-                    : 'border-transparent text-gray-500 hover:text-gray-800'
-                  }`}
-              >
-                <FaKey size={12} />
-                <span>Change MPIN</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSecurityTab('password');
-                  setErrorMessage('');
-                }}
-                className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors border-b-2 ${securityTab === 'password'
-                    ? 'border-[#f97316] text-[#f97316] bg-white'
-                    : 'border-transparent text-gray-500 hover:text-gray-800'
-                  }`}
-              >
-                <FaLock size={12} />
-                <span>Change Password</span>
               </button>
             </div>
 
@@ -435,56 +403,55 @@ export const UserProfile = () => {
                 </div>
               )}
 
-              {/* Field 1: Current MPIN */}
+              {/* Field 1: Old Password */}
               <div>
                 <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                  Current MPIN (to confirm)
+                  Old / Current Password (Optional)
                 </label>
                 <input
                   type={showValues ? 'text' : 'password'}
-                  maxLength={4}
-                  value={currentMpin}
+                  value={oldPassword}
                   onChange={(e) => {
-                    setCurrentMpin(e.target.value);
+                    setOldPassword(e.target.value);
                     if (errorMessage) setErrorMessage('');
                   }}
-                  placeholder="••••"
+                  placeholder="Enter current password"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#f97316] transition-colors"
                 />
               </div>
 
-              {/* Field 2: New Value */}
+              {/* Field 2: New Password */}
               <div>
                 <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                  {securityTab === 'password' ? 'New Password' : 'New 4-Digit MPIN'}
+                  New Password
                 </label>
                 <input
                   type={showValues ? 'text' : 'password'}
-                  maxLength={securityTab === 'mpin' ? 4 : 20}
+                  maxLength={30}
                   value={newPassword}
                   onChange={(e) => {
                     setNewPassword(e.target.value);
                     if (errorMessage) setErrorMessage('');
                   }}
-                  placeholder={securityTab === 'password' ? 'Min 4 characters' : 'Enter 4 digit MPIN'}
+                  placeholder="Min 4 characters"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#f97316] transition-colors"
                 />
               </div>
 
-              {/* Field 3: Confirm Value */}
+              {/* Field 3: Confirm New Password */}
               <div>
                 <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                  {securityTab === 'password' ? 'Confirm New Password' : 'Confirm New MPIN'}
+                  Confirm New Password
                 </label>
                 <input
                   type={showValues ? 'text' : 'password'}
-                  maxLength={securityTab === 'mpin' ? 4 : 20}
+                  maxLength={30}
                   value={confirmPassword}
                   onChange={(e) => {
                     setConfirmPassword(e.target.value);
                     if (errorMessage) setErrorMessage('');
                   }}
-                  placeholder={securityTab === 'password' ? 'Re-enter new password' : 'Re-enter 4 digit MPIN'}
+                  placeholder="Re-enter new password"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#f97316] transition-colors"
                 />
               </div>
@@ -505,11 +472,7 @@ export const UserProfile = () => {
                 className="w-full py-3 rounded-2xl text-white font-bold text-xs shadow-md transition-all active:scale-98 cursor-pointer mt-2 disabled:opacity-50"
                 style={{ backgroundColor: currentTheme.headerBgColor }}
               >
-                {isSubmitting
-                  ? 'Updating...'
-                  : securityTab === 'password'
-                    ? 'Update Password'
-                    : 'Update MPIN'}
+                {isSubmitting ? 'Updating Password...' : 'Update Password 🔑'}
               </button>
             </form>
           </div>

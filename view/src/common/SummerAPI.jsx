@@ -1,5 +1,5 @@
-//export const baseURL = "http://localhost:5010";
-export const baseURL = "https://royalmatkaapi.growva.tech";
+export const baseURL = "http://localhost:5010";
+//export const baseURL = "https://royalmatkaapi.growva.tech";
 
 const SummaryApi = {
     // Aviator Socket & Admin Endpoints
@@ -59,6 +59,10 @@ const SummaryApi = {
     getUserProfile: {
         url: baseURL + "/api/user/get-user-profile",
         method: "get"
+    },
+    changeUserPassword: {
+        url: baseURL + "/api/user/change-password",
+        method: "post"
     },
     addBankAccount: {
         url: baseURL + "/api/user/add-bank-account",
@@ -160,6 +164,10 @@ const SummaryApi = {
         url: baseURL + "/api/user/force-logout",
         method: "post"
     },
+    deleteUserByAdmin: {
+        url: baseURL + "/api/user/delete-user",
+        method: "delete"
+    },
     getAdminList: {
         url: baseURL + "/api/user/get-admin-list",
         method: "get"
@@ -170,6 +178,32 @@ const SummaryApi = {
     },
     adminSelfChangePassword: {
         url: baseURL + "/api/user/admin-self-change-password",
+        method: "post"
+    },
+
+    // Notifications Management
+    sendNotification: {
+        url: baseURL + "/api/notification/send",
+        method: "post"
+    },
+    getAllNotifications: {
+        url: baseURL + "/api/notification/all",
+        method: "get"
+    },
+    updateNotification: {
+        url: baseURL + "/api/notification/update",
+        method: "post"
+    },
+    deleteNotification: {
+        url: baseURL + "/api/notification/delete",
+        method: "delete"
+    },
+    getNotificationSettings: {
+        url: baseURL + "/api/notification/settings",
+        method: "get"
+    },
+    updateNotificationSettings: {
+        url: baseURL + "/api/notification/settings",
         method: "post"
     },
     getWelcomePopup: {

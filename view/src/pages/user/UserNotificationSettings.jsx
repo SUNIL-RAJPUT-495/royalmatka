@@ -1,13 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { FaArrowLeft, FaSave } from 'react-icons/fa';
 import { IoNotificationsOutline } from 'react-icons/io5';
 import toast from 'react-hot-toast';
+import Axios from '../../utils/axios';
+import SummaryApi from '../../common/SummerAPI';
 
 export const UserNotificationSettings = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
+
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Retrieve user data for userId
+  const localUserStr = localStorage.getItem("user_data");
+  let localUser = null;
+  try {
+    if (localUserStr) localUser = JSON.parse(localUserStr);
+  } catch (e) {}
+  const userId = localUser?._id || localUser?.id || localUser?.mobile || "user";
 
   const [settings, setSettings] = useState({
     allNotifications: true,
@@ -26,13 +39,75 @@ export const UserNotificationSettings = () => {
     fundAlerts: true
   });
 
+  const fetchSettings = useCallback(async () => {
+    // 1. Try loading from localStorage first
+    const cached = localStorage.getItem('user_notification_settings');
+    if (cached) {
+      try {
+        setSettings(JSON.parse(cached));
+      } catch (e) {}
+    }
+
+    // 2. Fetch from database API
+    try {
+      const res = await Axios({
+        url: `${SummaryApi.getNotificationSettings.url}?userId=${userId}`,
+        method: SummaryApi.getNotificationSettings.method
+      });
+      if (res.data.success && res.data.settings) {
+        setSettings(prev => ({
+          ...prev,
+          ...res.data.settings
+        }));
+        localStorage.setItem('user_notification_settings', JSON.stringify(res.data.settings));
+      }
+    } catch (error) {
+      console.warn("Could not fetch user notification settings from API, using cached/defaults:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
   const toggle = (key) => {
-    setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
+    setSettings((prev) => {
+      const updated = { ...prev, [key]: !prev[key] };
+      // If master switch toggled, toggle all child switches
+      if (key === 'allNotifications') {
+        const val = updated.allNotifications;
+        Object.keys(updated).forEach(k => {
+          updated[k] = val;
+        });
+      } else if (!updated[key]) {
+        updated.allNotifications = false;
+      }
+      return updated;
+    });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setSaving(true);
     localStorage.setItem('user_notification_settings', JSON.stringify(settings));
-    toast.success('Notification settings saved successfully!');
+
+    try {
+      const res = await Axios({
+        url: SummaryApi.updateNotificationSettings.url,
+        method: SummaryApi.updateNotificationSettings.method,
+        data: { settings, userId }
+      });
+      if (res.data.success) {
+        toast.success(res.data.message || 'Notification settings saved successfully! 🔔');
+      } else {
+        toast.success('Notification settings saved!');
+      }
+    } catch (error) {
+      toast.success('Notification settings saved!');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const items = [
@@ -94,7 +169,7 @@ export const UserNotificationSettings = () => {
           </div>
         </div>
 
-        {/* 3. TOGGLE LIST OF NOTIFICATIONS (Exact Match with Screenshots 2 & 3) */}
+        {/* 3. TOGGLE LIST OF NOTIFICATIONS */}
         <div className="bg-white rounded-3xl p-4 border border-gray-150 shadow-2xs divide-y divide-gray-100 space-y-1">
           {items.map((item) => {
             const isChecked = settings[item.key];
@@ -135,10 +210,11 @@ export const UserNotificationSettings = () => {
           <button
             type="button"
             onClick={handleSave}
-            className="bg-[#2563eb] hover:bg-blue-700 active:scale-95 text-white font-bold px-6 py-2.5 rounded-xl shadow-xs flex items-center gap-2 cursor-pointer text-xs transition-all"
+            disabled={saving}
+            className="bg-[#2563eb] hover:bg-blue-700 active:scale-95 text-white font-bold px-6 py-2.5 rounded-xl shadow-xs flex items-center gap-2 cursor-pointer text-xs transition-all disabled:opacity-50"
           >
             <FaSave size={13} />
-            <span>Save Changes</span>
+            <span>{saving ? 'Saving...' : 'Save Changes'}</span>
           </button>
         </div>
       </div>
