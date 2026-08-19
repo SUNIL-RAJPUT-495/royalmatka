@@ -57,6 +57,7 @@ import { JackpotGaliResults } from "./pages/admin/JackpotGaliResults";
 import { StarLineAdmin } from "./pages/admin/StarLineAdmin";
 import { GameRatesAdmin } from "./pages/admin/GameRatesAdmin";
 import { ResultAdmin } from "./pages/admin/ResultAdmin";
+import { AutoResultAdmin } from "./pages/admin/AutoResultAdmin";
 import { MatkaResultPage } from "./pages/admin/MatkaResultPage";
 import { AdminPanel } from "./pages/admin/AdminPanel";
 import { NotificationSender } from "./pages/admin/NotificationSender";
@@ -210,6 +211,9 @@ function App() {
               <Route path="jackpot-gali" element={<StarLineAdmin />} />
               <Route path="GameRatesAdmin" element={<GameRatesAdmin />} />
               <Route path="game-rates" element={<GameRatesAdmin />} />
+              <Route path="auto-result" element={<AutoResultAdmin />} />
+              <Route path="AutoResult" element={<AutoResultAdmin />} />
+              <Route path="auto-result-declare" element={<AutoResultAdmin />} />
               <Route path="ResultAdmin" element={<ResultAdmin />} />
               <Route path="ResultDecleare" element={<ResultAdmin />} />
               <Route path="result-declare" element={<ResultAdmin />} />

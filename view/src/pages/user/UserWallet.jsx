@@ -12,7 +12,7 @@ import {
   FaGift,
   FaArrowLeft
 } from 'react-icons/fa';
-import { IoWalletOutline, IoFlashSharp, IoRefreshOutline, IoTrendingUpOutline } from 'react-icons/io5';
+import { IoWalletOutline, IoFlashSharp, IoRefreshOutline, IoTrendingUpOutline, IoDocumentTextOutline } from 'react-icons/io5';
 import { HiOutlineSparkles } from 'react-icons/hi';
 
 export const UserWallet = () => {
@@ -118,42 +118,8 @@ export const UserWallet = () => {
     fetchWalletData();
   };
 
-  // Transactions list (Live DB + fallback screenshot data)
-  const transactions = dbTransactions.length > 0 ? dbTransactions : [
-    {
-      id: 'tx1',
-      type: 'loss',
-      title: 'Game Loss',
-      time: '1/8/2026, 2:27:03 PM',
-      tag: 'Aviator • casino',
-      amount: -10,
-      category: 'Games'
-    },
-    {
-      id: 'tx2',
-      type: 'deposit',
-      title: 'Deposit',
-      time: '31/7/2026, 6:57:08 PM',
-      amount: 10,
-      category: 'Deposits'
-    },
-    {
-      id: 'tx3',
-      type: 'bonus',
-      title: 'Bonus',
-      time: '28/7/2026, 1:12:00 PM',
-      amount: 9,
-      category: 'Bonuses'
-    },
-    {
-      id: 'tx4',
-      type: 'withdrawal',
-      title: 'Withdrawal',
-      time: '20/7/2026, 5:40:22 PM',
-      amount: -500,
-      category: 'Withdrawals'
-    }
-  ];
+  // Transactions list (Live DB data only)
+  const transactions = dbTransactions;
 
   const filterTabs = ['All', 'Deposits', 'Withdrawals', 'Games'];
 
@@ -327,62 +293,74 @@ export const UserWallet = () => {
           </div>
 
           {/* Transactions List */}
-          <div className="bg-white rounded-3xl p-2 border border-gray-100 shadow-2xs divide-y divide-gray-50">
-            {filteredTransactions.map((tx) => {
-              const isNegative = tx.amount < 0;
-              return (
-                <div key={tx.id} className="p-3 flex items-center justify-between">
-                  {/* Left: Icon & Title/Time */}
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center shadow-2xs shrink-0 ${
-                        tx.type === 'deposit'
-                          ? 'bg-emerald-50 text-emerald-500'
-                          : tx.type === 'bonus'
-                          ? 'bg-purple-50 text-purple-500'
-                          : tx.type === 'loss'
-                          ? 'bg-gray-100 text-gray-500'
-                          : 'bg-red-50 text-red-500'
-                      }`}
-                    >
-                      {tx.type === 'deposit' ? (
-                        <FaArrowUp size={13} className="rotate-45" />
-                      ) : tx.type === 'bonus' ? (
-                        <FaGift size={13} />
-                      ) : tx.type === 'loss' ? (
-                        <FaQuestion size={12} />
-                      ) : (
-                        <FaArrowRight size={12} className="rotate-45" />
-                      )}
-                    </div>
+          {filteredTransactions.length > 0 ? (
+            <div className="bg-white rounded-3xl p-2 border border-gray-100 shadow-2xs divide-y divide-gray-50">
+              {filteredTransactions.map((tx) => {
+                const isNegative = tx.amount < 0;
+                return (
+                  <div key={tx.id} className="p-3 flex items-center justify-between">
+                    {/* Left: Icon & Title/Time */}
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-9 h-9 rounded-full flex items-center justify-center shadow-2xs shrink-0 ${
+                          tx.type === 'deposit'
+                            ? 'bg-emerald-50 text-emerald-500'
+                            : tx.type === 'bonus'
+                            ? 'bg-purple-50 text-purple-500'
+                            : tx.type === 'loss'
+                            ? 'bg-gray-100 text-gray-500'
+                            : 'bg-red-50 text-red-500'
+                        }`}
+                      >
+                        {tx.type === 'deposit' ? (
+                          <FaArrowUp size={13} className="rotate-45" />
+                        ) : tx.type === 'bonus' ? (
+                          <FaGift size={13} />
+                        ) : tx.type === 'loss' ? (
+                          <FaQuestion size={12} />
+                        ) : (
+                          <FaArrowRight size={12} className="rotate-45" />
+                        )}
+                      </div>
 
-                    <div>
-                      <h5 className="text-xs font-semibold text-gray-900">{tx.title}</h5>
-                      <span className="text-[10px] text-gray-400 font-normal block mt-0.5">
-                        {tx.time}
-                      </span>
-                      {tx.tag && (
-                        <span className="inline-block mt-1 bg-gray-100 text-gray-600 text-[9px] font-medium px-2 py-0.5 rounded-full">
-                          {tx.tag}
+                      <div>
+                        <h5 className="text-xs font-semibold text-gray-900">{tx.title}</h5>
+                        <span className="text-[10px] text-gray-400 font-normal block mt-0.5">
+                          {tx.time}
                         </span>
-                      )}
+                        {tx.tag && (
+                          <span className="inline-block mt-1 bg-gray-100 text-gray-600 text-[9px] font-medium px-2 py-0.5 rounded-full">
+                            {tx.tag}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right: Amount */}
+                    <div className="text-right">
+                      <span
+                        className={`text-sm font-bold tracking-tight ${
+                          isNegative ? 'text-red-500' : 'text-emerald-600'
+                        }`}
+                      >
+                        {isNegative ? `₹${tx.amount}` : `+₹${tx.amount}`}
+                      </span>
                     </div>
                   </div>
-
-                  {/* Right: Amount */}
-                  <div className="text-right">
-                    <span
-                      className={`text-sm font-bold tracking-tight ${
-                        isNegative ? 'text-red-500' : 'text-emerald-600'
-                      }`}
-                    >
-                      {isNegative ? `₹${tx.amount}` : `+₹${tx.amount}`}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-2xs flex flex-col items-center justify-center text-center">
+              <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mb-2">
+                <IoDocumentTextOutline size={24} />
+              </div>
+              <h3 className="text-xs font-bold text-gray-900">No Transactions Found</h3>
+              <p className="text-[11px] text-gray-400 font-normal mt-0.5">
+                No transactions yet.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

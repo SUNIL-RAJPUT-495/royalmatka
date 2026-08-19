@@ -4,6 +4,7 @@ import User from "../../auth/models/User.js";
 import GameRate from "../models/GameRate.js";
 import DeclaredResultHistory from "../models/DeclaredResultHistory.js";
 import mongoose from "mongoose";
+import dpbossAutoSyncService from "../services/dpbossAutoSyncService.js";
 
 // Helper to parse rate values e.g. "1 ka 9.5" or "1 ka 140"
 const parseMultiplier = (rateStr, defaultMult) => {
@@ -102,8 +103,20 @@ export const addMarket = async (req, res) => {
       return res.status(400).json({ success: false, message: "All fields (Market Name, Opening Time, Closing Time) are required" });
     }
     if (mongoose.connection.readyState === 1) {
+      const cleanName = market_name.trim().toUpperCase();
+      const existingMarket = await Market.findOne({ 
+        market_name: new RegExp(`^${cleanName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') 
+      });
+
+      if (existingMarket) {
+        return res.status(400).json({ 
+          success: false, 
+          message: `Market "${cleanName}" already exists in Database!` 
+        });
+      }
+
       const newMarket = await Market.create({
-        market_name: market_name.trim().toUpperCase(),
+        market_name: cleanName,
         open_time: open_time.trim(),
         close_time: close_time.trim(),
         off_days: Array.isArray(off_days) ? off_days : [],
@@ -416,6 +429,21 @@ export const getMarketChartHistory = async (req, res) => {
       }).sort({ date: -1 }).limit(100).lean();
     }
     return res.status(200).json({ success: true, data: history });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const toggleAutoMaster = async (req, res) => {
+  try {
+    const { enabled } = req.body;
+    const isEnabled = typeof enabled === 'boolean' ? enabled : req.body.enabled !== 'false';
+    dpbossAutoSyncService.setAutoMaster(isEnabled);
+    return res.status(200).json({
+      success: true,
+      message: `Auto Master System ${isEnabled ? 'ENABLED ⚡' : 'PAUSED ⏸️'}`,
+      autoMasterEnabled: isEnabled
+    });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

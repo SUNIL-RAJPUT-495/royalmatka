@@ -4,7 +4,7 @@ import {
     FaUserShield, FaTrophy, FaStar, FaDice, FaCrown, FaMoneyBillWave,
     FaHandHoldingUsd, FaUsersCog, FaLightbulb, FaUserTimes, FaFileAlt,
     FaComments, FaBell, FaPalette, FaPhoneAlt, FaQuestionCircle,
-    FaCreditCard, FaChartPie, FaQrcode, FaCheckCircle, FaPercent, FaRocket
+    FaCreditCard, FaChartPie, FaQrcode, FaCheckCircle, FaPercent, FaRocket, FaRobot
 } from "react-icons/fa";
 import { 
     MdDashboard, MdGames, MdScoreboard, MdHistory, MdPersonRemove, 
@@ -78,6 +78,7 @@ export const AdminSideBar = ({ closeSidebar }) => {
                // { icons: FaTrophy, itemsDetails: "Matka Results", link: "matka-results" },
                 { icons: FaCheckCircle, itemsDetails: "Declare Results", link: "ResultDecleare" },
                 { icons: FaPercent, itemsDetails: "Game Rates", link: "game-rates" },
+                { icons: FaRobot, itemsDetails: "Auto Result", link: "auto-result" },
             ]
         },
         {

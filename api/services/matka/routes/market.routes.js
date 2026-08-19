@@ -8,6 +8,7 @@ import {
   updateMarketDetails,
   declareResult,
   getMarketChartHistory,
+  toggleAutoMaster,
 } from "../controllers/market.controller.js";
 
 import {
@@ -43,6 +44,7 @@ router.delete("/delete-market", verifyAdmin, deleteMarket);
 router.delete("/delete-all-markets", verifyAdmin, deleteAllMarkets);
 router.post("/update-market-status", verifyAdmin, updateMarketStatus);
 router.post("/declare-result", verifyAdmin, declareResult);
+router.post("/toggle-auto-master", toggleAutoMaster);
 
 // Starline & Jackpot Endpoints (Time-slot based)
 router.get("/get-starline-markets", getStarlineMarkets);

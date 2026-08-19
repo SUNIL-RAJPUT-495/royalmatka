@@ -75,65 +75,8 @@ export const UserPassbook = () => {
     fetchTransactions();
   }, []);
 
-  // Combined transactions list (Live DB + screenshot fallback data)
-  const allTransactions = dbTransactions.length > 0 ? dbTransactions : [
-    {
-      id: 'tx-1',
-      code: '#be160',
-      title: 'Deposit #be160',
-      date: '5/8/2026, 1:50:58 PM',
-      type: 'Deposit',
-      amount: 500,
-      utr: 'TX-1785918058381-187',
-      status: 'Pending',
-      category: 'Deposits'
-    },
-    {
-      id: 'tx-2',
-      code: '#be07e',
-      title: 'Deposit #be07e',
-      date: '5/8/2026, 1:34:04 PM',
-      type: 'Deposit',
-      amount: 500,
-      utr: 'TX-1785917044872-156',
-      status: 'Pending',
-      category: 'Deposits'
-    },
-    {
-      id: 'tx-3',
-      code: '#b14ce',
-      title: 'Transaction #b14ce',
-      date: '1/8/2026, 2:27:03 PM',
-      type: 'Game',
-      amount: -10,
-      utr: 'TX-1785574623987-561',
-      status: 'Confirmed',
-      category: 'Games',
-      notes: 'Nexx settle round:11499933095758999572 bet:10 win:0 bal:9 serial:f588cacd-ff67-3c8d-819c-b50060164ea4'
-    },
-    {
-      id: 'tx-4',
-      code: '#b091f',
-      title: 'Bonus #b091f',
-      date: '28/7/2026, 2:31:25 PM',
-      type: 'Bonus',
-      amount: 9,
-      utr: 'BET-1785229285955',
-      status: 'Confirmed',
-      category: 'Bonuses'
-    },
-    {
-      id: 'tx-5',
-      code: '#w992a',
-      title: 'Withdrawal #w992a',
-      date: '20/7/2026, 5:40:22 PM',
-      type: 'Withdrawal',
-      amount: -500,
-      utr: 'TX-1784992819201-332',
-      status: 'Confirmed',
-      category: 'Withdrawals'
-    }
-  ];
+  // Transactions list (Live DB data only)
+  const allTransactions = dbTransactions;
 
   const tabs = [
     { id: 'All', label: 'All' },

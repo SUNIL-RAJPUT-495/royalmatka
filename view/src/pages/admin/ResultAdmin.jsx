@@ -473,7 +473,7 @@ export const ResultAdmin = () => {
                 )}
               </div>
 
-              {/* Calculated Results Panel matching Screenshot 1 */}
+              {/* Calculated Results Panel */}
               {isCalculated && (
                 <div className="space-y-4 pt-4 border-t border-gray-100">
                   <h3 className="text-center font-bold text-emerald-600 text-sm tracking-wide">
@@ -516,7 +516,7 @@ export const ResultAdmin = () => {
                       </div>
                     </div>
 
-                    {/* Double Panna */}
+                    {/* Double Pana */}
                     <div className="bg-white border border-gray-250 rounded-2xl p-4 space-y-2 shadow-3xs">
                       <span className="text-gray-450 block text-[10px]">Double Pana</span>
                       <div className="grid grid-cols-2 gap-2">
@@ -525,45 +525,6 @@ export const ResultAdmin = () => {
                         </div>
                         <div className="bg-blue-50/50 border border-blue-100 text-blue-800 text-center py-2 rounded-xl text-xs">
                           Close: <span className="text-gray-900">-</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Triple Panna */}
-                    <div className="bg-white border border-gray-250 rounded-2xl p-4 space-y-2 shadow-3xs">
-                      <span className="text-gray-450 block text-[10px]">Triple Pana</span>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-blue-50/50 border border-blue-100 text-blue-800 text-center py-2 rounded-xl text-xs">
-                          Open: <span className="text-gray-900">-</span>
-                        </div>
-                        <div className="bg-blue-50/50 border border-blue-100 text-blue-800 text-center py-2 rounded-xl text-xs">
-                          Close: <span className="text-gray-900">-</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Half Sang */}
-                    <div className="bg-white border border-gray-250 rounded-2xl p-4 space-y-2 shadow-3xs">
-                      <span className="text-gray-450 block text-[10px]">Half Sang</span>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-blue-50/50 border border-blue-100 text-blue-800 text-center py-2 rounded-xl text-xs">
-                          Open Digit: <span className="text-gray-900">{openAnk}</span>
-                        </div>
-                        <div className="bg-blue-50/50 border border-blue-100 text-blue-800 text-center py-2 rounded-xl text-xs">
-                          Close Pana: <span className="text-gray-900">{closePana}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Full Sang */}
-                    <div className="bg-white border border-gray-250 rounded-2xl p-4 space-y-2 shadow-3xs md:col-span-2">
-                      <span className="text-gray-450 block text-[10px]">Full Sang</span>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-blue-50/50 border border-blue-100 text-blue-800 text-center py-2 rounded-xl text-xs">
-                          Open Pana: <span className="text-gray-900">{openPana}</span>
-                        </div>
-                        <div className="bg-blue-50/50 border border-blue-100 text-blue-800 text-center py-2 rounded-xl text-xs">
-                          Close Pana: <span className="text-gray-900">{closePana}</span>
                         </div>
                       </div>
                     </div>
