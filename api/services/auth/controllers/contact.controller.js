@@ -8,10 +8,10 @@ export const getContactSettings = async (req, res) => {
       if (!settings) {
         settings = await ContactSettings.create({
           whatsapp: "+91 9999999999",
-          telegram: "https://t.me/royalmatka_support",
+          telegram: "https://t.me/sanwariyaboss_support",
           phone1: "9999999999",
           phone2: "",
-          email: "support@royalmatka.com",
+          email: "support@sanwariyaboss.fun",
           address: ""
         });
       }
@@ -21,10 +21,10 @@ export const getContactSettings = async (req, res) => {
       success: true,
       contact: {
         whatsapp: "+91 9999999999",
-        telegram: "https://t.me/royalmatka_support",
+        telegram: "https://t.me/sanwariyaboss_support",
         phone1: "9999999999",
         phone2: "",
-        email: "support@royalmatka.com",
+        email: "support@sanwariyaboss.fun",
         address: ""
       }
     });

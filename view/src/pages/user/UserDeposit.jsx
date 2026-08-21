@@ -19,8 +19,8 @@ export const UserDeposit = () => {
 
   // Settings from backend
   const [settings, setSettings] = useState({
-    upiId: 'royal1008@ybl',
-    displayName: 'Royal Play',
+    upiId: 'sanwariyaboss@ybl',
+    displayName: 'Sanwariya Boss',
     qrCodeUrl: '',
     activeFundSystem: 'Manual',
     minAmount: 100,
@@ -324,7 +324,7 @@ export const UserDeposit = () => {
                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Official UPI ID</span>
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-extrabold text-gray-900 font-mono">
-                    {settings.upiId || 'royal1008@ybl'}
+                    {settings.upiId || 'sanwariyaboss@ybl'}
                   </span>
                   <button
                     type="button"

@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import logoImg from '../../assets/logo.jpeg';
 import {
   FaTimes,
   FaChevronRight,
@@ -97,9 +98,7 @@ export const SideBar = ({
         >
           {/* Top Row: Mini Brand Avatar + Close Button */}
           <div className="flex items-center justify-between mb-3.5">
-            <div className="w-7 h-7 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white text-xs font-bold">
-              🏃
-            </div>
+            <img src={logoImg} alt="SanwariyaBoss Logo" className="w-8 h-8 rounded-full object-cover border border-white/30 shadow-xs" />
             <button
               onClick={closeSidebar}
               className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors cursor-pointer"

@@ -67,11 +67,11 @@ export const UserShare = () => {
   }, []);
 
   // Compute Referral Code & Link
-  const myReferralCode = user.referralCode || (user.mobile ? `RM${user.mobile.slice(-6)}` : 'ROYAL777');
+  const myReferralCode = user.referralCode || (user.mobile ? `SB${user.mobile.slice(-6)}` : 'SANWARIYA777');
   const shareDomain = window.location.origin;
   const shareUrl = `${shareDomain}/register?ref=${myReferralCode}`;
   
-  const shareMessage = `Play Online Matka & Casino Games on Royal Matka! 🎲\nUse my Referral Code: *${myReferralCode}* to get ₹${bonusRules.referredBonus} welcome bonus!\nDownload & Register now: ${shareUrl}`;
+  const shareMessage = `Play Online Matka & Casino Games on SanwariyaBoss! 🎲\nUse my Referral Code: *${myReferralCode}* to get ₹${bonusRules.referredBonus} welcome bonus!\nDownload & Register now: ${shareUrl}`;
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(myReferralCode);
@@ -91,7 +91,7 @@ export const UserShare = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Join Royal Matka',
+          title: 'Join SanwariyaBoss',
           text: shareMessage,
           url: shareUrl
         });
@@ -104,7 +104,7 @@ export const UserShare = () => {
   };
 
   const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
-  const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(`Join Royal Matka with code ${myReferralCode}!`)}`;
+  const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(`Join SanwariyaBoss with code ${myReferralCode}!`)}`;
 
   return (
     <div className="w-full select-none pb-12 font-sans bg-[#f8f9fa] min-h-screen text-left">

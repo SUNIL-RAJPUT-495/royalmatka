@@ -10,10 +10,10 @@ import SummaryApi from '../../common/SummerAPI';
 export const UpiSettings = () => {
   // UPI ID List
   const [upiList, setUpiList] = useState([
-    { id: 1, upiId: 'royal1008@ybl', displayName: 'Royal Play', isActive: true }
+    { id: 1, upiId: 'sanwariyaboss@ybl', displayName: 'Sanwariya Boss', isActive: true }
   ]);
-  const [newUpiId, setNewUpiId] = useState('royal1008@ybl');
-  const [newDisplayName, setNewDisplayName] = useState('Royal Play');
+  const [newUpiId, setNewUpiId] = useState('sanwariyaboss@ybl');
+  const [newDisplayName, setNewDisplayName] = useState('Sanwariya Boss');
   const [newIsActive, setNewIsActive] = useState(true);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
 
@@ -42,8 +42,8 @@ export const UpiSettings = () => {
         });
         if (res.data?.settings) {
           const s = res.data.settings;
-          setNewUpiId(s.upiId || 'royal1008@ybl');
-          setNewDisplayName(s.displayName || 'Royal Play');
+          setNewUpiId(s.upiId || 'sanwariyaboss@ybl');
+          setNewDisplayName(s.displayName || 'Sanwariya Boss');
           setQrCodeUrl(s.qrCodeUrl || '');
           setActiveFundSystem(s.activeFundSystem || 'Manual');
           setMinAmount(String(s.minAmount || 100));

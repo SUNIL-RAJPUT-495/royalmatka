@@ -1,4 +1,4 @@
-// Service Worker for Royal Matka PWA & PWABuilder compatibility
+// Service Worker for SanwariyaBoss PWA & PWABuilder compatibility
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });

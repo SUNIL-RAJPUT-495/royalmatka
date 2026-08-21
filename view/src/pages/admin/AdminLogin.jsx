@@ -4,6 +4,7 @@ import { ShieldCheck, Lock, User, Eye, EyeOff, KeyRound, Loader2, Crown } from '
 import toast from 'react-hot-toast';
 import SummaryApi from '../../common/SummerAPI';
 import Axios from '../../utils/axios';
+import logoImg from '../../assets/logo.jpeg';
 
 export const AdminLogin = () => {
   const navigate = useNavigate();
@@ -87,10 +88,8 @@ export const AdminLogin = () => {
 
         {/* Header Logo Badge */}
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-red-600 to-amber-500 flex items-center justify-center shadow-lg shadow-red-500/30 mb-4 transform hover:scale-105 transition-transform duration-300">
-            <Crown size={32} className="text-white" />
-          </div>
-          <h1 className="text-2xl font-black text-white tracking-wider uppercase">ROYAL MATKA</h1>
+          <img src={logoImg} alt="SanwariyaBoss Logo" className="w-16 h-16 rounded-2xl object-cover shadow-lg shadow-red-500/30 mb-4 border-2 border-amber-400 transform hover:scale-105 transition-transform duration-300" />
+          <h1 className="text-2xl font-black text-white tracking-wider uppercase">SANWARIYA<span className="text-[#ef4444]">BOSS</span></h1>
           <p className="text-xs text-gray-400 mt-1 font-medium tracking-wide">Control Center Admin Portal</p>
           <div className="flex items-center gap-1.5 mt-3 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full">
             <ShieldCheck size={14} className="text-red-400" />

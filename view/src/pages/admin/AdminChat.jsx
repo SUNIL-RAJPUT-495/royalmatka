@@ -20,7 +20,7 @@ export const AdminChat = () => {
     "Your withdrawal is under process and will be credited soon.",
     "Your deposit has been verified and added to your wallet.",
     "Please send a screenshot of the transaction details.",
-    "Thank you for contacting Royal Matka Support!"
+    "Thank you for contacting SanwariyaBoss Support!"
   ];
 
   // Fetch threads list from API

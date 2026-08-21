@@ -92,7 +92,7 @@ export const createOrder = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Order Created Successfully (Demo Link)",
-      payment_url: `https://upi.link/pay?pa=royal1008@ybl&am=${amount}&tn=${transactionId}`,
+      payment_url: `https://upi.link/pay?pa=sanwariyaboss@ybl&am=${amount}&tn=${transactionId}`,
       orderId: transactionId
     });
 
@@ -281,8 +281,8 @@ export const getPaymentSettings = async (req, res) => {
       let settings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
       if (!settings) {
         settings = await PaymentSettings.create({
-          upiId: "royal1008@ybl",
-          displayName: "Royal Play",
+          upiId: "sanwariyaboss@ybl",
+          displayName: "Sanwariya Boss",
           qrCodeUrl: "",
           activeFundSystem: "Manual",
           minAmount: 100,
@@ -296,8 +296,8 @@ export const getPaymentSettings = async (req, res) => {
     return res.status(200).json({
       success: true,
       settings: {
-        upiId: "royal1008@ybl",
-        displayName: "Royal Play",
+        upiId: "sanwariyaboss@ybl",
+        displayName: "Sanwariya Boss",
         qrCodeUrl: "",
         activeFundSystem: "Manual",
         minAmount: 100,
@@ -310,8 +310,8 @@ export const getPaymentSettings = async (req, res) => {
     return res.status(200).json({
       success: true,
       settings: {
-        upiId: "royal1008@ybl",
-        displayName: "Royal Play",
+        upiId: "sanwariyaboss@ybl",
+        displayName: "Sanwariya Boss",
         qrCodeUrl: "",
         activeFundSystem: "Manual",
         minAmount: 100,

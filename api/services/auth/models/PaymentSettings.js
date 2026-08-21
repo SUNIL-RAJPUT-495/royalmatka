@@ -3,11 +3,11 @@ import mongoose from "mongoose";
 const paymentSettingsSchema = new mongoose.Schema({
   upiId: {
     type: String,
-    default: "royal1008@ybl"
+    default: "sanwariyaboss@ybl"
   },
   displayName: {
     type: String,
-    default: "Royal Play"
+    default: "Sanwariya Boss"
   },
   qrCodeUrl: {
     type: String,

@@ -3,6 +3,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { FaUserCircle, FaBell, FaWallet } from 'react-icons/fa';
 import { IoPlayCircleOutline, IoAddCircleOutline } from 'react-icons/io5';
 import { BiMoneyWithdraw } from 'react-icons/bi';
+import logoImg from '../../assets/logo.jpeg';
 
 export const UserHeader = ({ walletBalance = '12,500' }) => {
   const { currentTheme } = useTheme();
@@ -16,9 +17,10 @@ export const UserHeader = ({ walletBalance = '12,500' }) => {
       >
         {/* Left: Brand Logo */}
         <div className="flex items-center gap-2">
+          <img src={logoImg} alt="SanwariyaBoss Logo" className="w-8 h-8 rounded-full object-cover border border-amber-300/40 shadow-xs" />
           <div className="text-xl font-black tracking-tight">
-            <span>Royal</span>
-            <span className="text-[#facc15]">1008</span>
+            <span>Sanwariya</span>
+            <span className="text-[#facc15]">Boss</span>
           </div>
         </div>
 

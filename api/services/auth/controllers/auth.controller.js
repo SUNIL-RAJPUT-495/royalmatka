@@ -655,7 +655,7 @@ export const getUserProfile = async (req, res) => {
           bonusBalance: 0
         },
         registrationDate: new Date(),
-        referralCode: "ROYAL9067",
+        referralCode: "SANWARIYA9067",
         bankAccounts: [],
         upiIds: []
       }
@@ -1213,13 +1213,13 @@ export const getWelcomePopupConfig = async (req, res) => {
           enabled: true,
           eliteLabel: "Elite Experience",
           headingLine: "WELCOME TO",
-          brandName: "Royal 1008",
+          brandName: "SanwariyaBoss",
           trustBadgeText: "INDIA'S #1 TRUSTED APP",
           ratesHeading: "Live Payout Rates",
           ratesSubLabel: "10 Ka Rate",
           ctaButtonText: "Start Playing Now",
           footerLine1: "Authorized Gaming Environment",
-          footerLine2: "Target your success with Royal Matka 🎯",
+          footerLine2: "Target your success with SanwariyaBoss 🎯",
           heroDescription: "Play safely with trusted rates and transparent payout rules.",
           ratesDescription: "Below rates are for quick reference. Please verify before placing bids.",
           highlights: ["Fast support", "Secure wallet", "Instant updates"],

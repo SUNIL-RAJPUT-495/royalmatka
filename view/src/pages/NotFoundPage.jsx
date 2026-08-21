@@ -68,7 +68,7 @@ export const NotFoundPage = () => {
 
       {/* Footer Brand Tag */}
       <p className="text-[11px] font-semibold text-gray-400 mt-6 tracking-wide uppercase">
-        Royal Matka • 404 Route Handler
+        SanwariyaBoss • 404 Route Handler
       </p>
     </div>
   );

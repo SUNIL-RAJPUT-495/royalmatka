@@ -16,7 +16,7 @@ const welcomePopupSchema = new mongoose.Schema(
     },
     brandName: {
       type: String,
-      default: "Royal 1008"
+      default: "SanwariyaBoss"
     },
     trustBadgeText: {
       type: String,
@@ -40,7 +40,7 @@ const welcomePopupSchema = new mongoose.Schema(
     },
     footerLine2: {
       type: String,
-      default: "Target your success with Royal Matka 🎯"
+      default: "Target your success with SanwariyaBoss 🎯"
     },
     heroDescription: {
       type: String,

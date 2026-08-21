@@ -10,7 +10,7 @@ const systemSettingsSchema = new mongoose.Schema(
     minDeposit: { type: Number, default: 100 },
     minWithdrawal: { type: Number, default: 500 },
     maxWithdrawal: { type: Number, default: 50000 },
-    welcomePopupText: { type: String, default: "Welcome to Royal Matka!" }
+    welcomePopupText: { type: String, default: "Welcome to SanwariyaBoss!" }
   },
   { timestamps: true }
 );

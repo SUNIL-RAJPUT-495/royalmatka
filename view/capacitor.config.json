@@ -1,6 +1,6 @@
 {
   "appId": "com.royalmatka.app",
-  "appName": "Royal Matka",
+  "appName": "SanwariyaBoss",
   "webDir": "dist",
   "server": {
     "url": "http://localhost:5173",

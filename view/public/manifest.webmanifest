@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Royal Matka",
-  "short_name": "RoyalMatka",
-  "description": "Royal Matka Official Gaming, Live Support & Casino App",
+  "name": "SanwariyaBoss",
+  "short_name": "SanwariyaBoss",
+  "description": "SanwariyaBoss Official Gaming, Live Support & Casino App",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -17,12 +17,12 @@
   "related_applications": [
     {
       "platform": "play",
-      "url": "https://play.google.com/store/apps/details?id=com.royalmatka.app",
-      "id": "com.royalmatka.app"
+      "url": "https://sawariya.sanwariyaboss.fun/",
+      "id": "fun.sanwariyaboss.sawariya"
     },
     {
       "platform": "webapp",
-      "url": "https://royalmatkaapi.growva.tech/manifest.json"
+      "url": "https://sawariyaapi.sanwariyaboss.fun/manifest.json"
     }
   ],
   "iarc_rating_id": "e84b3b5c-2e67-466a-93e1-30114006c019",
@@ -48,15 +48,11 @@
   "scope_extensions": [
     {
       "type": "web",
-      "origin": "https://royalmatkaapi.growva.tech"
+      "origin": "https://sawariyaapi.sanwariyaboss.fun"
     },
     {
       "type": "web",
-      "origin": "https://royalmatka.growva.tech"
-    },
-    {
-      "type": "web",
-      "origin": "https://royalmatka.com"
+      "origin": "https://sawariya.sanwariyaboss.fun"
     }
   ],
   "file_handlers": [
@@ -77,7 +73,7 @@
     {
       "name": "Live Support Chat",
       "short_name": "Support",
-      "description": "Chat with Royal Matka 24/7 Support",
+      "description": "Chat with SanwariyaBoss 24/7 Support",
       "url": "/support",
       "icons": [
         {
@@ -103,7 +99,7 @@
   ],
   "widgets": [
     {
-      "name": "Royal Matka Results",
+      "name": "SanwariyaBoss Results",
       "short_name": "Results",
       "description": "View live Matka game results",
       "tag": "matka-results",
@@ -134,14 +130,14 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Royal Matka Mobile Home"
+      "label": "SanwariyaBoss Mobile Home"
     },
     {
       "src": "/pwa-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Royal Matka Dashboard"
+      "label": "SanwariyaBoss Dashboard"
     }
   ],
   "icons": [

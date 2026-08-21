@@ -136,7 +136,7 @@ export const UserLayout = () => {
             <div>
               <h3 className="text-lg font-bold text-gray-900 tracking-tight">Account Restricted</h3>
               <p className="text-xs text-gray-600 font-medium mt-1 leading-relaxed">
-                {blockedMessage || "Your account has been blocked or deleted by the administrator. Access to Royal Matka has been restricted."}
+                {blockedMessage || "Your account has been blocked or deleted by the administrator. Access to SanwariyaBoss has been restricted."}
               </p>
             </div>
 

@@ -124,7 +124,7 @@ export const UserChatModal = ({ isOpen, onClose }) => {
 
             <div>
               <h3 className="font-bold text-xs sm:text-sm leading-tight text-white flex items-center gap-1.5">
-                Royal Matka Support
+                SanwariyaBoss Support
               </h3>
               <p className="text-[10px] text-emerald-200 font-medium leading-none mt-0.5">
                 online • 24/7 Live Agent
@@ -150,7 +150,7 @@ export const UserChatModal = ({ isOpen, onClose }) => {
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-2">
               <div className="bg-[#fff2c6] text-[#765d14] border border-[#ffe48c] px-3.5 py-1.5 rounded-xl text-[10px] font-bold shadow-2xs max-w-xs">
-                🔒 Messages are end-to-end encrypted with Royal Support.
+                🔒 Messages are end-to-end encrypted with Sanwariya Support.
               </div>
               <p className="text-xs font-bold text-gray-700 mt-4">How can we help you today?</p>
               <p className="text-[10px] text-gray-500">Type your query below to start live conversation.</p>

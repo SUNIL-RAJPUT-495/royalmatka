@@ -17,10 +17,10 @@ export const ThemeCard = ({ theme, isSelected, isLive, onSelect }) => {
           className="px-5 py-3.5 flex items-center justify-between"
           style={{ backgroundColor: theme.headerBgColor }}
         >
-          {/* Logo: Royal in white, 1008 in gold/amber */}
+          {/* Logo: Sanwariya in white, Boss in gold/amber */}
           <div className="flex items-center text-white font-extrabold text-base tracking-tight">
-            <span>Royal</span>
-            <span className="text-[#facc15]">1008</span>
+            <span>Sanwariya</span>
+            <span className="text-[#facc15]">Boss</span>
           </div>
 
           {/* Amount Pill */}

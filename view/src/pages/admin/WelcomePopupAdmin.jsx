@@ -13,13 +13,13 @@ export const WelcomePopupAdmin = () => {
     enabled: true,
     eliteLabel: 'Elite Experience',
     headingLine: 'WELCOME TO',
-    brandName: 'Royal 1008',
+    brandName: 'SanwariyaBoss',
     trustBadgeText: "INDIA'S #1 TRUSTED APP",
     ratesHeading: 'Live Payout Rates',
     ratesSubLabel: '10 Ka Rate',
     ctaButtonText: 'Start Playing Now',
     footerLine1: 'Authorized Gaming Environment',
-    footerLine2: 'Target your success with Royal Matka 🎯',
+    footerLine2: 'Target your success with SanwariyaBoss 🎯',
     heroDescription: 'Play safely with trusted rates and transparent payout rules.',
     ratesDescription: 'Below rates are for quick reference. Please verify before placing bids.',
     highlights: ['Fast support', 'Secure wallet', 'Instant updates'],
@@ -551,7 +551,7 @@ export const WelcomePopupAdmin = () => {
                   </h2>
 
                   <h1 className="text-2xl font-black italic text-yellow-300 mt-0.5">
-                    {config.brandName || 'Royal 1008'}
+                    {config.brandName || 'SanwariyaBoss'}
                   </h1>
 
                   <div className="bg-white/15 px-3 py-1 rounded-full border border-white/25 flex items-center gap-1 mt-2.5 shadow-2xs">
@@ -639,7 +639,7 @@ export const WelcomePopupAdmin = () => {
                     {config.footerLine1 || 'Authorized Gaming Environment'}
                   </span>
                   <p className="text-[7.5px] text-gray-500 font-bold mt-1">
-                    {config.footerLine2 || 'Target your success with Royal Matka 🎯'}
+                    {config.footerLine2 || 'Target your success with SanwariyaBoss 🎯'}
                   </p>
                 </div>
 

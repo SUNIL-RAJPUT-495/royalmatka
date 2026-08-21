@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import AxiosAdmin from '../../utils/axiosAdmin';
 import SummaryApi from '../../common/SummerAPI';
+import logoImg from '../../assets/logo.jpeg';
 
 export const AdminNavbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
@@ -90,14 +91,12 @@ export const AdminNavbar = ({ toggleSidebar }) => {
           <FaBars size={18} />
         </button>
 
-        {/* Brand Logo: royal1008 */}
-        <div className="flex items-center gap-2.5">
-          <div className="bg-[#ef4444] p-1.5 rounded-lg shadow-md flex items-center justify-center text-white">
-            <FaCrown size={16} />
-          </div>
+        {/* Brand Logo: SanwariyaBoss */}
+        <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/systum/dashboard')}>
+          <img src={logoImg} alt="SanwariyaBoss Logo" className="w-8 h-8 rounded-full object-cover border border-red-500/50 shadow-md" />
           <div className="flex items-center">
             <span className="text-lg font-black tracking-wider text-white uppercase font-sans">
-              ROYAL<span className="text-[#ef4444]">1008</span>
+              SANWARIYA<span className="text-[#ef4444]">BOSS</span>
             </span>
           </div>
         </div>

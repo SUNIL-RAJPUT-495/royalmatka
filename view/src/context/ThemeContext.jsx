@@ -7,7 +7,7 @@ export const APP_THEMES = [
   {
     id: 'green-current',
     name: 'Green (Current)',
-    appName: 'royal1008',
+    appName: 'SanwariyaBoss',
     description: 'Logo ka sage green + gold. Abhi wala look.',
     headerBgColor: '#447668',
     balancePillBg: 'rgba(0, 0, 0, 0.18)',
@@ -24,7 +24,7 @@ export const APP_THEMES = [
   {
     id: 'orange-classic',
     name: 'Orange Classic',
-    appName: 'royal1008',
+    appName: 'SanwariyaBoss',
     description: 'Bright orange + amber. Saaf, energetic.',
     headerBgColor: '#ea580c',
     balancePillBg: 'rgba(0, 0, 0, 0.18)',
@@ -41,7 +41,7 @@ export const APP_THEMES = [
   {
     id: 'orange-noir',
     name: 'Orange Noir',
-    appName: 'royal1008',
+    appName: 'SanwariyaBoss',
     description: 'Neon orange + gold. Premium look.',
     headerBgColor: '#c2410c',
     balancePillBg: 'rgba(0, 0, 0, 0.18)',
@@ -58,7 +58,7 @@ export const APP_THEMES = [
   {
     id: 'orange-charcoal',
     name: 'Orange + Charcoal',
-    appName: 'royal1008',
+    appName: 'SanwariyaBoss',
     description: 'Black header + orange buttons + gold. Sleek, premium.',
     headerBgColor: '#18181b',
     balancePillBg: 'rgba(255, 255, 255, 0.15)',
@@ -75,7 +75,7 @@ export const APP_THEMES = [
   {
     id: 'orange-emerald',
     name: 'Orange Emerald',
-    appName: 'royal1008',
+    appName: 'SanwariyaBoss',
     description: 'Orange header + emerald action balance.',
     headerBgColor: '#ea580c',
     balancePillBg: 'rgba(0, 0, 0, 0.18)',
@@ -92,7 +92,7 @@ export const APP_THEMES = [
   {
     id: 'rust-amber',
     name: 'Rust Amber',
-    appName: 'royal1008',
+    appName: 'SanwariyaBoss',
     description: 'Deep rust orange + amber highlights.',
     headerBgColor: '#9a3412',
     balancePillBg: 'rgba(0, 0, 0, 0.18)',
@@ -109,7 +109,7 @@ export const APP_THEMES = [
   {
     id: 'golden-sunset',
     name: 'Golden Sunset',
-    appName: 'royal1008',
+    appName: 'SanwariyaBoss',
     description: 'Sunset amber + golden gradient glow.',
     headerBgColor: '#b45309',
     balancePillBg: 'rgba(0, 0, 0, 0.18)',

@@ -4,6 +4,7 @@ import { toast, Toaster } from "react-hot-toast";
 import Axios from "../../utils/axios";
 import SummaryApi from "../../common/SummerAPI";
 import { useTheme } from "../../context/ThemeContext";
+import logoImg from "../../assets/logo.jpeg";
 import {
   FaUserAlt,
   FaPhoneAlt,
@@ -23,7 +24,7 @@ export const UserAuth = () => {
   const { currentTheme } = useTheme();
 
   const themeColor = currentTheme?.headerBgColor || currentTheme?.playBtnBg || '#ea580c';
-  const brandName = currentTheme?.appName || 'Royal 1008';
+  const brandName = currentTheme?.appName || 'SanwariyaBoss';
 
   // Mode: "register" | "login"
   const [mode, setMode] = useState(location.pathname === "/register" ? "register" : "login");
@@ -421,12 +422,13 @@ export const UserAuth = () => {
       <Toaster position="top-center" reverseOrder={false} />
 
       {/* TOP LOGO & HEADER */}
-      <div className="text-center mb-6">
+      <div className="text-center mb-6 flex flex-col items-center">
+        <img src={logoImg} alt="SanwariyaBoss Logo" className="w-16 h-16 rounded-full object-cover mb-2 border-2 border-amber-400 shadow-md" />
         <h1 className="text-3xl font-black uppercase tracking-wider flex items-center justify-center gap-1.5 drop-shadow-xs" style={{ color: themeColor }}>
-          <span>{brandName}</span>
+          <span>Sanwariya<span className="text-[#facc15]">Boss</span></span>
         </h1>
         <p className="text-xs font-semibold text-gray-500 mt-0.5 tracking-wide">
-          Premium Betting Platform
+          Premium Matka Gaming Platform
         </p>
       </div>
 

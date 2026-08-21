@@ -5,6 +5,7 @@ import { IoFlashSharp, IoWalletOutline, IoChatbubbleEllipsesOutline, IoRefreshOu
 import { HiOutlineSparkles } from 'react-icons/hi';
 import { useNavigate, useLocation } from 'react-router-dom';
 import UserChatModal from './UserChatModal';
+import logoImg from '../../assets/logo.jpeg';
 
 export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
   const { currentTheme } = useTheme();
@@ -61,22 +62,28 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
         /* STANDARD TOP NAVBAR (Home / Bids) */
         <div className="px-4 pt-3 pb-3 flex items-center justify-between">
           {/* Left: Hamburger & Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={onOpenSidebar}
-              className="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition-all cursor-pointer active:scale-95 border border-white/20 shadow-xs"
+              className="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition-all cursor-pointer active:scale-95 border border-white/20 shadow-xs shrink-0"
               title="Open Menu"
             >
               <FaBars size={15} />
             </button>
 
-            {/* Logo Name: Royal1008 */}
+            {/* Logo Image & Name: SanwariyaBoss */}
             <div
               onClick={() => navigate('/')}
-              className="flex items-center text-lg font-bold tracking-tight cursor-pointer"
+              className="flex items-center gap-2 text-base font-bold tracking-tight cursor-pointer select-none"
             >
-              <span className="text-white">Royal</span>
-              <span className="text-[#facc15]">1008</span>
+              <img
+                src={logoImg}
+                alt="SanwariyaBoss Logo"
+                className="w-8 h-8 rounded-full object-cover border border-amber-300/40 shadow-xs shrink-0"
+              />
+              <span className="text-white font-black tracking-tight text-base">
+                Sanwariya<span className="text-[#facc15]">Boss</span>
+              </span>
             </div>
           </div>
 
