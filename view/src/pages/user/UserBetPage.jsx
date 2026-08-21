@@ -5,7 +5,7 @@ import { FaArrowLeft } from 'react-icons/fa';
 import { IoWalletOutline } from 'react-icons/io5';
 import Axios from '../../utils/axios';
 import SummaryApi from '../../common/SummerAPI';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 
 import { fetchGame } from '../../utils/api';
 import { getMarketSessionStatus } from '../../utils/marketTiming';
@@ -270,7 +270,7 @@ export const UserBetPage = () => {
         mobile: localUser?.mobile || '',
         marketName: decodedMarketName,
         gameMode: gameMode,
-        type: isGaliParam ? 'gali' : (b.type || ''),
+        type: isGaliParam ? 'gali' : (bidsList[0]?.type || ''),
         bids: bidsList.map(b => ({
           session: b.session || session || 'Open',
           digit: b.digit || '',
@@ -292,7 +292,7 @@ export const UserBetPage = () => {
       });
 
       if (res.data?.success) {
-        toast.success(res.data.message || 'Bids submitted successfully! 🎉');
+        toast.success(res.data.message || 'Your bet placed successfully! 🎉');
         if (res.data.newBalance !== undefined) {
           setWalletBalance(Number(res.data.newBalance));
           if (localUser) {
@@ -304,16 +304,16 @@ export const UserBetPage = () => {
         }
         setBidsList([]);
       } else {
-        toast.error(res.data?.message || 'Failed to submit bids.');
+        toast.error(res.data?.message || 'Failed to place bet. Please try again!');
       }
     } catch (error) {
       console.error('Error submitting bids:', error);
-      const errResponseMsg = error.response?.data?.message;
+      const errResponseMsg = error.response?.data?.message || error.message;
       if (errResponseMsg && error.response?.status !== 404) {
         toast.error(errResponseMsg);
       } else {
         // Fallback optimistic submission while backend deployment completes
-        toast.success('Bids submitted successfully! 🎉');
+        toast.success('Your bet placed successfully! 🎉');
         setWalletBalance(prev => Math.max(0, prev - totalPointsSum));
         setBidsList([]);
       }
@@ -324,6 +324,7 @@ export const UserBetPage = () => {
 
   return (
     <div className="min-h-screen bg-[#f4f5f8] font-sans pb-24 select-none max-w-md mx-auto relative">
+      <Toaster position="top-center" reverseOrder={false} />
       
       {/* 1. TOP NAVBAR HEADER MATCHING SCREENSHOT WITH TALLER HEIGHT */}
       <div 

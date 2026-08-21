@@ -38,6 +38,7 @@
   "share_target": {
     "action": "/support",
     "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
     "params": {
       "title": "title",
       "text": "text",
@@ -46,12 +47,15 @@
   },
   "scope_extensions": [
     {
+      "type": "web",
       "origin": "https://royalmatkaapi.growva.tech"
     },
     {
+      "type": "web",
       "origin": "https://royalmatka.growva.tech"
     },
     {
+      "type": "web",
       "origin": "https://royalmatka.com"
     }
   ],

@@ -54,7 +54,7 @@ export const WelcomePopup = () => {
           url: SummaryApi.getWelcomePopup?.url || '/api/user/get-welcome-popup',
           method: SummaryApi.getWelcomePopup?.method || 'get'
         });
-        if (res.data.success && res.data.config) {
+        if (res?.data?.success && res?.data?.config) {
           setConfig(res.data.config);
           localStorage.setItem('welcome_popup_config', JSON.stringify(res.data.config));
         }

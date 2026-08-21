@@ -143,7 +143,7 @@ export const ThemeProvider = ({ children }) => {
           url: SummaryApi.getAppTheme?.url || '/api/user/get-app-theme',
           method: SummaryApi.getAppTheme?.method || 'get'
         });
-        if (res.data.success && res.data.theme && res.data.theme.themeId) {
+        if (res?.data?.success && res?.data?.theme && res?.data?.theme?.themeId) {
           const matched = APP_THEMES.find((t) => t.id === res.data.theme.themeId);
           if (matched) {
             setCurrentTheme(matched);
