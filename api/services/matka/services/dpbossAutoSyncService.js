@@ -28,11 +28,61 @@ const parseMultiplier = (rateStr, defaultMult) => {
   return isNaN(num) || num <= 0 ? defaultMult : num;
 };
 
+const getCurrentDateIST = () => {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+};
+
+const parseTimeToMinutes = (timeStr) => {
+  if (!timeStr) return 99999;
+  const cleanStr = String(timeStr).trim().toUpperCase();
+  const match = cleanStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/);
+  if (!match) return 99999;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3] || 'AM';
+
+  if (period === 'PM' && hours !== 12) {
+    hours += 12;
+  } else if (period === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  return hours * 60 + minutes;
+};
+
+const getCurrentTimeInMinutesIST = () => {
+  const nowStr = new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+  const nowIST = new Date(nowStr);
+  return nowIST.getHours() * 60 + nowIST.getMinutes();
+};
+
+const isOpenTimeReached = (openTimeStr) => {
+  if (!openTimeStr) return true;
+  const openMins = parseTimeToMinutes(openTimeStr);
+  if (openMins === 99999) return true;
+  const currentMins = getCurrentTimeInMinutesIST();
+  return currentMins >= openMins;
+};
+
+const isCloseTimeReached = (openTimeStr, closeTimeStr) => {
+  if (!closeTimeStr) return true;
+  const openMins = parseTimeToMinutes(openTimeStr);
+  const closeMins = parseTimeToMinutes(closeTimeStr);
+  if (closeMins === 99999) return true;
+  const currentMins = getCurrentTimeInMinutesIST();
+
+  if (closeMins < openMins) {
+    return currentMins >= closeMins && currentMins < openMins;
+  }
+  return currentMins >= closeMins;
+};
+
 class DpbossAutoSyncService {
   constructor() {
     this.intervalId = null;
     this.midnightCheckId = null;
-    this.lastResetDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    this.lastResetDate = getCurrentDateIST();
     this.isSyncing = false;
     this.autoMasterEnabled = true; // Default ON
   }
@@ -45,6 +95,9 @@ class DpbossAutoSyncService {
   start() {
     console.log("🌐 DPBOSS Live API Auto-Sync Service Starting (30s Polling + Midnight Reset)...");
     
+    // Check and clear outdated results immediately on service startup
+    this.checkStartupDateReset();
+
     // 1. Run sync every 30 seconds
     this.intervalId = setInterval(() => {
       this.syncLiveApiResults();
@@ -61,6 +114,28 @@ class DpbossAutoSyncService {
     }, 60000);
   }
 
+  async checkStartupDateReset() {
+    if (mongoose.connection.readyState !== 1) return;
+    try {
+      const todayIST = getCurrentDateIST();
+      const res = await Market.updateMany(
+        { result_date: { $ne: todayIST } },
+        {
+          $set: {
+            result_open: "***",
+            result_close: "***",
+            jodi_result: "**"
+          }
+        }
+      );
+      if (res.modifiedCount > 0) {
+        console.log(`🧹 Startup Reset: Cleared ${res.modifiedCount} outdated market results to ***-**-***.`);
+      }
+    } catch (err) {
+      console.error("Error performing startup date reset:", err);
+    }
+  }
+
   stop() {
     if (this.intervalId) clearInterval(this.intervalId);
     if (this.midnightCheckId) clearInterval(this.midnightCheckId);
@@ -70,7 +145,7 @@ class DpbossAutoSyncService {
   // Check if Midnight (12:00 AM IST) has arrived for New Day Reset
   async checkMidnightReset() {
     try {
-      const currentDateIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      const currentDateIST = getCurrentDateIST();
       if (currentDateIST !== this.lastResetDate) {
         console.log(`🌙 Midnight New Day Detected (${currentDateIST})! Clearing market results for fresh day...`);
         this.lastResetDate = currentDateIST;
@@ -89,7 +164,8 @@ class DpbossAutoSyncService {
         $set: {
           result_open: "***",
           result_close: "***",
-          jodi_result: "**"
+          jodi_result: "**",
+          result_date: ""
         }
       });
       console.log(`🎉 New Day Reset Complete! ${res.modifiedCount || 0} markets reset to ***-**-***.`);
@@ -118,6 +194,7 @@ class DpbossAutoSyncService {
 
       const externalMarkets = data.markets;
       const dbMarkets = await Market.find({});
+      const todayIST = getCurrentDateIST();
 
       for (const dbMarket of dbMarkets) {
         const dbName = (dbMarket.market_name || dbMarket.name || '').toUpperCase().trim();
@@ -153,18 +230,31 @@ class DpbossAutoSyncService {
         let updateOpen = false;
         let updateClose = false;
 
-        // Check if Open Pana is newly declared
-        if (apiOpenPana && apiOpenPana.length === 3 && (!dbMarket.result_open || dbMarket.result_open === '***' || dbMarket.result_open !== apiOpenPana)) {
-          dbMarket.result_open = apiOpenPana;
-          needsUpdate = true;
-          updateOpen = true;
+        const canSyncOpen = isOpenTimeReached(dbMarket.open_time);
+        const canSyncClose = isCloseTimeReached(dbMarket.open_time, dbMarket.close_time);
+
+        // Check if Open Pana is newly declared AND open time reached
+        if (canSyncOpen && apiOpenPana && apiOpenPana.length === 3) {
+          // If updating for a new day, clear previous close result
+          if (dbMarket.result_date !== todayIST) {
+            dbMarket.result_close = '***';
+          }
+          if (!dbMarket.result_open || dbMarket.result_open === '***' || dbMarket.result_open !== apiOpenPana) {
+            dbMarket.result_open = apiOpenPana;
+            dbMarket.result_date = todayIST;
+            needsUpdate = true;
+            updateOpen = true;
+          }
         }
 
-        // Check if Close Pana is newly declared
-        if (apiClosePana && apiClosePana.length === 3 && (!dbMarket.result_close || dbMarket.result_close === '***' || dbMarket.result_close !== apiClosePana)) {
-          dbMarket.result_close = apiClosePana;
-          needsUpdate = true;
-          updateClose = true;
+        // Check if Close Pana is newly declared AND close time reached
+        if (canSyncClose && apiClosePana && apiClosePana.length === 3) {
+          if (!dbMarket.result_close || dbMarket.result_close === '***' || dbMarket.result_close !== apiClosePana) {
+            dbMarket.result_close = apiClosePana;
+            dbMarket.result_date = todayIST;
+            needsUpdate = true;
+            updateClose = true;
+          }
         }
 
         // Calculate center Jodi
@@ -187,7 +277,6 @@ class DpbossAutoSyncService {
           await this.settleMarketBids(dbMarket, updateOpen, updateClose);
 
           // Save record in history collection
-          const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
           await DeclaredResultHistory.findOneAndUpdate(
             { market_name: dbName, date: todayIST },
             {

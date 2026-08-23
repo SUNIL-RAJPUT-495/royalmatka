@@ -27,15 +27,86 @@ const calculateSingleDigit = (pana) => {
   return String(sum % 10);
 };
 
+const getCurrentDateIST = () => {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+};
+
+const parseTimeToMinutes = (timeStr) => {
+  if (!timeStr) return 99999;
+  const cleanStr = String(timeStr).trim().toUpperCase();
+  const match = cleanStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/);
+  if (!match) return 99999;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3] || 'AM';
+
+  if (period === 'PM' && hours !== 12) {
+    hours += 12;
+  } else if (period === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  return hours * 60 + minutes;
+};
+
+const getCurrentTimeInMinutesIST = () => {
+  const nowStr = new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+  const nowIST = new Date(nowStr);
+  return nowIST.getHours() * 60 + nowIST.getMinutes();
+};
+
+const isOpenTimeReached = (openTimeStr) => {
+  if (!openTimeStr) return true;
+  const openMins = parseTimeToMinutes(openTimeStr);
+  if (openMins === 99999) return true;
+  const currentMins = getCurrentTimeInMinutesIST();
+  return currentMins >= openMins;
+};
+
+const isCloseTimeReached = (openTimeStr, closeTimeStr) => {
+  if (!closeTimeStr) return true;
+  const openMins = parseTimeToMinutes(openTimeStr);
+  const closeMins = parseTimeToMinutes(closeTimeStr);
+  if (closeMins === 99999) return true;
+  const currentMins = getCurrentTimeInMinutesIST();
+
+  if (closeMins < openMins) {
+    return currentMins >= closeMins && currentMins < openMins;
+  }
+  return currentMins >= closeMins;
+};
+
 const formatMarketResult = (marketDoc) => {
   const market = marketDoc.toObject ? marketDoc.toObject() : marketDoc;
-  const openPana = market.result_open && market.result_open !== '***' ? String(market.result_open).trim() : '***';
-  const closePana = market.result_close && market.result_close !== '***' ? String(market.result_close).trim() : '***';
+  const todayIST = getCurrentDateIST();
+
+  let rawOpen = market.result_open && market.result_open !== '***' ? String(market.result_open).trim() : '***';
+  let rawClose = market.result_close && market.result_close !== '***' ? String(market.result_close).trim() : '***';
+
+  // Guard 1: If result_date is not today's date, hide old results!
+  if (market.result_date && market.result_date !== todayIST) {
+    rawOpen = '***';
+    rawClose = '***';
+  }
+
+  // Guard 2: If current time is before market open_time, hide open result!
+  if (!isOpenTimeReached(market.open_time)) {
+    rawOpen = '***';
+  }
+
+  // Guard 3: If current time is before market close_time, hide close result!
+  if (!isCloseTimeReached(market.open_time, market.close_time)) {
+    rawClose = '***';
+  }
+
+  const openPana = rawOpen;
+  const closePana = rawClose;
 
   const openDigit = calculateSingleDigit(openPana);
   const closeDigit = calculateSingleDigit(closePana);
 
-  let jodi = market.jodi_result || '**';
+  let jodi = '**';
   if (openDigit !== '*' && closeDigit !== '*') {
     jodi = `${openDigit}${closeDigit}`;
   } else if (openDigit !== '*') {
@@ -55,27 +126,6 @@ const formatMarketResult = (marketDoc) => {
     jodi_result: jodi,
     display_result: `${openPana}-${jodi}-${closePana}`
   };
-};
-
-
-
-const parseTimeToMinutes = (timeStr) => {
-  if (!timeStr) return 99999;
-  const cleanStr = String(timeStr).trim().toUpperCase();
-  const match = cleanStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/);
-  if (!match) return 99999;
-
-  let hours = parseInt(match[1], 10);
-  const minutes = parseInt(match[2], 10);
-  const period = match[3] || 'AM';
-
-  if (period === 'PM' && hours !== 12) {
-    hours += 12;
-  } else if (period === 'AM' && hours === 12) {
-    hours = 0;
-  }
-
-  return hours * 60 + minutes;
 };
 
 export const getAllMarkets = async (req, res) => {
@@ -235,11 +285,36 @@ export const declareResult = async (req, res) => {
       }
 
       if (market) {
-        if (openPanaVal !== undefined && openPanaVal !== null && openPanaVal !== "") {
-          market.result_open = String(openPanaVal).trim();
+        const todayIST = getCurrentDateIST();
+        const hasOpenToSet = openPanaVal !== undefined && openPanaVal !== null && openPanaVal !== "" && openPanaVal !== "***";
+        const hasCloseToSet = closePanaVal !== undefined && closePanaVal !== null && closePanaVal !== "" && closePanaVal !== "***";
+
+        if (hasOpenToSet && !isOpenTimeReached(market.open_time)) {
+          return res.status(400).json({
+            success: false,
+            message: `Cannot declare Open result before market open time (${market.open_time})!`
+          });
         }
-        if (closePanaVal !== undefined && closePanaVal !== null && closePanaVal !== "") {
+
+        if (hasCloseToSet && !isCloseTimeReached(market.open_time, market.close_time)) {
+          return res.status(400).json({
+            success: false,
+            message: `Cannot declare Close result before market close time (${market.close_time})!`
+          });
+        }
+
+        // If updating for a new day, reset close result when setting fresh open result
+        if (market.result_date !== todayIST && hasOpenToSet) {
+          market.result_close = "***";
+        }
+
+        if (hasOpenToSet) {
+          market.result_open = String(openPanaVal).trim();
+          market.result_date = todayIST;
+        }
+        if (hasCloseToSet) {
           market.result_close = String(closePanaVal).trim();
+          market.result_date = todayIST;
         }
 
         // Calculate center Jodi automatically
@@ -393,7 +468,6 @@ export const declareResult = async (req, res) => {
         }
 
         // Save permanent record to DeclaredResultHistory collection for Charts
-        const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
         await DeclaredResultHistory.findOneAndUpdate(
           { market_name: market.market_name.toUpperCase(), date: todayIST },
           {

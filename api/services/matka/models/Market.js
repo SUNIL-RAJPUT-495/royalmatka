@@ -9,6 +9,7 @@ const marketSchema = new mongoose.Schema({
   result_open: { type: String, default: "***" },
   result_close: { type: String, default: "***" },
   jodi_result: { type: String, default: "**" },
+  result_date: { type: String, default: "" },
 }, { timestamps: true });
 
 export default mongoose.model("Market", marketSchema);
