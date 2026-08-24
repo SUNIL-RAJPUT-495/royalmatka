@@ -435,6 +435,40 @@ const SummaryApi = {
     sendUserChatMessage: {
         url: baseURL + "/api/chat/user/send",
         method: "post"
+    },
+
+    // NexxAPI Casino Endpoints
+    getCasinoWhoAmI: {
+        url: baseURL + "/api/cashino/whoami",
+        method: "get"
+    },
+    getCasinoProviders: {
+        url: baseURL + "/api/cashino/providers",
+        method: "get"
+    },
+    getCasinoGames: {
+        url: baseURL + "/api/cashino/games",
+        method: "get"
+    },
+    getCasinoGgrBalance: {
+        url: baseURL + "/api/cashino/ggr-balance",
+        method: "get"
+    },
+    launchCasinoGame: {
+        url: baseURL + "/api/cashino/launch",
+        method: "post"
+    },
+    getCasinoTransactions: {
+        url: baseURL + "/api/cashino/transactions",
+        method: "get"
+    },
+    proxyCasinoImage: {
+        url: baseURL + "/api/cashino/proxy-image",
+        method: "get"
+    },
+    toggleCasinoGameStatus: {
+        url: baseURL + "/api/cashino/toggle-game-status",
+        method: "post"
     }
 };
 

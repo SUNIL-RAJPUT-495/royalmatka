@@ -29,6 +29,7 @@ import { UserStarline } from "./pages/user/UserStarline";
 import { UserShare } from "./pages/user/UserShare";
 import Aviator from "./services/aviator/pages/Aviator";
 import { AviatorAdminControl } from "./pages/admin/AviatorAdminControl";
+import { CasinoAdminControl } from "./pages/admin/CasinoAdminControl";
 import { AdminLayout } from "./layout/AdminLayout";
 import { Dashboard } from "./components/admin/Dashboard";
 import { AddGame } from "./pages/admin/AddGame";
@@ -171,6 +172,8 @@ function App() {
               <Route path="AdminHowToPlay" element={<AdminHowToPlay />} />
               <Route path="contact-management" element={<ContactManagement />} />
               <Route path="aviator" element={<AviatorAdminControl />} />
+              <Route path="casino" element={<CasinoAdminControl />} />
+              <Route path="cashino" element={<CasinoAdminControl />} />
               <Route path="ContactManagement" element={<ContactManagement />} />
               <Route path="contact" element={<ContactManagement />} />
               <Route path="upi" element={<UpiSettings />} />

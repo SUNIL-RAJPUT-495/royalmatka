@@ -19,6 +19,7 @@ import bidRoutes from "./services/matka/routes/bid.routes.js";
 import settingsRoutes from "./services/matka/routes/settings.routes.js";
 import chatRoutes from "./services/chat/routes/chat.routes.js";
 import notificationRoutes from "./services/auth/routes/notification.routes.js";
+import cashinoRoutes from "./services/cashino/routes/cashino.routes.js";
 import GameEngine from "./services/aviator/game/GameEngine.js";
 import dpbossAutoSyncService from "./services/matka/services/dpbossAutoSyncService.js";
 
@@ -60,6 +61,8 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/notification", notificationRoutes);
 app.use("/api/user/notification", notificationRoutes);
+app.use("/api/cashino", cashinoRoutes);
+app.use("/api/casino", cashinoRoutes);
 
 // Test Route
 app.get("/", (req, res) => {

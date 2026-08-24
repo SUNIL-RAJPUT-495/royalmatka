@@ -85,6 +85,7 @@ export const AdminSideBar = ({ closeSidebar }) => {
             heading: "Casino",
             items: [
                 { icons: FaRocket, itemsDetails: "Aviator", link: "aviator" },
+                { icons: GiDiceSixFacesThree, itemsDetails: "Casino Management", link: "casino" },
             ]
         },
         // {
