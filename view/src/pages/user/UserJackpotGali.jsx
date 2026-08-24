@@ -96,8 +96,8 @@ export const UserJackpotGali = () => {
         className="w-full text-white shadow-xs transition-colors duration-300 shrink-0 sticky top-0 z-30"
         style={{ backgroundColor: themeHeaderBg }}
       >
-        {/* Top Action Bar (Back Arrow + Notification Bell) */}
-        <div className="px-4 pt-4 pb-3 flex items-center justify-between">
+        {/* Top Action Bar (Back Arrow + Title + Notification Bell) */}
+        <div className="px-4 pt-4 pb-4 flex items-center justify-between">
           <button
             type="button"
             onClick={() => navigate('/')}
@@ -106,6 +106,10 @@ export const UserJackpotGali = () => {
           >
             <FaArrowLeft size={15} />
           </button>
+
+          <h2 className="text-base font-bold text-white tracking-wide uppercase">
+            Jackpot Gali
+          </h2>
 
           <button
             type="button"
@@ -117,49 +121,24 @@ export const UserJackpotGali = () => {
           </button>
         </div>
 
-        {/* 3 Horizontal Nav Tabs */}
+        {/* Extra Navigation Tabs (Commented out for now as requested)
         <div className="px-4 pb-5">
           <div className="grid grid-cols-3 gap-2.5">
-            {/* TAB 1: StarLine */}
-            <div
-              onClick={() => navigate('/starline')}
-              className="bg-white/95 hover:bg-white active:scale-95 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center gap-1 shadow-sm cursor-pointer transition-all border border-white/60"
-            >
-              <div className="w-8 h-8 rounded-xl bg-[#f5eeff] flex items-center justify-center text-[#9333ea] shrink-0 shadow-2xs">
-                <IoStarOutline size={18} className="text-[#9333ea]" />
-              </div>
-              <span className="text-xs font-bold text-gray-800 tracking-tight">
-                StarLine
-              </span>
+            <div onClick={() => navigate('/starline')} className="bg-white/95 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center gap-1">
+              <IoStarOutline size={18} className="text-[#9333ea]" />
+              <span className="text-xs font-bold text-gray-800">StarLine</span>
             </div>
-
-            {/* TAB 2: Jackpot / Gali (Active) */}
-            <div
-              onClick={() => navigate('/Jackpot')}
-              className="bg-white rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center gap-1 shadow-md cursor-pointer transition-all border-2 border-white scale-[1.02] active:scale-95"
-            >
-              <div className="w-8 h-8 rounded-xl bg-[#fff7ed] flex items-center justify-center text-[#ea580c] shrink-0 shadow-2xs">
-                <FaChartLine size={16} className="text-[#ea580c]" />
-              </div>
-              <span className="text-xs font-bold text-gray-900 tracking-tight">
-                Jackpot
-              </span>
+            <div onClick={() => navigate('/Jackpot')} className="bg-white rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center gap-1">
+              <FaChartLine size={16} className="text-[#ea580c]" />
+              <span className="text-xs font-bold text-gray-900">Jackpot</span>
             </div>
-
-            {/* TAB 3: Main (Navigates to Home) */}
-            <div
-              onClick={() => navigate('/')}
-              className="bg-white/95 hover:bg-white active:scale-95 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center gap-1 shadow-sm cursor-pointer transition-all border border-white/60"
-            >
-              <div className="w-8 h-8 rounded-xl bg-[#ecfdf5] flex items-center justify-center text-[#10b981] shrink-0 shadow-2xs">
-                <IoGridOutline size={18} className="text-[#10b981]" />
-              </div>
-              <span className="text-xs font-bold text-gray-800 tracking-tight">
-                Main
-              </span>
+            <div onClick={() => navigate('/')} className="bg-white/95 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center gap-1">
+              <IoGridOutline size={18} className="text-[#10b981]" />
+              <span className="text-xs font-bold text-gray-800">Main</span>
             </div>
           </div>
         </div>
+        */}
       </div>
 
       {/* 2. BODY CONTENT */}
