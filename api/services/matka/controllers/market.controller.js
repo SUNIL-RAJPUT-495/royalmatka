@@ -3,6 +3,7 @@ import Bid from "../models/Bid.js";
 import User from "../../auth/models/User.js";
 import GameRate from "../models/GameRate.js";
 import DeclaredResultHistory from "../models/DeclaredResultHistory.js";
+import Notification from "../../auth/models/Notification.js";
 import mongoose from "mongoose";
 import dpbossAutoSyncService from "../services/dpbossAutoSyncService.js";
 
@@ -356,6 +357,30 @@ export const declareResult = async (req, res) => {
 
         // Settle bids phased: Open result settles Open bids, Close result settles Close & Jodi bids
         const finalMarketName = market.market_name || targetName;
+
+        // 1. Create Broadcast / Global Notification for all users
+        try {
+          let notifTitle = `📢 ${finalMarketName.toUpperCase()} RESULT DECLARED`;
+          let notifMsg = "";
+          if (hasOpenToSet && hasCloseToSet) {
+            notifMsg = `${finalMarketName} Full Result: ${market.result_open}-${market.jodi_result}-${market.result_close}`;
+          } else if (hasOpenToSet) {
+            notifMsg = `${finalMarketName} Open Pana ${market.result_open} (Digit ${openDigit}) Declared! Result: ${market.result_open}-${openDigit}*`;
+          } else if (hasCloseToSet) {
+            notifMsg = `${finalMarketName} Close Pana ${market.result_close} (Digit ${closeDigit}) Declared! Full Result: ${market.result_open}-${market.jodi_result}-${market.result_close}`;
+          }
+
+          if (notifMsg) {
+            await Notification.create({
+              title: notifTitle,
+              content: notifMsg,
+              isGlobal: true
+            });
+          }
+        } catch (nErr) {
+          console.warn("Global notification creation failed:", nErr);
+        }
+
         const pendingBids = await Bid.find({
           marketName: new RegExp(`^${finalMarketName.trim()}$`, 'i'),
           status: "Pending"
@@ -444,6 +469,9 @@ export const declareResult = async (req, res) => {
 
           // Execute settlement if evaluated in current declaration phase
           if (shouldEvaluate) {
+            const userTargetId = String(bid.userId || bid.userMobile || '');
+            const bidDigitPana = String(bid.digit || bid.pana || bid.jodi || '');
+
             if (isWin) {
               const winAmt = Math.round(pts * mult);
               bid.status = "Won";
@@ -459,10 +487,30 @@ export const declareResult = async (req, res) => {
                   } 
                 });
               }
+
+              // Send Win Notification to Bidder
+              if (userTargetId) {
+                await Notification.create({
+                  title: `🎉 WINNER! ${finalMarketName.toUpperCase()}`,
+                  content: `Congratulations! You WON ₹${winAmt} on your bid (${bid.gameMode || 'Bid'} - Digit: ${bidDigitPana}) in ${finalMarketName}! ₹${winAmt} credited to your wallet.`,
+                  isGlobal: false,
+                  targetUser: userTargetId
+                }).catch(() => {});
+              }
             } else {
               bid.status = "Lost";
               bid.winAmount = 0;
               await bid.save();
+
+              // Send Loss Notification to Bidder
+              if (userTargetId) {
+                await Notification.create({
+                  title: `❌ BID RESULT: ${finalMarketName.toUpperCase()}`,
+                  content: `Your bid of ₹${pts} on (${bid.gameMode || 'Bid'} - Digit: ${bidDigitPana}) in ${finalMarketName} did not match. Better luck next time!`,
+                  isGlobal: false,
+                  targetUser: userTargetId
+                }).catch(() => {});
+              }
             }
           }
         }

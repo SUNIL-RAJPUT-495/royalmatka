@@ -92,8 +92,21 @@ export const sendNotification = async (req, res) => {
  */
 export const getAllNotifications = async (req, res) => {
   try {
+    const { userId, mobile, user } = req.query;
+    const target = String(userId || mobile || user || '').trim();
+
     if (mongoose.connection.readyState === 1) {
-      const notifications = await Notification.find().sort({ createdAt: -1 });
+      let query = { isGlobal: true };
+      if (target) {
+        query = {
+          $or: [
+            { isGlobal: true },
+            { targetUser: target }
+          ]
+        };
+      }
+
+      const notifications = await Notification.find(query).sort({ createdAt: -1 }).limit(100);
       return res.status(200).json({
         success: true,
         notifications

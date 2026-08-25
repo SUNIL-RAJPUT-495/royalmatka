@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { FaBars, FaBell, FaTelegramPlane, FaArrowLeft } from 'react-icons/fa';
 import { IoFlashSharp, IoWalletOutline, IoChatbubbleEllipsesOutline, IoRefreshOutline } from 'react-icons/io5';
@@ -6,6 +6,8 @@ import { HiOutlineSparkles } from 'react-icons/hi';
 import { useNavigate, useLocation } from 'react-router-dom';
 import UserChatModal from './UserChatModal';
 import logoImg from '../../assets/logo.jpeg';
+import Axios from '../../utils/axios';
+import SummaryApi from '../../common/SummerAPI';
 
 export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
   const { currentTheme } = useTheme();
@@ -20,6 +22,48 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
   const [lastUpdatedTime, setLastUpdatedTime] = useState(() => new Date().toLocaleTimeString());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const localUserStr = localStorage.getItem("user_data");
+        let localUser = null;
+        try { if (localUserStr) localUser = JSON.parse(localUserStr); } catch (e) {}
+        const uId = localUser?._id || localUser?.id || "";
+        const uMob = localUser?.mobile || "";
+
+        // Check cached settings
+        let settings = { allNotifications: true, resultDeclared: true, betWinLoss: true, adminBroadcasts: true };
+        const cached = localStorage.getItem('user_notification_settings');
+        if (cached) {
+          try { settings = { ...settings, ...JSON.parse(cached) }; } catch (e) {}
+        }
+
+        if (settings.allNotifications === false) {
+          setUnreadCount(0);
+          return;
+        }
+
+        const res = await Axios({
+          url: `${SummaryApi.getAllNotifications.url}?userId=${uId}&mobile=${uMob}`,
+          method: SummaryApi.getAllNotifications.method
+        });
+        if (res.data.success && Array.isArray(res.data.notifications)) {
+          const readIds = JSON.parse(localStorage.getItem('read_notification_ids') || '[]');
+          const unread = res.data.notifications.filter(n => {
+            if (readIds.includes(n._id || n.id)) return false;
+            const titleUpper = String(n.title || '').toUpperCase();
+            if (titleUpper.includes('RESULT') && settings.resultDeclared === false) return false;
+            if ((titleUpper.includes('WIN') || titleUpper.includes('LOSS')) && settings.betWinLoss === false) return false;
+            return true;
+          });
+          setUnreadCount(unread.length);
+        }
+      } catch (e) {}
+    };
+    fetchUnreadCount();
+  }, [location.pathname]);
 
   const handleRefreshBalance = () => {
     setIsRefreshing(true);
@@ -95,9 +139,11 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
               className="w-8 h-8 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition-all cursor-pointer relative border border-white/20"
             >
               <FaBell size={13} />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white font-bold text-[9px] px-1.5 py-0.2 rounded-full border border-white shadow-xs">
-                9+
-              </span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white font-bold text-[9px] px-1.5 py-0.2 rounded-full border border-white shadow-xs animate-pulse">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
 
             {/* Wallet Balance Pill */}

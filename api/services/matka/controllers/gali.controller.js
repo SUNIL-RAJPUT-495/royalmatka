@@ -2,6 +2,7 @@ import GaliMarket from "../models/GaliMarket.js";
 import Bid from "../models/Bid.js";
 import User from "../../auth/models/User.js";
 import GameRate from "../models/GameRate.js";
+import Notification from "../../auth/models/Notification.js";
 import mongoose from "mongoose";
 
 // Helper to check if time has passed in IST
@@ -116,6 +117,13 @@ export const declareGaliResult = async (req, res) => {
       market.is_closed = true;
       await market.save();
 
+      // Create Global Broadcast Notification for Gali Result
+      await Notification.create({
+        title: `🎯 ${market.name.toUpperCase()} RESULT DECLARED`,
+        content: `${market.name} Gali Result Declared: Jodi ${cleanJodi}`,
+        isGlobal: true
+      }).catch(() => {});
+
       const lDigit = cleanJodi[0];
       const rDigit = cleanJodi[1];
 
@@ -163,6 +171,7 @@ export const declareGaliResult = async (req, res) => {
         const mode = (bid.gameMode || bid.game_type || '').toLowerCase().replace(/-/g, ' ');
         const digit = String(bid.digit || bid.jodi || bid.pana || bid.number || bid.bid_digit || '').trim();
         const pts = Number(bid.points) || 0;
+        const userTargetId = String(bid.userId || bid.userMobile || bid.mobile || '');
 
         let isWin = false;
         let mult = rateSingleDigit;
@@ -198,10 +207,30 @@ export const declareGaliResult = async (req, res) => {
               { $inc: { balance: winAmount, wallet_balance: winAmount } }
             );
           }
+
+          // Send Win Notification to Gali bidder
+          if (userTargetId) {
+            await Notification.create({
+              title: `🎉 WINNER! ${market.name.toUpperCase()}`,
+              content: `Congratulations! You WON ₹${winAmount} on bid (${bid.gameMode || 'Gali Bid'} - Digit: ${digit}) in ${market.name}! Balance credited.`,
+              isGlobal: false,
+              targetUser: userTargetId
+            }).catch(() => {});
+          }
         } else {
           bid.status = "Lost";
           bid.winAmount = 0;
           bid.win_amount = 0;
+
+          // Send Loss Notification to Gali bidder
+          if (userTargetId) {
+            await Notification.create({
+              title: `❌ GALI BID RESULT: ${market.name.toUpperCase()}`,
+              content: `Your bid of ₹${pts} on (${bid.gameMode || 'Gali Bid'} - Digit: ${digit}) in ${market.name} did not match. Better luck next time!`,
+              isGlobal: false,
+              targetUser: userTargetId
+            }).catch(() => {});
+          }
         }
 
         await bid.save();

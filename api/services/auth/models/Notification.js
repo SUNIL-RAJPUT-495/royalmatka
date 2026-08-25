@@ -17,8 +17,7 @@ const notificationSchema = new mongoose.Schema(
       default: true
     },
     targetUser: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: String,
       default: null
     },
     reads: {

@@ -13,6 +13,7 @@ const router = express.Router();
 // Notifications Management
 router.post("/send", sendNotification);
 router.get("/all", getAllNotifications);
+router.get("/get-all-notifications", getAllNotifications);
 router.put("/update/:id", updateNotification);
 router.put("/update", updateNotification);
 router.post("/update", updateNotification);

@@ -389,7 +389,7 @@ const SummaryApi = {
 
     // Notifications
     getAllNotifications: {
-        url: baseURL + "/api/notification/get-all-notifications",
+        url: baseURL + "/api/notification/all",
         method: "get"
     },
     sendNotification: {
