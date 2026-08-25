@@ -228,6 +228,8 @@ export const UserBetPage = () => {
     };
 
     setBidsList(prev => [...prev, newBid]);
+
+    
     setDigit('');
     setPoints('');
     toast.success('Bid added to list!');
