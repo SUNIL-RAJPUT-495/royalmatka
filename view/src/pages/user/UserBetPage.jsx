@@ -221,7 +221,7 @@ export const UserBetPage = () => {
 
     const newBid = {
       id: Date.now(),
-      session: 'Open',
+      session: session || 'Open',
       digit: digit.trim(),
       points: parseInt(points, 10),
       type: gameMode === 'left-digit' ? 'Left' : gameMode === 'right-digit' ? 'Right' : ''
