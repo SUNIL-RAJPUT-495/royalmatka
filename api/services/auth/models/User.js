@@ -62,6 +62,10 @@ const userSchema = new mongoose.Schema({
     enum: ["Active", "Blocked"],
     default: "Active"
   },
+  fcmToken: {
+    type: String,
+    default: ""
+  },
   isForceLoggedOut: {
     type: Boolean,
     default: false

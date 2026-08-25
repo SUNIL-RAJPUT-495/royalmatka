@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "202654754463",
+    "project_id": "matka-8dff8",
+    "storage_bucket": "matka-8dff8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:202654754463:android:e8e0b8839ebd540c6b24aa",
+        "android_client_info": {
+          "package_name": "com.matka"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbytr2X-Pf4GbZ6-ANr23z5d3ecxisIsc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:202654754463:android:e8e0b8839ebd540c6b24aa",
+        "android_client_info": {
+          "package_name": "com.royalmatka.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbytr2X-Pf4GbZ6-ANr23z5d3ecxisIsc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

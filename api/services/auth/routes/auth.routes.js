@@ -31,7 +31,8 @@ import {
   approveAccountDeletionRequest,
   rejectAccountDeletionRequest,
   deleteAccountDeletionRequest,
-  getAdminDashboardStats
+  getAdminDashboardStats,
+  saveFcmToken
 } from "../controllers/auth.controller.js";
 
 const router = express.Router();
@@ -47,6 +48,7 @@ router.post("/add-bank-account", addBankAccount);
 router.post("/add-upi-id", addUpiId);
 router.post("/update-wallet", updateUserWallet);
 router.post("/change-password", changeUserPassword);
+router.post("/save-fcm-token", saveFcmToken);
 
 // Account Deletion Routes
 router.post("/request-deletion", requestAccountDeletion);

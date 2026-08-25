@@ -1559,3 +1559,27 @@ export const getAdminDashboardStats = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const saveFcmToken = async (req, res) => {
+  try {
+    const { userId, mobile, fcmToken } = req.body;
+    if (!fcmToken) {
+      return res.status(400).json({ success: false, message: "FCM token is required" });
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      let query = {};
+      if (userId && mongoose.Types.ObjectId.isValid(userId)) query._id = userId;
+      else if (mobile) query.mobile = mobile;
+
+      if (Object.keys(query).length > 0) {
+        await User.findOneAndUpdate(query, { fcmToken });
+      }
+    }
+
+    return res.status(200).json({ success: true, message: "FCM token saved successfully" });
+  } catch (error) {
+    console.error("saveFcmToken Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};

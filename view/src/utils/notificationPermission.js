@@ -56,3 +56,27 @@ export const requestAppNotificationPermission = async () => {
     return 'error';
   }
 };
+
+/**
+ * Trigger Native Status Bar Notification (Android / iOS / Browser)
+ */
+export const showLocalStatusNotification = async (title, body) => {
+  try {
+    if (Capacitor.isNativePlatform()) {
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: String(title),
+            body: String(body),
+            id: Math.floor(Math.random() * 100000) + 1,
+            schedule: { at: new Date(Date.now() + 100) }
+          }
+        ]
+      });
+    } else if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, { body: body });
+    }
+  } catch (e) {
+    console.warn("Could not trigger status bar notification:", e);
+  }
+};

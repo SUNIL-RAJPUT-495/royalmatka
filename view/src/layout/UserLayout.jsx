@@ -4,15 +4,20 @@ import { UserNavbar } from '../components/user/UserNavbar';
 import { SideBar } from '../pages/user/SideBar';
 import { UserBottomNav } from '../components/user/UserBottomNav';
 import { WelcomePopup } from '../components/user/WelcomePopup';
-import { NotificationPermissionModal } from '../components/user/NotificationPermissionModal';
 import Axios from '../utils/axios';
 import SummaryApi from '../common/SummerAPI';
+import { initPushNotifications } from '../utils/pushNotifications';
 
 export const UserLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
   const [isBlockedModalOpen, setIsBlockedModalOpen] = useState(false);
   const [blockedMessage, setBlockedMessage] = useState('');
+
+  // Initialize FCM Push Notifications on app mount
+  useEffect(() => {
+    initPushNotifications();
+  }, []);
 
   const [userData, setUserData] = useState(() => {
     const saved = localStorage.getItem('user_data');
@@ -122,9 +127,6 @@ export const UserLayout = () => {
 
       {/* 5. WELCOME POPUP MODAL (ONCE PER SESSION) */}
       <WelcomePopup />
-
-      {/* AUTOMATIC NOTIFICATION PERMISSION PROMPT MODAL */}
-      <NotificationPermissionModal />
 
       {/* 6. ACCOUNT BLOCKED / DELETED POPUP MODAL */}
       {isBlockedModalOpen && (

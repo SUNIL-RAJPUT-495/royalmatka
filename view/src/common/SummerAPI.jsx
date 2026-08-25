@@ -76,6 +76,10 @@ const SummaryApi = {
         url: baseURL + "/api/user/update-wallet",
         method: "post"
     },
+    saveFcmToken: {
+        url: baseURL + "/api/user/save-fcm-token",
+        method: "post"
+    },
 
     // Payment Gateway & Deposits
     createOrder: {
