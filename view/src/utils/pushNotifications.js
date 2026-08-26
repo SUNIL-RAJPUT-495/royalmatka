@@ -18,6 +18,9 @@ export const initPushNotifications = async () => {
     }
     console.log("Push notifications initialized (Web mode)");
     return;
+
+
+    
   }
 
   try {
