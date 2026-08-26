@@ -15,6 +15,7 @@ export const NotificationSender = () => {
   const [notificationTitle, setNotificationTitle] = useState('');
   const [messageContent, setMessageContent] = useState('');
   const [sendToAll, setSendToAll] = useState(true);
+  const [targetUser, setTargetUser] = useState('');
   const [editModeId, setEditModeId] = useState(null);
 
   // Notifications state
@@ -89,7 +90,8 @@ export const NotificationSender = () => {
             id: editModeId,
             title: notificationTitle.trim().toUpperCase(),
             content: messageContent.trim(),
-            isGlobal: sendToAll
+            isGlobal: sendToAll,
+            targetUser: sendToAll ? null : targetUser.trim()
           }
         });
         if (res.data.success) {
@@ -107,7 +109,8 @@ export const NotificationSender = () => {
           data: {
             title: notificationTitle.trim().toUpperCase(),
             content: messageContent.trim(),
-            isGlobal: sendToAll
+            isGlobal: sendToAll,
+            targetUser: sendToAll ? null : targetUser.trim()
           }
         });
         if (res.data.success) {
@@ -121,6 +124,7 @@ export const NotificationSender = () => {
       // Reset Form
       setNotificationTitle('');
       setMessageContent('');
+      setTargetUser('');
       setSendToAll(true);
       setCreatePanelOpen(false);
     } catch (error) {
@@ -134,6 +138,7 @@ export const NotificationSender = () => {
     setNotificationTitle(notif.title);
     setMessageContent(notif.content);
     setSendToAll(notif.isGlobal !== false);
+    setTargetUser(notif.targetUser || '');
     setEditModeId(notif._id || notif.id);
     setCreatePanelOpen(true);
   };
@@ -252,6 +257,20 @@ export const NotificationSender = () => {
                   />
                   <span>Send to all users (Global Notification)</span>
                 </label>
+
+                {!sendToAll && (
+                  <div className="space-y-1 text-xs animate-in fade-in duration-150">
+                    <label className="block font-bold text-gray-500 uppercase tracking-wider">Target User (Mobile or User ID)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g., 9876543210"
+                      value={targetUser}
+                      onChange={(e) => setTargetUser(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-xs font-semibold outline-none focus:border-blue-500 shadow-3xs"
+                      required
+                    />
+                  </div>
+                )}
 
                 {/* Submit button */}
                 <div className="pt-2">

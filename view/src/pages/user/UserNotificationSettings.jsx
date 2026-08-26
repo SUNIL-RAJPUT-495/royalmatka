@@ -61,11 +61,16 @@ export const UserNotificationSettings = () => {
 
   const [settings, setSettings] = useState(defaultSettings);
 
-  // Check Notification Permission on Mount
+  // Check & Request Standard System Notification Permission on Mount
   useEffect(() => {
     const initPermission = async () => {
       const status = await checkNotificationPermission();
-      setPermissionState(status);
+      if (status === 'default' || status === 'prompt') {
+        const newStatus = await requestAppNotificationPermission();
+        setPermissionState(newStatus);
+      } else {
+        setPermissionState(status);
+      }
     };
     initPermission();
   }, []);
@@ -322,28 +327,6 @@ export const UserNotificationSettings = () => {
       </div>
 
       <div className="px-4 space-y-3.5">
-        {/* PERMISSION PROMPT BANNER IF NOT GRANTED */}
-        {permissionState !== 'granted' && (
-          <div className="bg-amber-50 border border-amber-200 rounded-3xl p-4 shadow-2xs flex items-center justify-between gap-3 animate-in fade-in duration-200">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 shadow-2xs">
-                <IoShieldCheckmarkOutline size={20} />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-gray-900">Allow System Notifications</h4>
-                <p className="text-[11px] text-gray-600 font-normal mt-0.5 leading-snug">
-                  Tap allow to receive instant game result alerts & broadcasts on your device.
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={handleAllowPermission}
-              className="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs shrink-0 cursor-pointer transition-all"
-            >
-              ALLOW
-            </button>
-          </div>
-        )}
 
         {/* TAB 1: NOTIFICATIONS LIST */}
         {activeTab === 'notifications' && (

@@ -9,6 +9,13 @@ import { showLocalStatusNotification } from './notificationPermission';
  */
 export const initPushNotifications = async () => {
   if (!Capacitor.isNativePlatform()) {
+    if ('Notification' in window && Notification.permission === 'default') {
+      try {
+        await Notification.requestPermission();
+      } catch (e) {
+        console.warn("Web notification permission request error:", e);
+      }
+    }
     console.log("Push notifications initialized (Web mode)");
     return;
   }

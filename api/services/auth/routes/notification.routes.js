@@ -15,9 +15,11 @@ router.post("/send", sendNotification);
 router.get("/all", getAllNotifications);
 router.get("/get-all-notifications", getAllNotifications);
 router.put("/update/:id", updateNotification);
+router.post("/update/:id", updateNotification);
 router.put("/update", updateNotification);
 router.post("/update", updateNotification);
 router.delete("/delete/:id", deleteNotification);
+router.post("/delete/:id", deleteNotification);
 router.delete("/delete", deleteNotification);
 router.post("/delete", deleteNotification);
 

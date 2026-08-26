@@ -93,15 +93,18 @@ export const sendNotification = async (req, res) => {
 export const getAllNotifications = async (req, res) => {
   try {
     const { userId, mobile, user } = req.query;
-    const target = String(userId || mobile || user || '').trim();
+    const targets = [userId, mobile, user]
+      .filter(Boolean)
+      .map(t => String(t).trim())
+      .filter(t => t.length > 0);
 
     if (mongoose.connection.readyState === 1) {
       let query = { isGlobal: true };
-      if (target) {
+      if (targets.length > 0) {
         query = {
           $or: [
             { isGlobal: true },
-            { targetUser: target }
+            { targetUser: { $in: targets } }
           ]
         };
       }
@@ -113,9 +116,10 @@ export const getAllNotifications = async (req, res) => {
       });
     }
 
+    const memoryFiltered = memoryNotifications.filter(n => n.isGlobal || (targets.length > 0 && targets.includes(n.targetUser)));
     return res.status(200).json({
       success: true,
-      notifications: memoryNotifications
+      notifications: memoryFiltered
     });
   } catch (error) {
     console.error("getAllNotifications Error:", error);
