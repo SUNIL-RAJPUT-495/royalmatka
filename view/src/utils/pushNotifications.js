@@ -1,4 +1,5 @@
 import { PushNotifications } from '@capacitor/push-notifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import Axios from './axios';
 import SummaryApi from '../common/SummerAPI';
@@ -18,20 +19,36 @@ export const initPushNotifications = async () => {
     }
     console.log("Push notifications initialized (Web mode)");
     return;
-
-
-    
   }
 
   try {
-    // 1. Check & Request Permissions
+    // Create Android High Importance Notification Channel
+    if (Capacitor.getPlatform() === 'android') {
+      await LocalNotifications.createChannel({
+        id: 'default',
+        name: 'Default Notifications',
+        description: 'Game Result and Account Alerts',
+        importance: 5,
+        visibility: 1,
+        vibration: true,
+        lights: true,
+        lightColor: '#FF0000'
+      }).catch(() => {});
+    }
+
+    // 1. Check & Request Permissions (Push + Local Notifications)
     let permStatus = await PushNotifications.checkPermissions();
     if (permStatus.receive === 'prompt' || permStatus.receive === 'default') {
       permStatus = await PushNotifications.requestPermissions();
     }
 
-    if (permStatus.receive !== 'granted') {
-      console.warn("Push notification permission not granted");
+    let localPerm = await LocalNotifications.checkPermissions();
+    if (localPerm.display === 'prompt' || localPerm.display === 'default') {
+      localPerm = await LocalNotifications.requestPermissions();
+    }
+
+    if (permStatus.receive !== 'granted' && localPerm.display !== 'granted') {
+      console.warn("Notification permissions not granted");
       return;
     }
 

@@ -63,12 +63,27 @@ export const requestAppNotificationPermission = async () => {
 export const showLocalStatusNotification = async (title, body) => {
   try {
     if (Capacitor.isNativePlatform()) {
+      // Ensure Android High Importance Channel exists
+      if (Capacitor.getPlatform() === 'android') {
+        await LocalNotifications.createChannel({
+          id: 'default',
+          name: 'Default Notifications',
+          description: 'Game Result and Account Alerts',
+          importance: 5,
+          visibility: 1,
+          vibration: true,
+          lights: true,
+          lightColor: '#FF0000'
+        }).catch(() => {});
+      }
+
       await LocalNotifications.schedule({
         notifications: [
           {
             title: String(title),
             body: String(body),
             id: Math.floor(Math.random() * 100000) + 1,
+            channelId: 'default',
             schedule: { at: new Date(Date.now() + 100) }
           }
         ]
