@@ -10,10 +10,13 @@ import {
 
 const router = express.Router();
 
+import { saveFcmToken } from "../controllers/auth.controller.js";
+
 // Notifications Management
 router.post("/send", sendNotification);
 router.get("/all", getAllNotifications);
 router.get("/get-all-notifications", getAllNotifications);
+router.post("/save-fcm-token", saveFcmToken);
 router.put("/update/:id", updateNotification);
 router.post("/update/:id", updateNotification);
 router.put("/update", updateNotification);

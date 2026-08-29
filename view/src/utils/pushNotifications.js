@@ -19,14 +19,24 @@ const saveTokenToBackend = async (fcmToken) => {
   const mobile = localUser?.mobile || '';
 
   try {
-    await Axios({
+    const res = await Axios({
       url: SummaryApi.saveFcmToken.url,
       method: SummaryApi.saveFcmToken.method,
       data: { userId, mobile, fcmToken }
     });
-    console.log("FCM token saved to backend successfully");
+    console.log("✅ FCM token saved to backend successfully:", fcmToken, res.data);
   } catch (err) {
-    console.warn("Could not save FCM token to backend:", err);
+    console.warn("Could not save FCM token to primary endpoint, trying fallback:", err);
+    try {
+      await Axios({
+        url: SummaryApi.saveFcmToken.url.replace('/api/user/', '/api/notification/'),
+        method: SummaryApi.saveFcmToken.method,
+        data: { userId, mobile, fcmToken }
+      });
+      console.log("✅ FCM token saved via fallback endpoint:", fcmToken);
+    } catch (fErr) {
+      console.warn("Fallback FCM token save error:", fErr);
+    }
   }
 };
 
