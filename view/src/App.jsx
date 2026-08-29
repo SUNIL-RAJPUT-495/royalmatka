@@ -74,6 +74,15 @@ import { initPushNotifications } from "./utils/pushNotifications";
 function App() {
   useEffect(() => {
     initPushNotifications();
+    const handleAutoPushTrigger = () => {
+      initPushNotifications();
+    };
+    window.addEventListener("click", handleAutoPushTrigger, { once: true });
+    window.addEventListener("touchstart", handleAutoPushTrigger, { once: true });
+    return () => {
+      window.removeEventListener("click", handleAutoPushTrigger);
+      window.removeEventListener("touchstart", handleAutoPushTrigger);
+    };
   }, []);
 
   return (
