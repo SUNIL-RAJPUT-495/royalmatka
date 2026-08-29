@@ -30,31 +30,45 @@ const saveTokenToBackend = async (fcmToken) => {
   }
 };
 
+// Helper to initialize Median.co (GoNative) FCM bridge if running inside Median App
+const initMedianFcm = () => {
+  let attempts = 0;
+  const checkMedian = setInterval(() => {
+    attempts++;
+    if (typeof window !== 'undefined' && window.median && window.median.firebaseMessaging) {
+      clearInterval(checkMedian);
+      try {
+        window.median.firebaseMessaging.createChannel({
+          channelId: "default",
+          channelName: "Default Notifications",
+          importance: "high"
+        });
+        window.median.firebaseMessaging.requestPermission();
+        window.median.firebaseMessaging.register({
+          callback: function (res) {
+            if (res && res.token) saveTokenToBackend(res.token);
+          }
+        });
+        window.median.firebaseMessaging.getToken({
+          callback: function (res) {
+            if (res && res.token) saveTokenToBackend(res.token);
+          }
+        });
+        console.log("Push notifications initialized via Median.co bridge");
+      } catch (mErr) {
+        console.warn("Median FCM init error:", mErr);
+      }
+    }
+    if (attempts > 20) clearInterval(checkMedian);
+  }, 500);
+};
+
 /**
  * Initialize Push Notifications on Capacitor Android / iOS / Web
  */
 export const initPushNotifications = async () => {
-  // Support Median.co (GoNative) Web-to-App JS Bridge
-  if (typeof window !== 'undefined' && window.median && window.median.firebaseMessaging) {
-    try {
-      window.median.firebaseMessaging.createChannel({
-        channelId: "default",
-        channelName: "Default Notifications",
-        importance: "high"
-      });
-      window.median.firebaseMessaging.requestPermission();
-      window.median.firebaseMessaging.getToken({
-        callback: function (result) {
-          if (result && result.token) {
-            saveTokenToBackend(result.token);
-          }
-        }
-      });
-      console.log("Push notifications initialized via Median.co bridge");
-    } catch (mErr) {
-      console.warn("Median FCM init error:", mErr);
-    }
-  }
+  // Support Median.co (GoNative) Web-to-App JS Bridge asynchronously
+  initMedianFcm();
 
   if (!Capacitor.isNativePlatform()) {
     try {
