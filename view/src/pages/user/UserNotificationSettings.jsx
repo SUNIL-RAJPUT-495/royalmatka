@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import Axios from '../../utils/axios';
 import SummaryApi from '../../common/SummerAPI';
 import { checkNotificationPermission, requestAppNotificationPermission } from '../../utils/notificationPermission';
+import { initPushNotifications } from '../../utils/pushNotifications';
 
 export const UserNotificationSettings = () => {
   const { currentTheme } = useTheme();
@@ -80,7 +81,6 @@ export const UserNotificationSettings = () => {
     try {
       const res = await requestAppNotificationPermission();
       setPermissionState(res);
-      const { initPushNotifications } = await import('../../utils/pushNotifications');
       await initPushNotifications();
       toast.success("Device Registered for Push Notifications! 🔔", { id: "fcm_reg" });
     } catch (e) {
