@@ -1,6 +1,7 @@
 import Notification from "../models/Notification.js";
 import NotificationSettings from "../models/NotificationSettings.js";
 import User from "../models/User.js";
+import FcmToken from "../models/FcmToken.js";
 import mongoose from "mongoose";
 import admin from "firebase-admin";
 import fs from "fs";
@@ -160,10 +161,21 @@ export const sendNotification = async (req, res) => {
       try {
         let recipientTokens = [];
         if (isGlobal || !targetUser) {
-          const usersWithTokens = await User.find({ fcmToken: { $exists: true, $ne: "" } }).select("fcmToken");
-          recipientTokens = usersWithTokens.map(u => u.fcmToken).filter(Boolean);
+          const fcmDocs = await FcmToken.find({}).select("fcmToken");
+          const userDocs = await User.find({ fcmToken: { $exists: true, $ne: "" } }).select("fcmToken");
+
+          const allTokens = [
+            ...fcmDocs.map(d => d.fcmToken),
+            ...userDocs.map(u => u.fcmToken)
+          ].filter(Boolean);
+
+          recipientTokens = [...new Set(allTokens)];
         } else {
           const queryUser = targetUser.trim();
+          const fcmDoc = await FcmToken.findOne({
+            $or: [{ userId: queryUser }, { mobile: queryUser }]
+          }).select("fcmToken");
+
           const singleUser = await User.findOne({
             $or: [
               ...(mongoose.Types.ObjectId.isValid(queryUser) ? [{ _id: queryUser }] : []),
@@ -172,10 +184,12 @@ export const sendNotification = async (req, res) => {
             ]
           }).select("fcmToken");
 
-          if (singleUser?.fcmToken) {
-            recipientTokens.push(singleUser.fcmToken);
-          }
+          if (fcmDoc?.fcmToken) recipientTokens.push(fcmDoc.fcmToken);
+          if (singleUser?.fcmToken) recipientTokens.push(singleUser.fcmToken);
+          recipientTokens = [...new Set(recipientTokens)];
         }
+
+        console.log(`FCM Push Dispatching to ${recipientTokens.length} device tokens...`);
 
         if (recipientTokens.length > 0) {
           sendFcmPushNotification(recipientTokens, {

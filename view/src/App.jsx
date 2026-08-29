@@ -67,8 +67,15 @@ import { AdminChat } from "./pages/admin/AdminChat";
 import { AdminLogin } from "./pages/admin/AdminLogin";
 import { UserAuth } from "./pages/user/UserAuth";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { useEffect } from "react";
 import { AdminProtectedRoute, UserProtectedRoute } from "./components/routes/ProtectedRoute";
+import { initPushNotifications } from "./utils/pushNotifications";
+
 function App() {
+  useEffect(() => {
+    initPushNotifications();
+  }, []);
+
   return (
     <ThemeProvider>
       <BrowserRouter>

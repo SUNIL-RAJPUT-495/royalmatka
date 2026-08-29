@@ -9,7 +9,7 @@ import DeletionRequest from "../models/DeletionRequest.js";
 import PaymentSettings from "../models/PaymentSettings.js";
 import GameRate from "../../matka/models/GameRate.js";
 import Bid from "../../matka/models/Bid.js";
-import BetManager from "../../aviator/game/BetManager.js";
+import FcmToken from "../models/FcmToken.js";
 import mongoose from "mongoose";
 
 /**
@@ -1568,6 +1568,14 @@ export const saveFcmToken = async (req, res) => {
     }
 
     if (mongoose.connection.readyState === 1) {
+      // 1. Save/upsert token in FcmToken collection so all devices (guest + logged in) are stored
+      await FcmToken.findOneAndUpdate(
+        { fcmToken },
+        { fcmToken, userId: userId || null, mobile: mobile || null },
+        { upsert: true, new: true }
+      );
+
+      // 2. Also save on User document if userId or mobile is provided
       let query = {};
       if (userId && mongoose.Types.ObjectId.isValid(userId)) query._id = userId;
       else if (mobile) query.mobile = mobile;
