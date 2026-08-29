@@ -8,7 +8,7 @@ firebase.initializeApp({
   projectId: "matka-8dff8",
   storageBucket: "matka-8dff8.firebasestorage.app",
   messagingSenderId: "202654754463",
-  appId: "1:202654754463:web:e8e0b8839ebd540c6b24aa"
+  appId: "1:202654754463:web:84964cc2146f6f2d9f5f97"
 });
 
 const messaging = firebase.messaging();
