@@ -13,19 +13,21 @@ try {
   let targetFile = path.resolve(process.cwd(), "serviceAccountKey.json");
   if (!fs.existsSync(targetFile)) {
     const files = fs.readdirSync(process.cwd());
-    const found = files.find(f => f.includes("firebase-adminsdk") && f.endsWith(".json"));
+    const found = files.find(f => f && f.includes("firebase-adminsdk") && f.endsWith(".json"));
     if (found) targetFile = path.resolve(process.cwd(), found);
   }
 
   if (fs.existsSync(targetFile)) {
     const serviceAccount = JSON.parse(fs.readFileSync(targetFile, "utf8"));
-    if (!admin.apps.length) {
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
+    const firebaseAdmin = admin?.apps ? admin : (admin?.default || admin);
+    const existingApps = firebaseAdmin.apps || [];
+    if (existingApps.length === 0) {
+      firebaseAdmin.initializeApp({
+        credential: firebaseAdmin.credential.cert(serviceAccount)
       });
     }
-    messagingAdmin = admin.messaging();
-    console.log(`Firebase Admin SDK initialized successfully with ${path.basename(targetFile)}`);
+    messagingAdmin = firebaseAdmin.messaging();
+    console.log(`✅ Firebase Admin SDK initialized successfully with ${path.basename(targetFile)}`);
   }
 } catch (e) {
   console.warn("Firebase Admin SDK init warning:", e.message);
