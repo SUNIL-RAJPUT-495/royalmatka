@@ -34,6 +34,28 @@ const saveTokenToBackend = async (fcmToken) => {
  * Initialize Push Notifications on Capacitor Android / iOS / Web
  */
 export const initPushNotifications = async () => {
+  // Support Median.co (GoNative) Web-to-App JS Bridge
+  if (typeof window !== 'undefined' && window.median && window.median.firebaseMessaging) {
+    try {
+      window.median.firebaseMessaging.createChannel({
+        channelId: "default",
+        channelName: "Default Notifications",
+        importance: "high"
+      });
+      window.median.firebaseMessaging.requestPermission();
+      window.median.firebaseMessaging.getToken({
+        callback: function (result) {
+          if (result && result.token) {
+            saveTokenToBackend(result.token);
+          }
+        }
+      });
+      console.log("Push notifications initialized via Median.co bridge");
+    } catch (mErr) {
+      console.warn("Median FCM init error:", mErr);
+    }
+  }
+
   if (!Capacitor.isNativePlatform()) {
     try {
       const webToken = await requestForToken();
