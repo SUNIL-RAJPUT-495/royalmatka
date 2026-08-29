@@ -1,6 +1,104 @@
 import Notification from "../models/Notification.js";
 import NotificationSettings from "../models/NotificationSettings.js";
+import User from "../models/User.js";
 import mongoose from "mongoose";
+import admin from "firebase-admin";
+import fs from "fs";
+import path from "path";
+
+// Initialize Firebase Admin SDK if service account json file exists
+let messagingAdmin = null;
+try {
+  let targetFile = path.resolve(process.cwd(), "serviceAccountKey.json");
+  if (!fs.existsSync(targetFile)) {
+    const files = fs.readdirSync(process.cwd());
+    const found = files.find(f => f.includes("firebase-adminsdk") && f.endsWith(".json"));
+    if (found) targetFile = path.resolve(process.cwd(), found);
+  }
+
+  if (fs.existsSync(targetFile)) {
+    const serviceAccount = JSON.parse(fs.readFileSync(targetFile, "utf8"));
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+    }
+    messagingAdmin = admin.messaging();
+    console.log(`Firebase Admin SDK initialized successfully with ${path.basename(targetFile)}`);
+  }
+} catch (e) {
+  console.warn("Firebase Admin SDK init warning:", e.message);
+}
+
+/**
+ * Helper to dispatch FCM Push Notifications to device tokens
+ */
+const sendFcmPushNotification = async (tokens, notificationPayload) => {
+  if (!tokens || tokens.length === 0) return;
+
+  // 1. Try Firebase Admin SDK (FCM V1 API - Recommended)
+  if (messagingAdmin) {
+    try {
+      const message = {
+        notification: {
+          title: notificationPayload.title,
+          body: notificationPayload.content
+        },
+        data: {
+          title: notificationPayload.title,
+          body: notificationPayload.content,
+          url: "/notifications"
+        },
+        tokens: tokens
+      };
+
+      const response = await messagingAdmin.sendEachForMulticast(message);
+      console.log(`FCM V1 Push Response: ${response.successCount} sent, ${response.failureCount} failed`);
+      return;
+    } catch (err) {
+      console.error("Error sending FCM V1 via Firebase Admin:", err);
+    }
+  }
+
+  // 2. Fallback to FCM Legacy Server Key
+  const serverKey = process.env.FCM_SERVER_KEY || process.env.FIREBASE_SERVER_KEY;
+  if (!serverKey) {
+    console.warn("FCM Push Warning: Neither serviceAccountKey.json nor FCM_SERVER_KEY is configured.");
+    return;
+  }
+
+  try {
+    const payload = {
+      registration_ids: tokens,
+      notification: {
+        title: notificationPayload.title,
+        body: notificationPayload.content,
+        icon: "/logo192.png",
+        click_action: "/notifications"
+      },
+      data: {
+        title: notificationPayload.title,
+        body: notificationPayload.content,
+        url: "/notifications"
+      },
+      priority: "high"
+    };
+
+    const response = await fetch("https://fcm.googleapis.com/fcm/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `key=${serverKey}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    console.log("FCM Push Dispatch Result:", result);
+  } catch (err) {
+    console.error("Error sending FCM Push Notification:", err);
+  }
+};
 
 // In-memory fallback if DB disconnected
 let memoryNotifications = [
@@ -57,6 +155,37 @@ export const sendNotification = async (req, res) => {
         isGlobal: isGlobal !== undefined ? isGlobal : true,
         targetUser: targetUser || null
       });
+
+      // Collect target tokens & dispatch FCM Push Notification
+      try {
+        let recipientTokens = [];
+        if (isGlobal || !targetUser) {
+          const usersWithTokens = await User.find({ fcmToken: { $exists: true, $ne: "" } }).select("fcmToken");
+          recipientTokens = usersWithTokens.map(u => u.fcmToken).filter(Boolean);
+        } else {
+          const queryUser = targetUser.trim();
+          const singleUser = await User.findOne({
+            $or: [
+              ...(mongoose.Types.ObjectId.isValid(queryUser) ? [{ _id: queryUser }] : []),
+              { mobile: queryUser },
+              { username: queryUser }
+            ]
+          }).select("fcmToken");
+
+          if (singleUser?.fcmToken) {
+            recipientTokens.push(singleUser.fcmToken);
+          }
+        }
+
+        if (recipientTokens.length > 0) {
+          sendFcmPushNotification(recipientTokens, {
+            title: title.trim().toUpperCase(),
+            content: content.trim()
+          });
+        }
+      } catch (pushErr) {
+        console.error("Error dispatching push notifications:", pushErr);
+      }
 
       return res.status(200).json({
         success: true,

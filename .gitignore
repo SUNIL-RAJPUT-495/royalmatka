@@ -4,5 +4,11 @@ dist/
 **/dist/
 .env
 **/.env
+serviceAccountKey.json
+**/serviceAccountKey.json
+*firebase-adminsdk*.json
+**/*firebase-adminsdk*.json
 .DS_Store
 *.log
+
+

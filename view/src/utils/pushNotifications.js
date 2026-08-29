@@ -4,18 +4,54 @@ import { Capacitor } from '@capacitor/core';
 import Axios from './axios';
 import SummaryApi from '../common/SummerAPI';
 import { showLocalStatusNotification } from './notificationPermission';
+import { requestForToken, onMessageListener } from '../common/firebase-config';
+
+// Helper function to send token to backend
+const saveTokenToBackend = async (fcmToken) => {
+  if (!fcmToken) return;
+  localStorage.setItem('fcm_token', fcmToken);
+
+  const localUserStr = localStorage.getItem("user_data");
+  let localUser = null;
+  try { if (localUserStr) localUser = JSON.parse(localUserStr); } catch (e) {}
+
+  const userId = localUser?._id || localUser?.id || '';
+  const mobile = localUser?.mobile || '';
+
+  try {
+    await Axios({
+      url: SummaryApi.saveFcmToken.url,
+      method: SummaryApi.saveFcmToken.method,
+      data: { userId, mobile, fcmToken }
+    });
+    console.log("FCM token saved to backend successfully");
+  } catch (err) {
+    console.warn("Could not save FCM token to backend:", err);
+  }
+};
 
 /**
  * Initialize Push Notifications on Capacitor Android / iOS / Web
  */
 export const initPushNotifications = async () => {
   if (!Capacitor.isNativePlatform()) {
-    if ('Notification' in window && Notification.permission === 'default') {
-      try {
-        await Notification.requestPermission();
-      } catch (e) {
-        console.warn("Web notification permission request error:", e);
+    try {
+      const webToken = await requestForToken();
+      if (webToken) {
+        await saveTokenToBackend(webToken);
       }
+      
+      // Foreground Web message listener
+      onMessageListener().then((payload) => {
+        if (payload && payload.notification) {
+          showLocalStatusNotification(
+            payload.notification.title || 'SanwariyaBoss Alert',
+            payload.notification.body || ''
+          );
+        }
+      }).catch(() => {});
+    } catch (e) {
+      console.warn("Web push notification init error:", e);
     }
     console.log("Push notifications initialized (Web mode)");
     return;
@@ -59,25 +95,7 @@ export const initPushNotifications = async () => {
     PushNotifications.addListener('registration', async (token) => {
       console.log('FCM Token received:', token.value);
       if (token && token.value) {
-        localStorage.setItem('fcm_token', token.value);
-        
-        // Save FCM token to backend DB for current user
-        const localUserStr = localStorage.getItem("user_data");
-        let localUser = null;
-        try { if (localUserStr) localUser = JSON.parse(localUserStr); } catch (e) {}
-        
-        const userId = localUser?._id || localUser?.id || '';
-        const mobile = localUser?.mobile || '';
-
-        try {
-          await Axios({
-            url: SummaryApi.saveFcmToken.url,
-            method: SummaryApi.saveFcmToken.method,
-            data: { userId, mobile, fcmToken: token.value }
-          });
-        } catch (err) {
-          console.warn("Could not save FCM token to backend:", err);
-        }
+        await saveTokenToBackend(token.value);
       }
     });
 
@@ -104,3 +122,4 @@ export const initPushNotifications = async () => {
     console.warn("Push notifications init error:", e);
   }
 };
+
