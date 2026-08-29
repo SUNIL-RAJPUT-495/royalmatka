@@ -76,8 +76,16 @@ export const UserNotificationSettings = () => {
   }, []);
 
   const handleAllowPermission = async () => {
-    const res = await requestAppNotificationPermission();
-    setPermissionState(res);
+    toast.loading("Registering device for push notifications...", { id: "fcm_reg" });
+    try {
+      const res = await requestAppNotificationPermission();
+      setPermissionState(res);
+      const { initPushNotifications } = await import('../../utils/pushNotifications');
+      await initPushNotifications();
+      toast.success("Device Registered for Push Notifications! 🔔", { id: "fcm_reg" });
+    } catch (e) {
+      toast.error("Failed to register device. Check notification permissions.", { id: "fcm_reg" });
+    }
   };
 
   // 1. Fetch Notifications List
@@ -327,6 +335,19 @@ export const UserNotificationSettings = () => {
       </div>
 
       <div className="px-4 space-y-3.5">
+        {/* Device Push Registration Action Card */}
+        <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-3.5 text-white shadow-sm flex items-center justify-between gap-3">
+          <div>
+            <h4 className="text-xs font-bold leading-tight">Enable Live Push Alerts</h4>
+            <p className="text-[11px] text-white/90 font-normal mt-0.5">Click to register your mobile/device for push notifications.</p>
+          </div>
+          <button
+            onClick={handleAllowPermission}
+            className="bg-white text-orange-600 hover:bg-orange-50 font-extrabold text-xs px-3.5 py-2 rounded-xl shrink-0 shadow-xs active:scale-95 transition-all cursor-pointer"
+          >
+            Enable Push
+          </button>
+        </div>
 
         {/* TAB 1: NOTIFICATIONS LIST */}
         {activeTab === 'notifications' && (
