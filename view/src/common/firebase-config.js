@@ -18,8 +18,12 @@ const messaging = typeof window !== "undefined" ? getMessaging(app) : null;
 export let analytics = null;
 if (typeof window !== "undefined") {
   isSupported().then((supported) => {
-    if (supported) {
-      analytics = getAnalytics(app);
+    if (supported && firebaseConfig.measurementId) {
+      try {
+        analytics = getAnalytics(app);
+      } catch (e) {
+        console.warn("Analytics init warning:", e);
+      }
     }
   }).catch(() => {});
 }
