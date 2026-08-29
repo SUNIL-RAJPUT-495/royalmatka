@@ -3,7 +3,8 @@ import NotificationSettings from "../models/NotificationSettings.js";
 import User from "../models/User.js";
 import FcmToken from "../models/FcmToken.js";
 import mongoose from "mongoose";
-import admin from "firebase-admin";
+import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { getMessaging } from "firebase-admin/messaging";
 import fs from "fs";
 import path from "path";
 
@@ -19,14 +20,12 @@ try {
 
   if (fs.existsSync(targetFile)) {
     const serviceAccount = JSON.parse(fs.readFileSync(targetFile, "utf8"));
-    const firebaseAdmin = admin?.apps ? admin : (admin?.default || admin);
-    const existingApps = firebaseAdmin.apps || [];
-    if (existingApps.length === 0) {
-      firebaseAdmin.initializeApp({
-        credential: firebaseAdmin.credential.cert(serviceAccount)
+    if (getApps().length === 0) {
+      initializeApp({
+        credential: cert(serviceAccount)
       });
     }
-    messagingAdmin = firebaseAdmin.messaging();
+    messagingAdmin = getMessaging();
     console.log(`✅ Firebase Admin SDK initialized successfully with ${path.basename(targetFile)}`);
   }
 } catch (e) {
