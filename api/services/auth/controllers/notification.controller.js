@@ -50,11 +50,42 @@ const sendFcmPushNotification = async (tokens, notificationPayload) => {
           body: notificationPayload.content,
           url: "/notifications"
         },
+        android: {
+          priority: "high",
+          notification: {
+            title: notificationPayload.title,
+            body: notificationPayload.content,
+            channelId: "default",
+            sound: "default",
+            clickAction: "TOP_LEVEL"
+          }
+        },
+        webpush: {
+          headers: {
+            Urgency: "high"
+          },
+          notification: {
+            title: notificationPayload.title,
+            body: notificationPayload.content,
+            icon: "/logo192.png",
+            requireInteraction: true
+          },
+          fcmOptions: {
+            link: "/notifications"
+          }
+        },
         tokens: tokens
       };
 
       const response = await messagingAdmin.sendEachForMulticast(message);
-      console.log(`FCM V1 Push Response: ${response.successCount} sent, ${response.failureCount} failed`);
+      console.log(`FCM V1 Push Response: ${response.successCount} sent, ${response.failureCount} failed out of ${tokens.length} tokens.`);
+      if (response.responses) {
+        response.responses.forEach((resp, idx) => {
+          if (!resp.success) {
+            console.warn(`FCM Token [${tokens[idx]}] failed:`, resp.error?.message);
+          }
+        });
+      }
       return;
     } catch (err) {
       console.error("Error sending FCM V1 via Firebase Admin:", err);
