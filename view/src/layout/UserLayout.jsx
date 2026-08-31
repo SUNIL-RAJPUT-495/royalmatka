@@ -14,18 +14,9 @@ export const UserLayout = () => {
   const [isBlockedModalOpen, setIsBlockedModalOpen] = useState(false);
   const [blockedMessage, setBlockedMessage] = useState('');
 
-  // Initialize FCM Push Notifications on app mount and screen touch
+  // Initialize FCM Push Notifications on app mount
   useEffect(() => {
     initPushNotifications();
-    const handleMobileTouchPush = () => {
-      initPushNotifications();
-    };
-    window.addEventListener('touchstart', handleMobileTouchPush, { once: true });
-    window.addEventListener('click', handleMobileTouchPush, { once: true });
-    return () => {
-      window.removeEventListener('touchstart', handleMobileTouchPush);
-      window.removeEventListener('click', handleMobileTouchPush);
-    };
   }, []);
 
   const [userData, setUserData] = useState(() => {

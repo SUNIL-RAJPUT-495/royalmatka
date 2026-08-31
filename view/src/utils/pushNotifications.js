@@ -73,10 +73,15 @@ const initMedianFcm = () => {
   }, 500);
 };
 
+let isPushInitialized = false;
+
 /**
  * Initialize Push Notifications on Capacitor Android / iOS / Web
  */
 export const initPushNotifications = async () => {
+  if (isPushInitialized) return;
+  isPushInitialized = true;
+
   // Support Median.co (GoNative) Web-to-App JS Bridge asynchronously
   initMedianFcm();
 
