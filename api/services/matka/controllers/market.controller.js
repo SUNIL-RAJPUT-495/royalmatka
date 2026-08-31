@@ -4,6 +4,7 @@ import User from "../../auth/models/User.js";
 import GameRate from "../models/GameRate.js";
 import DeclaredResultHistory from "../models/DeclaredResultHistory.js";
 import Notification from "../../auth/models/Notification.js";
+import { broadcastResultNotification } from "../../auth/controllers/notification.controller.js";
 import mongoose from "mongoose";
 import dpbossAutoSyncService from "../services/dpbossAutoSyncService.js";
 
@@ -358,7 +359,7 @@ export const declareResult = async (req, res) => {
         // Settle bids phased: Open result settles Open bids, Close result settles Close & Jodi bids
         const finalMarketName = market.market_name || targetName;
 
-        // 1. Create Broadcast / Global Notification for all users
+        // 1. Create Broadcast / Global Notification for all users and send FCM Push
         try {
           let notifTitle = `📢 ${finalMarketName.toUpperCase()} RESULT DECLARED`;
           let notifMsg = "";
@@ -371,11 +372,7 @@ export const declareResult = async (req, res) => {
           }
 
           if (notifMsg) {
-            await Notification.create({
-              title: notifTitle,
-              content: notifMsg,
-              isGlobal: true
-            });
+            await broadcastResultNotification(notifTitle, notifMsg);
           }
         } catch (nErr) {
           console.warn("Global notification creation failed:", nErr);

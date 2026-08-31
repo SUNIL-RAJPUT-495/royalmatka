@@ -1,4 +1,5 @@
 import StarlineMarket from "../models/StarlineMarket.js";
+import { broadcastResultNotification } from "../../auth/controllers/notification.controller.js";
 import mongoose from "mongoose";
 
 const DEFAULT_STARLINE = [
@@ -55,6 +56,12 @@ export const declareStarlineResult = async (req, res) => {
       market.digit_result = calcDigit;
       market.display_result = `${market.pana_result}-${calcDigit}`;
       await market.save();
+
+      // Dispatch FCM Push Notification to all users
+      broadcastResultNotification(
+        `🌟 STARLINE (${market.time}) RESULT DECLARED`,
+        `StarLine ${market.time} Result: ${market.display_result}`
+      ).catch(() => {});
 
       return res.status(200).json({ success: true, message: "Starline result declared! 🌟", data: market });
     }

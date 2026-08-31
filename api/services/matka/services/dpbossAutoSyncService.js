@@ -3,6 +3,7 @@ import Bid from "../models/Bid.js";
 import User from "../../auth/models/User.js";
 import GameRate from "../models/GameRate.js";
 import DeclaredResultHistory from "../models/DeclaredResultHistory.js";
+import { broadcastResultNotification } from "../../auth/controllers/notification.controller.js";
 import mongoose from "mongoose";
 
 const API_BASE_URL = 'https://dpbpssapi.growva.tech';
@@ -272,6 +273,11 @@ class DpbossAutoSyncService {
         if (needsUpdate) {
           await dbMarket.save();
           console.log(`🎯 Auto-Synced Live Result for ${dbName}: ${dbMarket.result_open}-${dbMarket.jodi_result}-${dbMarket.result_close}`);
+
+          // Broadcast FCM Push Notification to all users
+          const notifTitle = `📢 ${dbName.toUpperCase()} RESULT DECLARED`;
+          const notifMsg = `${dbName} Result Declared: ${dbMarket.result_open}-${dbMarket.jodi_result}-${dbMarket.result_close}`;
+          broadcastResultNotification(notifTitle, notifMsg).catch(() => {});
 
           // Trigger automated payout settlement for this market
           await this.settleMarketBids(dbMarket, updateOpen, updateClose);

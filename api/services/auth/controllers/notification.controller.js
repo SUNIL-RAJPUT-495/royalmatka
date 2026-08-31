@@ -263,6 +263,45 @@ export const sendNotification = async (req, res) => {
 };
 
 /**
+ * Helper function to broadcast FCM Push Notifications to ALL devices (Users + Guest devices)
+ * when market results (Main Market, Starline, Gali Disawar) are declared.
+ */
+export const broadcastResultNotification = async (title, content) => {
+  try {
+    if (!title || !content) return;
+
+    if (mongoose.connection.readyState === 1) {
+      await Notification.create({
+        title: title.trim().toUpperCase(),
+        content: content.trim(),
+        isGlobal: true
+      }).catch(e => console.warn("DB Notification create notice:", e.message));
+    }
+
+    const fcmDocs = await FcmToken.find({ fcmToken: { $exists: true, $ne: "" } }).select("fcmToken").lean();
+    const userDocs = await User.find({ fcmToken: { $exists: true, $ne: "" } }).select("fcmToken").lean();
+
+    const allTokens = [
+      ...fcmDocs.map(d => d.fcmToken),
+      ...userDocs.map(u => u.fcmToken)
+    ].filter(Boolean);
+
+    const recipientTokens = [...new Set(allTokens)];
+
+    console.log(`📢 Broadcasting Result FCM Push Notification to ${recipientTokens.length} devices: "${title}" - "${content}"`);
+
+    if (recipientTokens.length > 0) {
+      await sendFcmPushNotification(recipientTokens, {
+        title: title.trim().toUpperCase(),
+        content: content.trim()
+      });
+    }
+  } catch (err) {
+    console.error("Error broadcasting result FCM push notification:", err);
+  }
+};
+
+/**
  * Get All Notifications
  */
 export const getAllNotifications = async (req, res) => {

@@ -3,6 +3,7 @@ import Bid from "../models/Bid.js";
 import User from "../../auth/models/User.js";
 import GameRate from "../models/GameRate.js";
 import Notification from "../../auth/models/Notification.js";
+import { broadcastResultNotification } from "../../auth/controllers/notification.controller.js";
 import mongoose from "mongoose";
 
 // Helper to check if time has passed in IST
@@ -117,12 +118,11 @@ export const declareGaliResult = async (req, res) => {
       market.is_closed = true;
       await market.save();
 
-      // Create Global Broadcast Notification for Gali Result
-      await Notification.create({
-        title: `🎯 ${market.name.toUpperCase()} RESULT DECLARED`,
-        content: `${market.name} Gali Result Declared: Jodi ${cleanJodi}`,
-        isGlobal: true
-      }).catch(() => {});
+      // Dispatch Broadcast FCM Push Notification for Gali Result to all users
+      broadcastResultNotification(
+        `🎯 ${market.name.toUpperCase()} RESULT DECLARED`,
+        `${market.name} Gali Result Declared: Jodi ${cleanJodi}`
+      ).catch(() => {});
 
       const lDigit = cleanJodi[0];
       const rDigit = cleanJodi[1];
