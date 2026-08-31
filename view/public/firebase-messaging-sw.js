@@ -19,8 +19,8 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification?.title || payload.data?.title || 'SanwariyaBoss Alert';
   const notificationOptions = {
     body: payload.notification?.body || payload.data?.body || payload.data?.content || '',
-    icon: '/logo192.png',
-    badge: '/logo192.png',
+    icon: '/pwa-192x192.png',
+    badge: '/pwa-192x192.png',
     vibrate: [200, 100, 200],
     data: {
       url: payload.data?.url || '/notifications'

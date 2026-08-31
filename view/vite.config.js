@@ -11,6 +11,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['logo.jpeg', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: false, // Use existing public/manifest.json
+      workbox: {
+        importScripts: ['/firebase-messaging-sw.js']
+      },
       devOptions: {
         enabled: true
       }

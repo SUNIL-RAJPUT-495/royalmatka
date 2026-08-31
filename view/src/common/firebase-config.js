@@ -35,9 +35,12 @@ export const requestForToken = async () => {
     if (permission === "granted") {
       let registration = null;
       try {
-        registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+        registration = await navigator.serviceWorker.ready;
+        if (!registration) {
+          registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+        }
       } catch (e) {
-        console.warn("Could not register firebase-messaging-sw.js:", e);
+        console.warn("Could not retrieve active serviceWorker registration:", e);
       }
 
       const tokenOptions = {};

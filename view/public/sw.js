@@ -40,8 +40,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || data.notification?.title || 'SanwariyaBoss Alert';
   const options = {
     body: data.body || data.content || data.notification?.body || '',
-    icon: '/logo192.png',
-    badge: '/logo192.png',
+    icon: '/pwa-192x192.png',
+    badge: '/pwa-192x192.png',
     vibrate: [200, 100, 200],
     data: {
       url: data.url || '/notifications'
