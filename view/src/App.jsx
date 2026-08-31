@@ -70,6 +70,7 @@ import { NotFoundPage } from "./pages/NotFoundPage";
 import { useEffect } from "react";
 import { AdminProtectedRoute, UserProtectedRoute } from "./components/routes/ProtectedRoute";
 import { initPushNotifications } from "./utils/pushNotifications";
+import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 
 function App() {
   useEffect(() => {
@@ -88,6 +89,7 @@ function App() {
   return (
     <ThemeProvider>
       <BrowserRouter>
+        <PWAInstallPrompt />
         <Routes>
           {/* USER AUTH ROUTES */}
           <Route path="/login" element={<UserAuth />} />
