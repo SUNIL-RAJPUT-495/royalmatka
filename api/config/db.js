@@ -6,7 +6,7 @@ const connectDB = async () => {
   try {
     let uri = process.env.MONGODB_URI || "";
     if (uri.includes("<db_password>")) {
-      const pass = process.env.MONGODB_PASSWORD || "AhbKm5hvBu72cyYc";
+      const pass = process.env.MONGODB_PASSWORD || "";
       uri = uri.replace("<db_password>", encodeURIComponent(pass));
     }
 

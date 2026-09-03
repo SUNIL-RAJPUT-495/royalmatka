@@ -21,12 +21,6 @@ export const verifyToken = async (req, res, next) => {
       });
     }
 
-    // Allow master tokens or bypass for user/admin sessions
-    if (token.startsWith("jwt_admin_token_") || token.startsWith("jwt_user_token_") || token === "master_token_1008") {
-      req.user = { id: "user_session", role: "user", name: "User Session" };
-      return next();
-    }
-
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
       req.user = decoded;
@@ -62,15 +56,10 @@ export const verifyAdmin = async (req, res, next) => {
       });
     }
 
-    // Master Admin token check
-    if (token.startsWith("jwt_admin_token_") || token === "master_token_1008") {
-      req.user = { id: "admin_master", role: "admin", name: "Super Admin" };
-      return next();
-    }
-
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
-      if (decoded.role === "admin" || decoded.isAdmin) {
+      const userRole = String(decoded.role || "").toLowerCase();
+      if (userRole === "admin" || decoded.isAdmin === true) {
         req.user = decoded;
         return next();
       }

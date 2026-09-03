@@ -7,28 +7,28 @@ import {
   getNotificationSettings,
   updateNotificationSettings
 } from "../controllers/notification.controller.js";
+import { saveFcmToken } from "../controllers/auth.controller.js";
+import { verifyAdmin, verifyToken } from "../../../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-import { saveFcmToken } from "../controllers/auth.controller.js";
-
 // Notifications Management
-router.post("/send", sendNotification);
+router.post("/send", verifyAdmin, sendNotification);
 router.get("/all", getAllNotifications);
 router.get("/get-all-notifications", getAllNotifications);
-router.post("/save-fcm-token", saveFcmToken);
-router.put("/update/:id", updateNotification);
-router.post("/update/:id", updateNotification);
-router.put("/update", updateNotification);
-router.post("/update", updateNotification);
-router.delete("/delete/:id", deleteNotification);
-router.post("/delete/:id", deleteNotification);
-router.delete("/delete", deleteNotification);
-router.post("/delete", deleteNotification);
+router.post("/save-fcm-token", verifyToken, saveFcmToken);
+router.put("/update/:id", verifyAdmin, updateNotification);
+router.post("/update/:id", verifyAdmin, updateNotification);
+router.put("/update", verifyAdmin, updateNotification);
+router.post("/update", verifyAdmin, updateNotification);
+router.delete("/delete/:id", verifyAdmin, deleteNotification);
+router.post("/delete/:id", verifyAdmin, deleteNotification);
+router.delete("/delete", verifyAdmin, deleteNotification);
+router.post("/delete", verifyAdmin, deleteNotification);
 
 // Notification Settings
 router.get("/settings", getNotificationSettings);
-router.post("/settings", updateNotificationSettings);
-router.put("/settings", updateNotificationSettings);
+router.post("/settings", verifyAdmin, updateNotificationSettings);
+router.put("/settings", verifyAdmin, updateNotificationSettings);
 
 export default router;

@@ -144,12 +144,21 @@ export const placeBid = async (req, res) => {
       });
     }
 
-    // Find User by mobile or userId
+    // Find User by authenticated token first, then fallback to request params
     let user = null;
-    if (userId) {
+    const authId = req.user?.id || req.user?._id;
+    const authMobile = req.user?.mobile;
+
+    if (authId && authId !== "user_session") {
+      user = await User.findById(authId);
+    }
+    if (!user && authMobile) {
+      user = await User.findOne({ mobile: String(authMobile).trim() });
+    }
+    if (!user && userId) {
       user = await User.findById(userId);
     }
-    if (!user) {
+    if (!user && mobile) {
       user = await User.findOne({ mobile: String(mobile).trim() });
     }
 
@@ -260,8 +269,14 @@ export const getUserBids = async (req, res) => {
     const skip = (page - 1) * limit;
 
     let filter = {};
+    const authId = req.user?.id || req.user?._id;
+    const authMobile = req.user?.mobile;
 
-    if (userId) {
+    if (authId) {
+      filter.userId = authId;
+    } else if (authMobile) {
+      filter.userMobile = String(authMobile).trim();
+    } else if (userId) {
       filter.userId = userId;
     } else if (mobile) {
       filter.userMobile = String(mobile).trim();

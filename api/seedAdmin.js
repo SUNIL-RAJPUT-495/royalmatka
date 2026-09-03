@@ -42,7 +42,11 @@ export const seedAdmin = async () => {
 
 // Execute if run directly via `node seedAdmin.js`
 if (process.argv[1]?.endsWith("seedAdmin.js")) {
-  const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://sunilsinghshekhawat495_db_user:AhbKm5hvBu72cyYc@royalmatka1008.e1sszzi.mongodb.net";
+  const MONGODB_URI = process.env.MONGODB_URI;
+  if (!MONGODB_URI) {
+    console.error("🔴 MONGODB_URI environment variable is missing.");
+    process.exit(1);
+  }
   mongoose.connect(MONGODB_URI, { dbName: "royalmatka" }).then(async () => {
     console.log("📡 Connected to MongoDB for seeding admin...");
     await seedAdmin();

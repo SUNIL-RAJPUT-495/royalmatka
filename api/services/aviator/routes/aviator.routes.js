@@ -10,18 +10,18 @@ import { verifyAdmin } from "../../../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-// Aviator Endpoints
-router.get("/settings", getSettings);
-router.post("/settings", updateSettings);
-router.post("/force-crash-next", forceCrashNext);
-router.post("/force-crash-now", forceCrashNow);
-router.get("/stats", getStats);
+// Aviator Admin Endpoints
+router.get("/settings", verifyAdmin, getSettings);
+router.post("/settings", verifyAdmin, updateSettings);
+router.post("/force-crash-next", verifyAdmin, forceCrashNext);
+router.post("/force-crash-now", verifyAdmin, forceCrashNow);
+router.get("/stats", verifyAdmin, getStats);
 
 // Protected Admin Aliases
-router.get("/admin/settings", getSettings);
-router.post("/admin/settings", updateSettings);
-router.post("/admin/force-crash-next", forceCrashNext);
-router.post("/admin/force-crash-now", forceCrashNow);
-router.get("/admin/stats", getStats);
+router.get("/admin/settings", verifyAdmin, getSettings);
+router.post("/admin/settings", verifyAdmin, updateSettings);
+router.post("/admin/force-crash-next", verifyAdmin, forceCrashNext);
+router.post("/admin/force-crash-now", verifyAdmin, forceCrashNow);
+router.get("/admin/stats", verifyAdmin, getStats);
 
 export default router;

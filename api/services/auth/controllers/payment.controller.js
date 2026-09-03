@@ -26,10 +26,14 @@ export const createOrder = async (req, res) => {
     }
 
     let user = null;
+    const authId = req.user?.id || req.user?._id;
+    const authMobile = req.user?.mobile;
+
     if (mongoose.connection.readyState === 1) {
-      if (userId) user = await User.findById(userId);
+      if (authId && authId !== "user_session") user = await User.findById(authId);
+      else if (authMobile) user = await User.findOne({ mobile: authMobile });
+      else if (userId) user = await User.findById(userId);
       else if (mobile) user = await User.findOne({ mobile });
-      else user = await User.findOne({ role: { $ne: "Admin" } });
     }
 
     if (!user) {
@@ -236,7 +240,12 @@ export const createManualDeposit = async (req, res) => {
       }
 
       let query = {};
-      if (userId) query._id = userId;
+      const authId = req.user?.id || req.user?._id;
+      const authMobile = req.user?.mobile;
+
+      if (authId && authId !== "user_session") query._id = authId;
+      else if (authMobile) query.mobile = authMobile;
+      else if (userId) query._id = userId;
       else if (mobile) query.mobile = mobile;
       else query = { role: { $ne: "Admin" } };
 
@@ -363,10 +372,18 @@ export const updatePaymentSettings = async (req, res) => {
 export const getUserTransactions = async (req, res) => {
   try {
     const { userId, mobile } = req.query;
+    const authId = req.user?.id || req.user?._id;
+    const authMobile = req.user?.mobile;
 
     if (mongoose.connection.readyState === 1) {
       let user = null;
-      if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      if (authId && mongoose.Types.ObjectId.isValid(authId)) {
+        user = await User.findById(authId);
+      }
+      if (!user && authMobile) {
+        user = await User.findOne({ mobile: authMobile });
+      }
+      if (!user && userId && mongoose.Types.ObjectId.isValid(userId)) {
         user = await User.findById(userId);
       }
       if (!user && mobile) {
@@ -571,9 +588,13 @@ export const requestWithdrawal = async (req, res) => {
 
     if (mongoose.connection.readyState === 1) {
       let query = {};
-      if (userId && mongoose.Types.ObjectId.isValid(userId)) query._id = userId;
+      const authId = req.user?.id || req.user?._id;
+      const authMobile = req.user?.mobile;
+
+      if (authId && mongoose.Types.ObjectId.isValid(authId)) query._id = authId;
+      else if (authMobile) query.mobile = authMobile;
+      else if (userId && mongoose.Types.ObjectId.isValid(userId)) query._id = userId;
       else if (mobile) query.mobile = mobile;
-      else query = { role: { $ne: "Admin" } };
 
       const user = await User.findOne(query);
       if (!user) return res.status(404).json({ success: false, message: "User account not found." });

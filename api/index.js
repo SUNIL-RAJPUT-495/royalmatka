@@ -17,7 +17,7 @@ import paymentRoutes from "./services/auth/routes/payment.routes.js";
 import contactRoutes from "./services/auth/routes/contact.routes.js";
 import bidRoutes from "./services/matka/routes/bid.routes.js";
 import settingsRoutes from "./services/matka/routes/settings.routes.js";
-import chatRoutes from "./services/chat/routes/chat.routes.js";
+import chatRoutes from "./services/cha t/routes/chat.routes.js";
 import notificationRoutes from "./services/auth/routes/notification.routes.js";
 import cashinoRoutes from "./services/cashino/routes/cashino.routes.js";
 import GameEngine from "./services/aviator/game/GameEngine.js";
