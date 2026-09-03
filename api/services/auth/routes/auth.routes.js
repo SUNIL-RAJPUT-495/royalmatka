@@ -52,7 +52,7 @@ router.get("/get-app-theme", getAppTheme);
 router.get("/get-user-profile", verifyToken, getUserProfile);
 router.post("/add-bank-account", verifyToken, addBankAccount);
 router.post("/add-upi-id", verifyToken, addUpiId);
-router.post("/update-wallet", verifyAdmin, updateUserWallet);
+router.post("/update-wallet", verifyToken, updateUserWallet);
 router.post("/change-password", verifyToken, changeUserPassword);
 router.post("/save-fcm-token", verifyToken, saveFcmToken);
 router.post("/request-deletion", verifyToken, requestAccountDeletion);
