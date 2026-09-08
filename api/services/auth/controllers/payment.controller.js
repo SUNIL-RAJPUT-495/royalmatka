@@ -41,12 +41,12 @@ export const createOrder = async (req, res) => {
       user = { _id: "demo_user_id", name: "User", mobile: mobile || "9999999999", email: "" };
     }
 
-    // Get IMB API token from database PaymentSettings
-    let imbToken = process.env.IMB_CLIENT_SECRET || "";
+    // Get IMB API token strictly from database PaymentSettings
+    let imbToken = "";
     if (mongoose.connection.readyState === 1) {
       const settings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
       if (settings?.imbToken) {
-        imbToken = settings.imbToken;
+        imbToken = settings.imbToken.trim();
       }
     }
 
@@ -138,7 +138,7 @@ export const checkAndApproveImbTransaction = async (transaction, imbToken) => {
   }
   if (!imbToken) {
     const settings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
-    imbToken = settings?.imbToken || process.env.IMB_CLIENT_SECRET || "";
+    imbToken = settings?.imbToken ? settings.imbToken.trim() : "";
   }
   if (!imbToken) return false;
 
@@ -377,8 +377,6 @@ export const createManualDeposit = async (req, res) => {
 // ==========================================
 export const getPaymentSettings = async (req, res) => {
   try {
-    const defaultEnvToken = process.env.IMB_CLIENT_SECRET || "";
-
     if (mongoose.connection.readyState === 1) {
       let settings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
       if (!settings) {
@@ -387,18 +385,14 @@ export const getPaymentSettings = async (req, res) => {
           displayName: "Sanwariya Boss",
           qrCodeUrl: "",
           activeFundSystem: "Manual",
-          imbToken: defaultEnvToken,
+          imbToken: "",
           payFromUpiToken: "",
           minAmount: 100,
           maxAmount: 20000,
           quickAmounts: [100, 300, 500, 1000, 5000, 10000]
         });
       }
-      const settingsObj = settings.toObject();
-      if (!settingsObj.imbToken || settingsObj.imbToken.includes("****")) {
-        settingsObj.imbToken = defaultEnvToken || settingsObj.imbToken || "";
-      }
-      return res.status(200).json({ success: true, settings: settingsObj });
+      return res.status(200).json({ success: true, settings: settings.toObject() });
     }
 
     return res.status(200).json({
@@ -408,7 +402,7 @@ export const getPaymentSettings = async (req, res) => {
         displayName: "Sanwariya Boss",
         qrCodeUrl: "",
         activeFundSystem: "Manual",
-        imbToken: defaultEnvToken,
+        imbToken: "",
         payFromUpiToken: "",
         minAmount: 100,
         maxAmount: 20000,
@@ -431,21 +425,8 @@ export const updatePaymentSettings = async (req, res) => {
       if (displayName !== undefined) updateData.displayName = String(displayName).trim();
       if (qrCodeUrl !== undefined) updateData.qrCodeUrl = qrCodeUrl;
       if (activeFundSystem !== undefined) updateData.activeFundSystem = activeFundSystem;
-
-      // Do not overwrite imbToken if masked or empty
-      if (imbToken !== undefined && !String(imbToken).includes("****")) {
-        const trimmed = String(imbToken).trim();
-        if (trimmed !== "") {
-          updateData.imbToken = trimmed;
-        }
-      }
-
-      if (payFromUpiToken !== undefined && !String(payFromUpiToken).includes("****")) {
-        const trimmed = String(payFromUpiToken).trim();
-        if (trimmed !== "") {
-          updateData.payFromUpiToken = trimmed;
-        }
-      }
+      if (imbToken !== undefined) updateData.imbToken = String(imbToken).trim();
+      if (payFromUpiToken !== undefined) updateData.payFromUpiToken = String(payFromUpiToken).trim();
 
       if (minAmount !== undefined && !isNaN(minAmount)) updateData.minAmount = Number(minAmount);
       if (maxAmount !== undefined && !isNaN(maxAmount)) updateData.maxAmount = Number(maxAmount);
@@ -520,7 +501,7 @@ export const getUserTransactions = async (req, res) => {
       const pendingImb = transactions.filter(t => t.status === "Pending" && t.method === "IMB");
       if (pendingImb.length > 0) {
         const settings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
-        const imbToken = settings?.imbToken || process.env.IMB_CLIENT_SECRET || "";
+        const imbToken = settings?.imbToken ? settings.imbToken.trim() : "";
         if (imbToken) {
           await Promise.all(pendingImb.slice(0, 5).map(tx => checkAndApproveImbTransaction(tx, imbToken)));
           if (user) {
@@ -556,7 +537,7 @@ export const getAllTransactionsAdmin = async (req, res) => {
       const pendingImb = transactions.filter(t => t.status === "Pending" && (t.method === "IMB" || (t.method || "").toLowerCase().includes("imb")));
       if (pendingImb.length > 0) {
         const settings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
-        const imbToken = settings?.imbToken || process.env.IMB_CLIENT_SECRET || "";
+        const imbToken = settings?.imbToken ? settings.imbToken.trim() : "";
         if (imbToken) {
           await Promise.all(pendingImb.slice(0, 10).map(tx => checkAndApproveImbTransaction(tx, imbToken)));
           transactions = await PaymentTransaction.find({ type: "Deposit" })
