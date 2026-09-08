@@ -22,7 +22,7 @@ export const UpiSettings = () => {
 
   // Add-Fund System state
   const [activeFundSystem, setActiveFundSystem] = useState('Manual'); // 'IMB' | 'PayFromUPI' | 'Manual'
-  const [imbToken, setImbToken] = useState('****');
+  const [imbToken, setImbToken] = useState('');
   const [payFromUpiToken, setPayFromUpiToken] = useState('');
   const [showImbToken, setShowImbToken] = useState(false);
   const [showPayFromUpiToken, setShowPayFromUpiToken] = useState(false);

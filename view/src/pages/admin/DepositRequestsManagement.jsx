@@ -75,12 +75,29 @@ export const DepositRequestsManagement = () => {
       });
 
       if (response.data || response.status === 200) {
+        const returnedTx = response.data?.transaction;
+        const appType = returnedTx?.approvalType || (status === 'Approved' ? 'Manual Admin' : 'Manual Admin');
+
         setDepositRequests(prev => prev.map(req => 
-          (req._id === id || req.id === id) ? { ...req, status: status } : req
+          (req._id === id || req.id === id) 
+            ? { 
+                ...req, 
+                ...(returnedTx || {}), 
+                status: status, 
+                approvalType: appType,
+                paymentSource: 'Manual Approval (Admin)'
+              } 
+            : req
         ));
         toast.success(`Deposit ${status} successfully!`);
         if (selectedDeposit && (selectedDeposit._id === id || selectedDeposit.id === id)) {
-          setSelectedDeposit(prev => ({ ...prev, status: status }));
+          setSelectedDeposit(prev => ({ 
+            ...prev, 
+            ...(returnedTx || {}), 
+            status: status, 
+            approvalType: appType,
+            paymentSource: 'Manual Approval (Admin)'
+          }));
         }
       }
     } catch (error) {

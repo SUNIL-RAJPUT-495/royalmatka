@@ -377,6 +377,8 @@ export const createManualDeposit = async (req, res) => {
 // ==========================================
 export const getPaymentSettings = async (req, res) => {
   try {
+    const defaultEnvToken = process.env.IMB_CLIENT_SECRET || "";
+
     if (mongoose.connection.readyState === 1) {
       let settings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
       if (!settings) {
@@ -385,14 +387,18 @@ export const getPaymentSettings = async (req, res) => {
           displayName: "Sanwariya Boss",
           qrCodeUrl: "",
           activeFundSystem: "Manual",
-          imbToken: "",
+          imbToken: defaultEnvToken,
           payFromUpiToken: "",
           minAmount: 100,
           maxAmount: 20000,
           quickAmounts: [100, 300, 500, 1000, 5000, 10000]
         });
       }
-      return res.status(200).json({ success: true, settings });
+      const settingsObj = settings.toObject();
+      if (!settingsObj.imbToken || settingsObj.imbToken.includes("****")) {
+        settingsObj.imbToken = defaultEnvToken || settingsObj.imbToken || "";
+      }
+      return res.status(200).json({ success: true, settings: settingsObj });
     }
 
     return res.status(200).json({
@@ -402,7 +408,7 @@ export const getPaymentSettings = async (req, res) => {
         displayName: "Sanwariya Boss",
         qrCodeUrl: "",
         activeFundSystem: "Manual",
-        imbToken: "",
+        imbToken: defaultEnvToken,
         payFromUpiToken: "",
         minAmount: 100,
         maxAmount: 20000,
@@ -411,20 +417,7 @@ export const getPaymentSettings = async (req, res) => {
     });
   } catch (error) {
     console.error("getPaymentSettings Error:", error);
-    return res.status(200).json({
-      success: true,
-      settings: {
-        upiId: "sanwariyaboss@ybl",
-        displayName: "Sanwariya Boss",
-        qrCodeUrl: "",
-        activeFundSystem: "Manual",
-        imbToken: "",
-        payFromUpiToken: "",
-        minAmount: 100,
-        maxAmount: 20000,
-        quickAmounts: [100, 300, 500, 1000, 5000, 10000]
-      }
-    });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -438,8 +431,22 @@ export const updatePaymentSettings = async (req, res) => {
       if (displayName !== undefined) updateData.displayName = String(displayName).trim();
       if (qrCodeUrl !== undefined) updateData.qrCodeUrl = qrCodeUrl;
       if (activeFundSystem !== undefined) updateData.activeFundSystem = activeFundSystem;
-      if (imbToken !== undefined) updateData.imbToken = String(imbToken).trim();
-      if (payFromUpiToken !== undefined) updateData.payFromUpiToken = String(payFromUpiToken).trim();
+
+      // Do not overwrite imbToken if masked or empty
+      if (imbToken !== undefined && !String(imbToken).includes("****")) {
+        const trimmed = String(imbToken).trim();
+        if (trimmed !== "") {
+          updateData.imbToken = trimmed;
+        }
+      }
+
+      if (payFromUpiToken !== undefined && !String(payFromUpiToken).includes("****")) {
+        const trimmed = String(payFromUpiToken).trim();
+        if (trimmed !== "") {
+          updateData.payFromUpiToken = trimmed;
+        }
+      }
+
       if (minAmount !== undefined && !isNaN(minAmount)) updateData.minAmount = Number(minAmount);
       if (maxAmount !== undefined && !isNaN(maxAmount)) updateData.maxAmount = Number(maxAmount);
       if (isOtpEnabled !== undefined) updateData.isOtpEnabled = Boolean(isOtpEnabled);
@@ -474,11 +481,6 @@ export const updatePaymentSettings = async (req, res) => {
     console.error("updatePaymentSettings Error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
-};
-
-export const getUserTransactions = async (req, res) => {
-  try {
-    const { userId, mobile } = req.query;
     const authId = req.user?.id || req.user?._id;
     const authMobile = req.user?.mobile;
 
