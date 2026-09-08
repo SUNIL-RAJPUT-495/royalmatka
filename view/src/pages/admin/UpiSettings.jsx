@@ -4,7 +4,7 @@ import {
   RefreshCw, Trash2, CheckCircle2, User, Key, Eye, EyeOff, Upload, QrCode
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import Axios from '../../utils/axios';
+import AxiosAdmin from '../../utils/axiosAdmin';
 import SummaryApi from '../../common/SummerAPI';
 
 export const UpiSettings = () => {
@@ -36,7 +36,7 @@ export const UpiSettings = () => {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await Axios({
+        const res = await AxiosAdmin({
           url: SummaryApi.getPaymentSettings.url,
           method: SummaryApi.getPaymentSettings.method
         });
@@ -77,7 +77,7 @@ export const UpiSettings = () => {
         isOtpEnabled: isOtpEnabled
       };
 
-      const res = await Axios({
+      const res = await AxiosAdmin({
         url: SummaryApi.updatePaymentSettings.url,
         method: SummaryApi.updatePaymentSettings.method,
         data: payload
@@ -370,7 +370,7 @@ export const UpiSettings = () => {
                   setIsOtpEnabled(nextVal);
                   toast.success(`OTP Verification turned ${nextVal ? 'ON' : 'OFF'}`);
                   try {
-                    await Axios({
+                    await AxiosAdmin({
                       url: SummaryApi.updatePaymentSettings.url,
                       method: SummaryApi.updatePaymentSettings.method,
                       data: {
