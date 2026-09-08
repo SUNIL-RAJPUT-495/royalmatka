@@ -391,6 +391,8 @@ export const getPaymentSettings = async (req, res) => {
           maxAmount: 20000,
           quickAmounts: [100, 300, 500, 1000, 5000, 10000]
         });
+      } else {
+        await PaymentSettings.deleteMany({ _id: { $ne: settings._id } });
       }
       return res.status(200).json({ success: true, settings: settings.toObject() });
     }
@@ -438,6 +440,9 @@ export const updatePaymentSettings = async (req, res) => {
           updateData.quickAmounts = quickAmounts.split(',').map(n => Number(n.trim())).filter(n => !isNaN(n));
         }
       }
+
+      // Update all records first so no stale record retains the old token
+      await PaymentSettings.updateMany({}, { $set: updateData });
 
       const settings = await PaymentSettings.findOneAndUpdate({}, updateData, {
         upsert: true,
