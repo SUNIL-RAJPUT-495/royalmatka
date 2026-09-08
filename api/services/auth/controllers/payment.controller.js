@@ -481,6 +481,14 @@ export const updatePaymentSettings = async (req, res) => {
     console.error("updatePaymentSettings Error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
+};
+
+// ==========================================
+// 6. USER: GET TRANSACTIONS
+// ==========================================
+export const getUserTransactions = async (req, res) => {
+  try {
+    const { userId, mobile } = req.query;
     const authId = req.user?.id || req.user?._id;
     const authMobile = req.user?.mobile;
 
