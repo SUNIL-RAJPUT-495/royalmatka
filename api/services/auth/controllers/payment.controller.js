@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import User from "../models/User.js";
 import PaymentTransaction from "../models/PaymentTransaction.js";
 import PaymentSettings from "../models/PaymentSettings.js";
+import SystemSettings from "../../matka/models/SystemSettings.js";
 
 const getCleanUrl = (baseUrl, path) => {
   if (!baseUrl) return "";
@@ -454,6 +455,17 @@ export const updatePaymentSettings = async (req, res) => {
         upsert: true,
         returnDocument: 'after'
       });
+
+      // Also sync SystemSettings.minDeposit
+      if (minAmount !== undefined && !isNaN(minAmount)) {
+        await SystemSettings.findOneAndUpdate({}, { minDeposit: Number(minAmount) }, { upsert: true });
+      }
+
+      // Cleanup any older stale records in PaymentSettings collection to prevent fetch mismatch
+      if (settings && settings._id) {
+        await PaymentSettings.deleteMany({ _id: { $ne: settings._id } });
+      }
+
       return res.status(200).json({ success: true, message: "Payment settings updated successfully! 🎉", settings });
     }
 
