@@ -432,29 +432,28 @@ export const updatePaymentSettings = async (req, res) => {
     const { upiId, displayName, qrCodeUrl, activeFundSystem, imbToken, payFromUpiToken, minAmount, maxAmount, quickAmounts, isOtpEnabled } = req.body;
 
     if (mongoose.connection.readyState === 1) {
-      let settings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
-      if (!settings) {
-        settings = new PaymentSettings();
-      }
-
-      if (upiId !== undefined) settings.upiId = String(upiId).trim();
-      if (displayName !== undefined) settings.displayName = String(displayName).trim();
-      if (qrCodeUrl !== undefined) settings.qrCodeUrl = qrCodeUrl;
-      if (activeFundSystem !== undefined) settings.activeFundSystem = activeFundSystem;
-      if (imbToken !== undefined) settings.imbToken = String(imbToken).trim();
-      if (payFromUpiToken !== undefined) settings.payFromUpiToken = String(payFromUpiToken).trim();
-      if (minAmount !== undefined && !isNaN(minAmount)) settings.minAmount = Number(minAmount);
-      if (maxAmount !== undefined && !isNaN(maxAmount)) settings.maxAmount = Number(maxAmount);
-      if (isOtpEnabled !== undefined) settings.isOtpEnabled = Boolean(isOtpEnabled);
+      const updateData = {};
+      if (upiId !== undefined) updateData.upiId = String(upiId).trim();
+      if (displayName !== undefined) updateData.displayName = String(displayName).trim();
+      if (qrCodeUrl !== undefined) updateData.qrCodeUrl = qrCodeUrl;
+      if (activeFundSystem !== undefined) updateData.activeFundSystem = activeFundSystem;
+      if (imbToken !== undefined) updateData.imbToken = String(imbToken).trim();
+      if (payFromUpiToken !== undefined) updateData.payFromUpiToken = String(payFromUpiToken).trim();
+      if (minAmount !== undefined && !isNaN(minAmount)) updateData.minAmount = Number(minAmount);
+      if (maxAmount !== undefined && !isNaN(maxAmount)) updateData.maxAmount = Number(maxAmount);
+      if (isOtpEnabled !== undefined) updateData.isOtpEnabled = Boolean(isOtpEnabled);
       if (quickAmounts !== undefined) {
         if (Array.isArray(quickAmounts)) {
-          settings.quickAmounts = quickAmounts.map(Number).filter(n => !isNaN(n));
+          updateData.quickAmounts = quickAmounts.map(Number).filter(n => !isNaN(n));
         } else if (typeof quickAmounts === 'string') {
-          settings.quickAmounts = quickAmounts.split(',').map(n => Number(n.trim())).filter(n => !isNaN(n));
+          updateData.quickAmounts = quickAmounts.split(',').map(n => Number(n.trim())).filter(n => !isNaN(n));
         }
       }
 
-      await settings.save();
+      const settings = await PaymentSettings.findOneAndUpdate({}, updateData, {
+        upsert: true,
+        returnDocument: 'after'
+      });
       return res.status(200).json({ success: true, message: "Payment settings updated successfully! 🎉", settings });
     }
 
