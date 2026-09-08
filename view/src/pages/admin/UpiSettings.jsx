@@ -46,6 +46,8 @@ export const UpiSettings = () => {
           setNewDisplayName(s.displayName || 'Sanwariya Boss');
           setQrCodeUrl(s.qrCodeUrl || '');
           setActiveFundSystem(s.activeFundSystem || 'Manual');
+          setImbToken(s.imbToken || '');
+          setPayFromUpiToken(s.payFromUpiToken || '');
           setMinAmount(String(s.minAmount || 100));
           setMaxAmount(String(s.maxAmount || 20000));
           if (s.quickAmounts && s.quickAmounts.length > 0) {
@@ -67,6 +69,8 @@ export const UpiSettings = () => {
         displayName: newDisplayName,
         qrCodeUrl: qrCodeUrl,
         activeFundSystem: activeFundSystem,
+        imbToken: imbToken,
+        payFromUpiToken: payFromUpiToken,
         minAmount: Number(minAmount),
         maxAmount: Number(maxAmount),
         quickAmounts: quickAmountString.split(',').map(v => Number(v.trim())).filter(v => !isNaN(v)),
@@ -481,23 +485,30 @@ export const UpiSettings = () => {
 
           {/* Conditional inputs */}
           {activeFundSystem === 'IMB' && (
-            <div className="space-y-1">
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">IMB API Token</label>
-              <div className="relative">
-                <input 
-                  type={showImbToken ? 'text' : 'password'} 
-                  value={imbToken}
-                  onChange={(e) => setImbToken(e.target.value)}
-                  className="w-full px-4 py-2.5 pr-14 bg-gray-50 border border-gray-200 rounded-lg outline-none text-xs font-semibold"
-                />
-                <button 
-                  type="button" 
-                  onClick={() => setShowImbToken(!showImbToken)}
-                  className="absolute right-4 top-3 text-[11px] font-bold text-orange-500 uppercase tracking-wide cursor-pointer hover:text-orange-600"
-                >
-                  {showImbToken ? 'Hide' : 'Show'}
-                </button>
+            <div className="space-y-2">
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">IMB API Token (user_token)</label>
+                <div className="relative">
+                  <input 
+                    type={showImbToken ? 'text' : 'password'} 
+                    value={imbToken}
+                    placeholder="Enter your IMB user_token"
+                    onChange={(e) => setImbToken(e.target.value)}
+                    className="w-full px-4 py-2.5 pr-14 bg-gray-50 border border-gray-200 rounded-lg outline-none text-xs font-semibold focus:border-orange-500"
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowImbToken(!showImbToken)}
+                    className="absolute right-4 top-3 text-[11px] font-bold text-orange-500 uppercase tracking-wide cursor-pointer hover:text-orange-600"
+                  >
+                    {showImbToken ? 'Hide' : 'Show'}
+                  </button>
+                </div>
               </div>
+              <p className="text-[10px] text-gray-400 font-semibold leading-relaxed">
+                Your IMB Payment API Token from dashboard. Set the Webhook URL in your IMB Merchant Dashboard to:<br/>
+                <span className="text-blue-600 font-bold">{window.location.origin.replace(':5173', ':5010')}/api/payment/imb-webhook</span>
+              </p>
             </div>
           )}
 

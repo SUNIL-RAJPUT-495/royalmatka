@@ -40,6 +40,22 @@ export const createOrder = async (req, res) => {
       user = { _id: "demo_user_id", name: "User", mobile: mobile || "9999999999", email: "" };
     }
 
+    // Get IMB API token from database PaymentSettings
+    let imbToken = process.env.IMB_CLIENT_SECRET || "";
+    if (mongoose.connection.readyState === 1) {
+      const settings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
+      if (settings?.imbToken) {
+        imbToken = settings.imbToken;
+      }
+    }
+
+    if (!imbToken) {
+      return res.status(400).json({
+        success: false,
+        message: "IMB Payment API Token is not configured in Admin Settings."
+      });
+    }
+
     const transactionId = "TXN" + Date.now() + Math.floor(Math.random() * 1000);
 
     if (mongoose.connection.readyState === 1) {
@@ -53,52 +69,54 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    const redirectUrl = process.env.FRONTEND_URL
-      ? `${process.env.FRONTEND_URL}/add-funds`
-      : `http://localhost:5173/add-funds`;
+    let redirectUrl = process.env.FRONTEND_URL
+      ? `${process.env.FRONTEND_URL}/wallet`
+      : `http://localhost:5173/wallet`;
 
-    const imbSecret = process.env.IMB_CLIENT_SECRET || "demo_imb_secret";
-    const payload = new URLSearchParams({
-      customer_mobile: String(user.mobile).replace(/\D/g, ""),
-      user_token: imbSecret,
-      amount: String(amount),
-      order_id: transactionId,
-      customer_name: user.name || "Customer",
-      remark1: user.email || 'N/A',
-      remark2: 'Deposit',
-      redirect_url: redirectUrl,
-    });
-
-    const imbBaseUrl = process.env.IMB_BASE_URL || "https://imb.pay";
-    const IMB_CREATE_ORDER_URL = getCleanUrl(imbBaseUrl, "/api/create-order");
-
-    if (process.env.IMB_BASE_URL) {
-      const response = await axios.post(IMB_CREATE_ORDER_URL, payload.toString(), {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      });
-
-      const data = response.data;
-      console.log("IMB Final Response:", data);
-
-      if (data && data.status === true && data.result) {
-        return res.status(200).json({
-          success: true,
-          message: "Order Created Successfully",
-          payment_url: data.result.payment_url || data.result.paytm_link || data.result.bhim_link || data.result.check_link,
-          orderId: transactionId
-        });
-      }
+    const requestOrigin = req.get("origin") || req.get("referer");
+    if (requestOrigin && !process.env.FRONTEND_URL) {
+      try {
+        const parsed = new URL(requestOrigin);
+        redirectUrl = `${parsed.origin}/wallet`;
+      } catch (e) {}
     }
 
-    // Fallback response for testing if gateway URL not configured
-    return res.status(200).json({
-      success: true,
-      message: "Order Created Successfully (Demo Link)",
-      payment_url: `https://upi.link/pay?pa=sanwariyaboss@ybl&am=${amount}&tn=${transactionId}`,
-      orderId: transactionId
+    const payload = new URLSearchParams({
+      customer_mobile: String(user.mobile).replace(/\D/g, ""),
+      user_token: imbToken,
+      amount: String(amount),
+      order_id: transactionId,
+      redirect_url: redirectUrl,
+      remark1: user.email || user.name || 'User Deposit',
+      remark2: 'Deposit',
     });
+
+    const IMB_CREATE_ORDER_URL = "https://api.imbpay.in/v2/create-order";
+
+    const response = await axios.post(IMB_CREATE_ORDER_URL, payload.toString(), {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      }
+    });
+
+    const data = response.data;
+    console.log("IMB Final Response:", data);
+
+    if (data && (data.status === true || data.status === "true") && data.result) {
+      return res.status(200).json({
+        success: true,
+        message: data.message || "Order Created Successfully",
+        payment_url: data.result.payment_url || data.result.paytm_link || data.result.bhim_link || data.result.check_link,
+        orderId: transactionId,
+        result: data.result
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: data.message || "Failed to create IMB payment order.",
+        data
+      });
+    }
 
   } catch (error) {
     console.error("IMB Create Order Error:", error.response?.data || error.message);
@@ -110,6 +128,75 @@ export const createOrder = async (req, res) => {
       error: errorDetail
     });
   }
+};
+
+// Helper function to auto-check & approve IMB Gateway orders
+export const checkAndApproveImbTransaction = async (transaction, imbToken) => {
+  if (!transaction || transaction.status === "Approved" || transaction.method !== "IMB") {
+    return false;
+  }
+  if (!imbToken) {
+    const settings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
+    imbToken = settings?.imbToken || process.env.IMB_CLIENT_SECRET || "";
+  }
+  if (!imbToken) return false;
+
+  try {
+    const payload = new URLSearchParams({
+      user_token: imbToken,
+      order_id: transaction.transactionId
+    });
+
+    const IMB_STATUS_URL = "https://api.imbpay.in/v2/check-order-status";
+    const response = await axios.post(IMB_STATUS_URL, payload.toString(), {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      timeout: 5000
+    });
+    const data = response.data;
+    console.log(`IMB Auto Check Status for ${transaction.transactionId}:`, data);
+
+    if (!data) return false;
+
+    let resultObj = data.result;
+    if (typeof resultObj === "string") {
+      try {
+        resultObj = JSON.parse(resultObj);
+      } catch (e) {}
+    }
+    if (!resultObj || typeof resultObj !== "object") {
+      resultObj = {};
+    }
+
+    const topStatus = String(data.status || "").toUpperCase();
+    const resStatus = String(resultObj.status || "").toUpperCase();
+    const resTxnStatus = String(resultObj.txnStatus || "").toUpperCase();
+
+    const isSuccess =
+      (topStatus === "COMPLETED" || topStatus === "SUCCESS" || data.status === true || data.status === "true") &&
+      (resStatus === "SUCCESS" || resStatus === "COMPLETED" || resTxnStatus === "COMPLETED" || resTxnStatus === "SUCCESS" || String(data.message || "").toLowerCase().includes("success"));
+
+    if (isSuccess && transaction.status !== "Approved") {
+      const utr = resultObj.utr || data.utr || resultObj.orderId || transaction.transactionId;
+      transaction.accountDetails = String(utr);
+      if (utr) transaction.utrNumber = String(utr);
+      transaction.status = "Approved";
+      transaction.approvalType = "Auto";
+      await transaction.save();
+
+      await creditUserDepositWithExposure(transaction.userId, transaction.amount);
+      console.log(`✅ Transaction ${transaction.transactionId} auto-verified and APPROVED!`);
+      return true;
+    } else if ((topStatus === "FAILED" || resTxnStatus === "FAILED" || resStatus === "FAILED") && transaction.status === "Pending") {
+      transaction.status = "Rejected";
+      await transaction.save();
+      console.log(`❌ Transaction ${transaction.transactionId} auto-checked and REJECTED!`);
+    }
+  } catch (error) {
+    console.error(`Error auto-checking IMB transaction ${transaction.transactionId}:`, error.message);
+  }
+  return false;
 };
 
 // ==========================================
@@ -129,37 +216,16 @@ export const verifyPayment = async (req, res) => {
         return res.status(404).json({ success: false, message: "Transaction not found" });
       }
 
-      const imbSecret = process.env.IMB_CLIENT_SECRET || "demo_imb_secret";
-      const statusPayload = {
-        user_token: imbSecret,
-        order_id: transactionId
-      };
-
-      let IMB_STATUS_URL = process.env.IMB_STATUS_URL;
-      if (!IMB_STATUS_URL && process.env.IMB_BASE_URL) {
-        IMB_STATUS_URL = getCleanUrl(process.env.IMB_BASE_URL, "/api/check-order-status");
+      if (transaction.status === "Approved") {
+        return res.status(200).json({ success: true, message: "Payment already verified and credited" });
       }
 
-      if (IMB_STATUS_URL) {
-        const response = await axios.post(IMB_STATUS_URL, statusPayload);
-        const data = response.data;
-
-        if (data.status === "SUCCESS" || data.status === "COMPLETED") {
-          if (transaction.status !== "Approved") {
-            transaction.accountDetails = data.upi_txn_id || data.bank_txn_id || transactionId;
-            transaction.status = "Approved";
-            await transaction.save();
-
-            await creditUserDepositWithExposure(transaction.userId, transaction.amount);
-
-            return res.status(200).json({
-              success: true,
-              message: "Payment Verified Successfully"
-            });
-          } else {
-            return res.status(200).json({ success: true, message: "Already verified" });
-          }
-        }
+      const isVerified = await checkAndApproveImbTransaction(transaction);
+      if (isVerified || transaction.status === "Approved") {
+        return res.status(200).json({
+          success: true,
+          message: "Payment Verified Successfully 🎉 Wallet updated!"
+        });
       }
     }
 
@@ -176,10 +242,25 @@ export const verifyPayment = async (req, res) => {
 // ==========================================
 export const imbWebhook = async (req, res) => {
   try {
-    const data = req.body;
+    let data = req.body;
     console.log("🔥 Webhook Received from IMB:", data);
 
-    const transactionId = data.client_txn_id || data.order_id;
+    if (!data || typeof data !== "object") {
+      return res.status(400).send("Invalid webhook payload");
+    }
+
+    // Parse result if stringified
+    let result = data.result;
+    if (typeof result === "string") {
+      try {
+        result = JSON.parse(result);
+      } catch (e) {
+        console.warn("Webhook result JSON parse error:", e.message);
+      }
+    }
+    if (!result) result = {};
+
+    const transactionId = data.order_id || data.orderId || result.orderId || data.client_txn_id;
 
     if (!transactionId) {
       return res.status(400).send("Transaction ID missing");
@@ -188,20 +269,29 @@ export const imbWebhook = async (req, res) => {
     if (mongoose.connection.readyState === 1) {
       const transaction = await PaymentTransaction.findOne({ transactionId });
       if (!transaction) {
+        console.warn(`Webhook: Transaction ${transactionId} not found in database`);
         return res.status(404).send("Transaction not found");
       }
 
-      if ((data.status === "SUCCESS" || data.status === "COMPLETED") && transaction.status !== "Approved") {
-        transaction.accountDetails = data.upi_txn_id || data.bank_txn_id || transactionId;
+      const isSuccess =
+        (data.status === "SUCCESS" || data.status === "COMPLETED") &&
+        (result.txnStatus === "COMPLETED" || result.status === "SUCCESS" || data.txnStatus === "COMPLETED");
+
+      const utr = result.utr || data.utr || result.orderId;
+
+      if (isSuccess && transaction.status !== "Approved") {
+        transaction.accountDetails = utr ? String(utr) : transactionId;
+        if (utr) transaction.utrNumber = String(utr);
         transaction.status = "Approved";
+        transaction.approvalType = "Auto";
         await transaction.save();
 
         await creditUserDepositWithExposure(transaction.userId, transaction.amount);
-        console.log(`✅ Transaction ${transactionId} marked as APPROVED via Webhook!`);
-      } else if (data.status === "FAILED" && transaction.status !== "Approved") {
+        console.log(`✅ Transaction ${transactionId} marked as APPROVED via IMB Webhook!`);
+      } else if ((data.status === "FAILED" || result.txnStatus === "FAILED") && transaction.status !== "Approved") {
         transaction.status = "Rejected";
         await transaction.save();
-        console.log(`❌ Transaction ${transactionId} marked as REJECTED via Webhook!`);
+        console.log(`❌ Transaction ${transactionId} marked as REJECTED via IMB Webhook!`);
       }
     }
 
@@ -294,6 +384,8 @@ export const getPaymentSettings = async (req, res) => {
           displayName: "Sanwariya Boss",
           qrCodeUrl: "",
           activeFundSystem: "Manual",
+          imbToken: "",
+          payFromUpiToken: "",
           minAmount: 100,
           maxAmount: 20000,
           quickAmounts: [100, 300, 500, 1000, 5000, 10000]
@@ -309,6 +401,8 @@ export const getPaymentSettings = async (req, res) => {
         displayName: "Sanwariya Boss",
         qrCodeUrl: "",
         activeFundSystem: "Manual",
+        imbToken: "",
+        payFromUpiToken: "",
         minAmount: 100,
         maxAmount: 20000,
         quickAmounts: [100, 300, 500, 1000, 5000, 10000]
@@ -323,6 +417,8 @@ export const getPaymentSettings = async (req, res) => {
         displayName: "Sanwariya Boss",
         qrCodeUrl: "",
         activeFundSystem: "Manual",
+        imbToken: "",
+        payFromUpiToken: "",
         minAmount: 100,
         maxAmount: 20000,
         quickAmounts: [100, 300, 500, 1000, 5000, 10000]
@@ -345,8 +441,8 @@ export const updatePaymentSettings = async (req, res) => {
       if (displayName !== undefined) settings.displayName = String(displayName).trim();
       if (qrCodeUrl !== undefined) settings.qrCodeUrl = qrCodeUrl;
       if (activeFundSystem !== undefined) settings.activeFundSystem = activeFundSystem;
-      if (imbToken !== undefined) settings.imbToken = imbToken;
-      if (payFromUpiToken !== undefined) settings.payFromUpiToken = payFromUpiToken;
+      if (imbToken !== undefined) settings.imbToken = String(imbToken).trim();
+      if (payFromUpiToken !== undefined) settings.payFromUpiToken = String(payFromUpiToken).trim();
       if (minAmount !== undefined && !isNaN(minAmount)) settings.minAmount = Number(minAmount);
       if (maxAmount !== undefined && !isNaN(maxAmount)) settings.maxAmount = Number(maxAmount);
       if (isOtpEnabled !== undefined) settings.isOtpEnabled = Boolean(isOtpEnabled);
@@ -399,6 +495,23 @@ export const getUserTransactions = async (req, res) => {
         transactions = await PaymentTransaction.find().sort({ createdAt: -1 }).limit(50);
       }
 
+      // Auto-check any pending IMB transactions
+      const pendingImb = transactions.filter(t => t.status === "Pending" && t.method === "IMB");
+      if (pendingImb.length > 0) {
+        const settings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
+        const imbToken = settings?.imbToken || process.env.IMB_CLIENT_SECRET || "";
+        if (imbToken) {
+          await Promise.all(pendingImb.slice(0, 5).map(tx => checkAndApproveImbTransaction(tx, imbToken)));
+          if (user) {
+            transactions = await PaymentTransaction.find({
+              $or: [{ userId: user._id }, { userId: user._id.toString() }]
+            }).sort({ createdAt: -1 });
+          } else {
+            transactions = await PaymentTransaction.find().sort({ createdAt: -1 }).limit(50);
+          }
+        }
+      }
+
       return res.status(200).json({ success: true, transactions });
     }
 
@@ -414,9 +527,22 @@ export const getUserTransactions = async (req, res) => {
 export const getAllTransactionsAdmin = async (req, res) => {
   try {
     if (mongoose.connection.readyState === 1) {
-      const transactions = await PaymentTransaction.find({ type: "Deposit" })
+      let transactions = await PaymentTransaction.find({ type: "Deposit" })
         .populate("userId", "name mobile email wallet balance")
         .sort({ createdAt: -1 });
+
+      // Auto-check any pending IMB transactions for admin list
+      const pendingImb = transactions.filter(t => t.status === "Pending" && (t.method === "IMB" || (t.method || "").toLowerCase().includes("imb")));
+      if (pendingImb.length > 0) {
+        const settings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
+        const imbToken = settings?.imbToken || process.env.IMB_CLIENT_SECRET || "";
+        if (imbToken) {
+          await Promise.all(pendingImb.slice(0, 10).map(tx => checkAndApproveImbTransaction(tx, imbToken)));
+          transactions = await PaymentTransaction.find({ type: "Deposit" })
+            .populate("userId", "name mobile email wallet balance")
+            .sort({ createdAt: -1 });
+        }
+      }
 
       const allUsers = await User.find({}).lean();
       const userMap = new Map();
@@ -484,7 +610,13 @@ export const getAllTransactionsAdmin = async (req, res) => {
 
         let paymentSource = "Manual QR / UPI";
         const m = (doc.method || "").toLowerCase();
-        if (m.includes("imb") || m.includes("gateway") || m.includes("online") || m.includes("auto")) {
+        const appType = (doc.approvalType || "").toLowerCase();
+
+        if (doc.status === "Approved" && appType.includes("auto")) {
+          paymentSource = "Auto Gateway (IMB)";
+        } else if (doc.status === "Approved" && appType.includes("manual")) {
+          paymentSource = "Manual Approval (Admin)";
+        } else if (m.includes("imb") || m.includes("gateway") || m.includes("auto")) {
           paymentSource = "Auto Gateway (IMB)";
         } else if (m.includes("payfromupi")) {
           paymentSource = "PayFromUPI Gateway";
@@ -555,6 +687,9 @@ export const updateTransactionStatusAdmin = async (req, res) => {
       // If approving a deposit that was pending, credit user wallet & exposure amount
       if (status === "Approved" && tx.status !== "Approved" && tx.type === "Deposit") {
         await creditUserDepositWithExposure(tx.userId, tx.amount);
+        tx.approvalType = "Manual Admin";
+      } else if (status === "Rejected") {
+        tx.approvalType = "Manual Admin";
       }
 
       tx.status = status;

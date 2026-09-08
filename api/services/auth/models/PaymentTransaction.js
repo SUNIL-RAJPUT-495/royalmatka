@@ -37,6 +37,11 @@ const paymentTransactionSchema = new mongoose.Schema({
     enum: ["Pending", "Approved", "Rejected", "Confirmed"],
     default: "Pending"
   },
+  approvalType: {
+    type: String,
+    enum: ["Auto", "Manual Admin", "None"],
+    default: "None"
+  },
 }, { timestamps: true });
 
 paymentTransactionSchema.index({ type: 1, createdAt: -1 });

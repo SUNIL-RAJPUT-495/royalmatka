@@ -30,13 +30,14 @@ export const UserDeposit = () => {
 
   useEffect(() => {
     const fetchSettings = async () => {
+      let fetchedPaymentSettings = null;
       try {
         const res = await Axios({
           url: SummaryApi.getPaymentSettings.url,
           method: SummaryApi.getPaymentSettings.method
         });
         if (res.data?.settings) {
-          setSettings(prev => ({ ...prev, ...res.data.settings }));
+          fetchedPaymentSettings = res.data.settings;
         }
       } catch (err) {
         console.warn('Using default payment settings');
@@ -47,19 +48,23 @@ export const UserDeposit = () => {
           url: SummaryApi.getTransactionSettings.url,
           method: SummaryApi.getTransactionSettings.method
         });
-        if (txnRes.data?.data?.minDeposit) {
+        if (txnRes.data?.data?.minDeposit && (!fetchedPaymentSettings || fetchedPaymentSettings.minAmount === undefined)) {
           setSettings(prev => ({ ...prev, minAmount: Number(txnRes.data.data.minDeposit) }));
         }
       } catch (err) {
         console.warn('Using default transaction settings');
+      }
+
+      if (fetchedPaymentSettings) {
+        setSettings(prev => ({ ...prev, ...fetchedPaymentSettings }));
       }
     };
     fetchSettings();
   }, []);
 
   const numAmount = Number(amount);
-  const minAmt = settings.minAmount || 100;
-  const maxAmt = settings.maxAmount || 50000;
+  const minAmt = settings.minAmount !== undefined && settings.minAmount !== null ? Number(settings.minAmount) : 100;
+  const maxAmt = settings.maxAmount !== undefined && settings.maxAmount !== null ? Number(settings.maxAmount) : 50000;
   const isValidAmount = numAmount >= minAmt && numAmount <= maxAmt;
   const presetAmounts = settings.quickAmounts && settings.quickAmounts.length > 0
     ? settings.quickAmounts

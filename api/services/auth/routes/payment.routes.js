@@ -19,6 +19,9 @@ const router = express.Router();
 
 // Webhook & Public Payment Settings
 router.post("/imb-webhook", imbWebhook);
+router.get("/imb-webhook", (req, res) => res.status(200).send("IMB Webhook endpoint active"));
+router.post("/webhook", imbWebhook);
+router.post("/imb/webhook.php", imbWebhook);
 router.get("/get-settings", getPaymentSettings);
 
 // User Protected Payment Routes

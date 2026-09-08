@@ -15,6 +15,8 @@ import {
 import { IoWalletOutline, IoFlashSharp, IoRefreshOutline, IoTrendingUpOutline, IoDocumentTextOutline } from 'react-icons/io5';
 import { HiOutlineSparkles } from 'react-icons/hi';
 
+import toast, { Toaster } from 'react-hot-toast';
+
 export const UserWallet = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
@@ -111,7 +113,27 @@ export const UserWallet = () => {
   };
 
   useEffect(() => {
-    fetchWalletData();
+    const checkPaymentAndFetch = async () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const orderId = searchParams.get('order_id') || searchParams.get('orderId') || searchParams.get('order');
+
+      if (orderId) {
+        try {
+          const res = await Axios({
+            url: SummaryApi.verifyPayment.url,
+            method: SummaryApi.verifyPayment.method,
+            data: { transactionId: orderId }
+          });
+          if (res.data?.success) {
+            toast.success(res.data.message || 'Payment status verified! Wallet updated. 🎉');
+          }
+        } catch (e) {
+          console.warn("Verify payment auto-check error:", e);
+        }
+      }
+      await fetchWalletData();
+    };
+    checkPaymentAndFetch();
   }, []);
 
   const handleRefreshBalance = () => {
@@ -129,6 +151,7 @@ export const UserWallet = () => {
 
   return (
     <div className="w-full select-none pb-8 font-sans">
+      <Toaster position="top-center" reverseOrder={false} />
       {/* 1. TOP CURVED WALLET HEADER (Exact match with Screenshot) */}
       <div
         className="p-4 pt-4 pb-5 rounded-b-[28px] text-white shadow-md transition-colors duration-300 mb-4 sticky top-0 z-30"

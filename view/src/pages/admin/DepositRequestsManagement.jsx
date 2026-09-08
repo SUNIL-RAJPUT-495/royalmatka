@@ -102,12 +102,30 @@ export const DepositRequestsManagement = () => {
   const getSourceDetails = (item) => {
     const m = (item?.method || '').toLowerCase();
     const paymentSource = item?.paymentSource || '';
+    const approvalType = (item?.approvalType || '').toLowerCase();
+
+    if (item?.status === 'Approved') {
+      if (approvalType.includes('manual') || paymentSource.includes('Manual Approval')) {
+        return {
+          label: 'Manual Approval (Admin)',
+          badgeClass: 'bg-blue-50 text-blue-700 border-blue-200',
+          icon: <ShieldCheck className="w-3 h-3 text-blue-600" />
+        };
+      }
+      if (approvalType.includes('auto') || paymentSource.includes('Auto Gateway') || m.includes('imb') || m.includes('auto')) {
+        return {
+          label: 'Auto Gateway (IMB)',
+          badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+          icon: <Zap className="w-3 h-3 text-emerald-600" />
+        };
+      }
+    }
 
     if (m.includes('imb') || m.includes('auto') || m.includes('gateway') || paymentSource.includes('Auto')) {
       return {
-        label: 'Auto Gateway (IMB)',
-        badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-        icon: <Zap className="w-3 h-3 text-emerald-600" />
+        label: 'Gateway (Pending)',
+        badgeClass: 'bg-orange-50 text-orange-700 border-orange-200',
+        icon: <Zap className="w-3 h-3 text-orange-600" />
       };
     }
     if (m.includes('payfromupi') || paymentSource.includes('PayFromUPI')) {
@@ -121,6 +139,42 @@ export const DepositRequestsManagement = () => {
       label: 'Manual QR / UTR',
       badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
       icon: <QrCode className="w-3 h-3 text-amber-600" />
+    };
+  };
+
+  // Helper to resolve Status Badge Details
+  const getStatusBadge = (item) => {
+    const status = item?.status || 'Pending';
+    const approvalType = (item?.approvalType || '').toLowerCase();
+    const paymentSource = (item?.paymentSource || '').toLowerCase();
+
+    if (status === 'Approved') {
+      if (approvalType.includes('manual') || paymentSource.includes('manual approval')) {
+        return {
+          text: 'Manual Approved',
+          className: 'bg-blue-600 text-white',
+          icon: <ShieldCheck className="w-3 h-3 stroke-[2.5]" />
+        };
+      }
+      return {
+        text: 'Auto Approved',
+        className: 'bg-green-600 text-white',
+        icon: <Check className="w-3 h-3 stroke-[2.5]" />
+      };
+    }
+
+    if (status === 'Rejected') {
+      return {
+        text: 'Rejected',
+        className: 'bg-red-600 text-white',
+        icon: <X className="w-3 h-3 stroke-[2.5]" />
+      };
+    }
+
+    return {
+      text: 'Pending',
+      className: 'bg-yellow-500 text-white',
+      icon: <Loader2 className="w-3 h-3 animate-spin" />
     };
   };
 
@@ -349,16 +403,15 @@ export const DepositRequestsManagement = () => {
 
                         {/* Status */}
                         <td className="px-5 py-4">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase shadow-3xs flex items-center gap-1 w-fit
-                            ${deposit.status === 'Pending' ? 'bg-yellow-500' : 
-                              deposit.status === 'Approved' ? 'bg-green-500' : 
-                              'bg-red-500'}`}
-                          >
-                            {deposit.status === 'Pending' && <Loader2 className="w-3 h-3 animate-spin" />}
-                            {deposit.status === 'Approved' && <Check className="w-3 h-3 stroke-[2.5]" />}
-                            {deposit.status === 'Rejected' && <X className="w-3 h-3 stroke-[2.5]" />}
-                            <span>{deposit.status || 'Unknown'}</span>
-                          </span>
+                          {(() => {
+                            const badge = getStatusBadge(deposit);
+                            return (
+                              <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase shadow-3xs flex items-center gap-1 w-fit ${badge.className}`}>
+                                {badge.icon}
+                                <span>{badge.text}</span>
+                              </span>
+                            );
+                          })()}
                         </td>
 
                         {/* ACTIONS COLUMN */}
@@ -510,12 +563,15 @@ export const DepositRequestsManagement = () => {
                   </span>
                 </div>
                 <div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold text-white uppercase shadow-3xs flex items-center gap-1 ${
-                    selectedDeposit.status === 'Pending' ? 'bg-yellow-500' :
-                    selectedDeposit.status === 'Approved' ? 'bg-green-500' : 'bg-red-500'
-                  }`}>
-                    {selectedDeposit.status}
-                  </span>
+                  {(() => {
+                    const badge = getStatusBadge(selectedDeposit);
+                    return (
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold text-white uppercase shadow-3xs flex items-center gap-1 ${badge.className}`}>
+                        {badge.icon}
+                        <span>{badge.text}</span>
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
