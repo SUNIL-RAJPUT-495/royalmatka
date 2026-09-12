@@ -48,9 +48,8 @@ export const UserAuth = () => {
 
   // Timer & Loading states
   const [loading, setLoading] = useState(false);
-  const [timer, setTimer] = useState(271); // 4:31 countdown like screenshot
+  const [timer, setTimer] = useState(271); // 4:31 countdown
   const [isTimerActive, setIsTimerActive] = useState(false);
-  const [generatedDemoOtp, setGeneratedDemoOtp] = useState("");
 
   const otpInputsRef = useRef([]);
 
@@ -116,7 +115,6 @@ export const UserAuth = () => {
     setPassword("");
     setConfirmPassword("");
     setReferralCode("");
-    setGeneratedDemoOtp("");
     setIsTimerActive(false);
     if (newMode === "register") {
       navigate("/register", { replace: true });
@@ -175,11 +173,7 @@ export const UserAuth = () => {
           setRegStep(3);
         } else {
           toast.success(res.data.message || "OTP sent successfully!");
-          if (res.data.otp) {
-            setGeneratedDemoOtp(res.data.otp);
-            const digits = res.data.otp.toString().split("");
-            setOtp([digits[0] || "", digits[1] || "", digits[2] || "", digits[3] || ""]);
-          }
+          setOtp(["", "", "", ""]);
           setRegStep(2);
           setTimer(271);
           setIsTimerActive(true);
@@ -318,11 +312,7 @@ export const UserAuth = () => {
           }
 
           toast.success(res.data.message || "OTP sent for login!");
-          if (res.data.otp) {
-            setGeneratedDemoOtp(res.data.otp);
-            const digits = res.data.otp.toString().split("");
-            setOtp([digits[0] || "", digits[1] || "", digits[2] || "", digits[3] || ""]);
-          }
+          setOtp(["", "", "", ""]);
           setLoginStep(2);
           setTimer(271);
           setIsTimerActive(true);
@@ -510,11 +500,6 @@ export const UserAuth = () => {
                     Enter the 4-digit code sent to <br />
                     <span className="font-bold text-gray-800">+91 {mobile}</span>
                   </p>
-                  {generatedDemoOtp && (
-                    <span className="inline-block mt-2 bg-amber-50 text-amber-700 text-[11px] font-bold px-3 py-1 rounded-full border border-amber-200">
-                      Demo OTP: {generatedDemoOtp}
-                    </span>
-                  )}
                 </div>
 
                 {/* 4 OTP BOXES */}

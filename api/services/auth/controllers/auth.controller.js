@@ -111,8 +111,7 @@ export const sendOtp = async (req, res) => {
     return res.status(200).json({
       success: true,
       isOtpEnabled: true,
-      message: `OTP sent successfully to +91 ${cleanMobile}`,
-      otp: otp
+      message: `OTP sent successfully to +91 ${cleanMobile}`
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
