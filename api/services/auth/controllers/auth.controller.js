@@ -11,6 +11,7 @@ import GameRate from "../../matka/models/GameRate.js";
 import Bid from "../../matka/models/Bid.js";
 import FcmToken from "../models/FcmToken.js";
 import mongoose from "mongoose";
+import { sendBlackSmsOtp, sendBlackBulkSms } from "../../smsService.js";
 
 /**
  * Seed or update admin@gmail.com in database
@@ -92,6 +93,20 @@ export const sendOtp = async (req, res) => {
     });
 
     console.log(`📱 OTP generated for ${cleanMobile}: ${otp}`);
+
+    // Trigger BlackSMS dispatch (SMS / WhatsApp) asynchronously
+    const smsChannel = req.body.channel || process.env.BLACK_SMS_CHANNEL || "sms";
+    const smsResult = await sendBlackSmsOtp({
+      mobile: cleanMobile,
+      otp,
+      channel: smsChannel
+    });
+
+    if (smsResult.success) {
+      console.log(`✅ BlackSMS dispatched successfully to ${cleanMobile}`);
+    } else {
+      console.warn(`⚠️ BlackSMS dispatch notice: ${smsResult.message}`);
+    }
 
     return res.status(200).json({
       success: true,
@@ -1591,3 +1606,33 @@ export const saveFcmToken = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const sendBulkSmsController = async (req, res) => {
+  try {
+    const { title, message, contacts } = req.body;
+    if (!message || !contacts || !Array.isArray(contacts) || contacts.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Message content and an array of target contact numbers are required."
+      });
+    }
+
+    const result = await sendBlackBulkSms({ title, message, contacts });
+    if (result.success) {
+      return res.status(200).json({
+        success: true,
+        message: result.message || "Bulk SMS Campaign created successfully!",
+        data: result.data
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: result.message || "Failed to send Bulk SMS Campaign.",
+        error: result.error
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+

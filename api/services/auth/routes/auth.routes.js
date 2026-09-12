@@ -32,7 +32,8 @@ import {
   rejectAccountDeletionRequest,
   deleteAccountDeletionRequest,
   getAdminDashboardStats,
-  saveFcmToken
+  saveFcmToken,
+  sendBulkSmsController
 } from "../controllers/auth.controller.js";
 import { verifyToken, verifyAdmin } from "../../../middleware/auth.middleware.js";
 
@@ -63,7 +64,7 @@ router.post("/approve-deletion-request", verifyAdmin, approveAccountDeletionRequ
 router.post("/reject-deletion-request", verifyAdmin, rejectAccountDeletionRequest);
 router.delete("/delete-deletion-request/:id", verifyAdmin, deleteAccountDeletionRequest);
 
-// Protected Admin User Management Routes
+// Protected Admin User Management & Bulk SMS Routes
 router.get("/get-all-users", verifyAdmin, getAllUsers);
 router.get("/get-admin-list", verifyAdmin, getAdminList);
 router.get("/get-user/:id", verifyAdmin, getAdminViewUser);
@@ -78,6 +79,7 @@ router.delete("/delete-user/:id", verifyAdmin, deleteUserByAdmin);
 router.post("/delete-user", verifyAdmin, deleteUserByAdmin);
 router.delete("/delete-admin/:id", verifyAdmin, deleteAdmin);
 router.get("/admin-dashboard-stats", verifyAdmin, getAdminDashboardStats);
+router.post("/send-bulk-sms", verifyAdmin, sendBulkSmsController);
 
 // Protected Admin Config Routes
 router.post("/update-welcome-popup", verifyAdmin, updateWelcomePopupConfig);

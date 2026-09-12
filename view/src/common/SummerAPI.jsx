@@ -44,6 +44,10 @@ const SummaryApi = {
         url: baseURL + "/api/user/send-otp",
         method: "post"
     },
+    sendBulkSms: {
+        url: baseURL + "/api/user/send-bulk-sms",
+        method: "post"
+    },
     verifyOtp: {
         url: baseURL + "/api/user/verify-otp",
         method: "post"
