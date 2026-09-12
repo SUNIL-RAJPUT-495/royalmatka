@@ -1,5 +1,5 @@
-//export const baseURL = "http://localhost:5010";
-export const baseURL = "https://sawariyaapi.sanwariyaboss.fun";
+export const baseURL = "http://localhost:5010";
+//export const baseURL = "https://sawariyaapi.sanwariyaboss.fun";
 
 const SummaryApi = {
     // Aviator Socket & Admin Endpoints

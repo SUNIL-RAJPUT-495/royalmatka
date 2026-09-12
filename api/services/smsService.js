@@ -16,7 +16,7 @@ export const sendBlackSmsOtp = async ({ mobile, otp, channel = "sms", senderId, 
     const endpoint = `https://blacksms.in/${apiChannel}`;
 
     const apiKey = process.env.BLACK_SMS_API_KEY || "8511c140945e1385b98b3062e4c5becf";
-    const targetSenderId = senderId || process.env.BLACK_SMS_SENDER_ID || "ROYALM";
+    const targetSenderId = senderId || process.env.BLACK_SMS_SENDER_ID || "595";
     const targetRoute = route !== undefined ? Number(route) : Number(process.env.BLACK_SMS_ROUTE || 1);
 
     const payload = {
