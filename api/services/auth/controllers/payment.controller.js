@@ -381,9 +381,10 @@ export const getPaymentSettings = async (req, res) => {
       let settings = await PaymentSettings.findOne().sort({ updatedAt: -1 });
       if (!settings) {
         settings = await PaymentSettings.create({
-          upiId: "sanwariyaboss@ybl",
-          displayName: "Sanwariya Boss",
+          upiId: "",
+          displayName: "",
           qrCodeUrl: "",
+          upiList: [],
           activeFundSystem: "Manual",
           imbToken: "",
           payFromUpiToken: "",
@@ -393,6 +394,17 @@ export const getPaymentSettings = async (req, res) => {
         });
       } else {
         await PaymentSettings.deleteMany({ _id: { $ne: settings._id } });
+        // Clean up any stale dummy data if present
+        if (settings.upiId === "sanwariyaboss@ybl" && settings.displayName === "Sanwariya Boss" && (!settings.upiList || settings.upiList.length === 0 || (settings.upiList.length === 1 && settings.upiList[0].upiId === "sanwariyaboss@ybl"))) {
+          settings.upiId = "";
+          settings.displayName = "";
+          settings.upiList = [];
+          await PaymentSettings.findByIdAndUpdate(settings._id, { upiId: "", displayName: "", upiList: [] });
+        } else if (!settings.upiList) {
+          settings.upiList = settings.upiId ? [
+            { id: "1", upiId: settings.upiId, displayName: settings.displayName || "", isActive: true }
+          ] : [];
+        }
       }
       return res.status(200).json({ success: true, settings: settings.toObject() });
     }
@@ -400,9 +412,10 @@ export const getPaymentSettings = async (req, res) => {
     return res.status(200).json({
       success: true,
       settings: {
-        upiId: "sanwariyaboss@ybl",
-        displayName: "Sanwariya Boss",
+        upiId: "",
+        displayName: "",
         qrCodeUrl: "",
+        upiList: [],
         activeFundSystem: "Manual",
         imbToken: "",
         payFromUpiToken: "",
@@ -419,13 +432,24 @@ export const getPaymentSettings = async (req, res) => {
 
 export const updatePaymentSettings = async (req, res) => {
   try {
-    const { upiId, displayName, qrCodeUrl, activeFundSystem, imbToken, payFromUpiToken, minAmount, maxAmount, quickAmounts, isOtpEnabled } = req.body;
+    const { upiId, displayName, qrCodeUrl, upiList, activeFundSystem, imbToken, payFromUpiToken, minAmount, maxAmount, quickAmounts, isOtpEnabled } = req.body;
 
     if (mongoose.connection.readyState === 1) {
       const updateData = {};
       if (upiId !== undefined) updateData.upiId = String(upiId).trim();
       if (displayName !== undefined) updateData.displayName = String(displayName).trim();
       if (qrCodeUrl !== undefined) updateData.qrCodeUrl = qrCodeUrl;
+      
+      if (upiList !== undefined && Array.isArray(upiList)) {
+        updateData.upiList = upiList;
+        // Sync primary upiId and displayName from active item if not explicitly supplied
+        const activeItem = upiList.find(u => u.isActive);
+        if (activeItem) {
+          if (activeItem.upiId && upiId === undefined) updateData.upiId = String(activeItem.upiId).trim();
+          if (activeItem.displayName && displayName === undefined) updateData.displayName = String(activeItem.displayName).trim();
+        }
+      }
+      
       if (activeFundSystem !== undefined) updateData.activeFundSystem = activeFundSystem;
       if (imbToken !== undefined) updateData.imbToken = String(imbToken).trim();
       if (payFromUpiToken !== undefined) updateData.payFromUpiToken = String(payFromUpiToken).trim();
@@ -441,7 +465,7 @@ export const updatePaymentSettings = async (req, res) => {
         }
       }
 
-      // Update all records first so no stale record retains the old token
+      // Update all records first so no stale record retains old settings
       await PaymentSettings.updateMany({}, { $set: updateData });
 
       const settings = await PaymentSettings.findOneAndUpdate({}, updateData, {

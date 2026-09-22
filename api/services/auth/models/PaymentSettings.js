@@ -3,16 +3,24 @@ import mongoose from "mongoose";
 const paymentSettingsSchema = new mongoose.Schema({
   upiId: {
     type: String,
-    default: "sanwariyaboss@ybl"
+    default: ""
   },
   displayName: {
     type: String,
-    default: "Sanwariya Boss"
+    default: ""
   },
   qrCodeUrl: {
     type: String,
     default: ""
   },
+  upiList: [
+    {
+      id: { type: String },
+      upiId: { type: String },
+      displayName: { type: String },
+      isActive: { type: Boolean, default: false }
+    }
+  ],
   activeFundSystem: {
     type: String,
     enum: ["IMB", "PayFromUPI", "Manual"],

@@ -1,21 +1,63 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Plus, Phone, MessageCircle, Mail, MapPin, Send, Save, 
-  RefreshCw, Trash2, CheckCircle2, User, Key, Eye, EyeOff, Upload, QrCode
+  RefreshCw, Trash2, CheckCircle2, User, Key, Eye, EyeOff, Upload, QrCode, Loader2, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AxiosAdmin from '../../utils/axiosAdmin';
 import SummaryApi from '../../common/SummerAPI';
 
+// Helper function to compress images on client side
+const compressImage = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.85) => {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) {
+      return reject(new Error('Selected file is not an image'));
+    }
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.onerror = () => reject(new Error('Failed to load image for compression'));
+    };
+    reader.onerror = () => reject(new Error('Failed to read image file'));
+  });
+};
+
 export const UpiSettings = () => {
   // UPI ID List
-  const [upiList, setUpiList] = useState([
-    { id: 1, upiId: 'sanwariyaboss@ybl', displayName: 'Sanwariya Boss', isActive: true }
-  ]);
-  const [newUpiId, setNewUpiId] = useState('sanwariyaboss@ybl');
-  const [newDisplayName, setNewDisplayName] = useState('Sanwariya Boss');
+  const [upiList, setUpiList] = useState([]);
+  const [newUpiId, setNewUpiId] = useState('');
+  const [newDisplayName, setNewDisplayName] = useState('');
   const [newIsActive, setNewIsActive] = useState(true);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [isUploadingQr, setIsUploadingQr] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const fileInputRef = useRef(null);
 
   // OTP Verification state
   const [isOtpEnabled, setIsOtpEnabled] = useState(true);
@@ -32,41 +74,66 @@ export const UpiSettings = () => {
   const [maxAmount, setMaxAmount] = useState('20000');
   const [quickAmountString, setQuickAmountString] = useState('100,300,500,1000,5000,10000');
 
+  // Reusable fetch settings
+  const fetchSettings = async () => {
+    try {
+      const res = await AxiosAdmin({
+        url: SummaryApi.getPaymentSettings.url,
+        method: SummaryApi.getPaymentSettings.method
+      });
+      if (res.data?.settings) {
+        const s = res.data.settings;
+        setQrCodeUrl(s.qrCodeUrl || '');
+        setActiveFundSystem(s.activeFundSystem || 'Manual');
+        setImbToken(s.imbToken || '');
+        setPayFromUpiToken(s.payFromUpiToken || '');
+        setMinAmount(String(s.minAmount ?? 100));
+        setMaxAmount(String(s.maxAmount ?? 20000));
+        if (s.quickAmounts && s.quickAmounts.length > 0) {
+          setQuickAmountString(s.quickAmounts.join(','));
+        }
+        setIsOtpEnabled(s.isOtpEnabled !== false);
+
+        if (s.upiList && Array.isArray(s.upiList)) {
+          setUpiList(s.upiList);
+        } else if (s.upiId) {
+          setUpiList([
+            { id: '1', upiId: s.upiId, displayName: s.displayName || '', isActive: true }
+          ]);
+        } else {
+          setUpiList([]);
+        }
+      }
+    } catch (err) {
+      console.warn('Using default UPI settings', err);
+    }
+  };
+
   // Load backend payment settings on mount
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const res = await AxiosAdmin({
-          url: SummaryApi.getPaymentSettings.url,
-          method: SummaryApi.getPaymentSettings.method
-        });
-        if (res.data?.settings) {
-          const s = res.data.settings;
-          setNewUpiId(s.upiId || 'sanwariyaboss@ybl');
-          setNewDisplayName(s.displayName || 'Sanwariya Boss');
-          setQrCodeUrl(s.qrCodeUrl || '');
-          setActiveFundSystem(s.activeFundSystem || 'Manual');
-          setImbToken(s.imbToken || '');
-          setPayFromUpiToken(s.payFromUpiToken || '');
-          setMinAmount(String(s.minAmount || 100));
-          setMaxAmount(String(s.maxAmount || 20000));
-          if (s.quickAmounts && s.quickAmounts.length > 0) {
-            setQuickAmountString(s.quickAmounts.join(','));
-          }
-          setIsOtpEnabled(s.isOtpEnabled !== false);
-        }
-      } catch (err) {
-        console.warn('Using default UPI settings');
-      }
-    };
     fetchSettings();
   }, []);
 
-  const handleSaveAllSettings = async () => {
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchSettings();
+    setIsRefreshing(false);
+    toast.success('UPI settings refreshed! 🔄');
+  };
+
+  const handleSaveAllSettings = async (customUpiList = null) => {
+    setIsSaving(true);
+    const saveToastId = toast.loading('Saving payment & QR settings...');
     try {
+      const listToSave = customUpiList || upiList;
+      const activeUpi = listToSave.find(u => u.isActive);
+      const upiToSave = activeUpi?.upiId || newUpiId || '';
+      const displayNameToSave = activeUpi?.displayName || newDisplayName || '';
+
       const payload = {
-        upiId: newUpiId,
-        displayName: newDisplayName,
+        upiId: upiToSave,
+        displayName: displayNameToSave,
+        upiList: listToSave,
         qrCodeUrl: qrCodeUrl,
         activeFundSystem: activeFundSystem,
         imbToken: imbToken,
@@ -84,22 +151,60 @@ export const UpiSettings = () => {
       });
 
       if (res.data?.success) {
-        toast.success(res.data.message || 'Payment settings saved successfully! 🎉');
+        toast.success(res.data.message || 'Payment & QR settings saved successfully! 🎉', { id: saveToastId });
+        if (res.data?.settings?.upiList) {
+          setUpiList(res.data.settings.upiList);
+        }
+      } else {
+        toast.error(res.data?.message || 'Failed to save settings!', { id: saveToastId });
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save payment settings');
+      console.error('Save error:', err);
+      const errMsg = err.response?.data?.message || (err.response?.status === 413 ? 'Image size is too large for the server!' : err.message || 'Failed to save payment settings');
+      toast.error(`Error: ${errMsg}`, { id: saveToastId });
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleQrUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setQrCodeUrl(reader.result);
-        toast.success('QR Code Scanner uploaded! Click Save Settings.');
-      };
-      reader.readAsDataURL(file);
+  const handleQrUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Invalid file! Please upload a valid image file (PNG, JPG, JPEG, WEBP).');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('Image size exceeds 20MB limit! Please select a smaller image.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    setIsUploadingQr(true);
+    const uploadToastId = toast.loading('Compressing and loading QR code...');
+    try {
+      const compressedDataUrl = await compressImage(file);
+      setQrCodeUrl(compressedDataUrl);
+      toast.success('QR Code Scanner uploaded! Click "Save Payment & QR Settings" to save. 🎉', { 
+        id: uploadToastId,
+        duration: 4000
+      });
+    } catch (err) {
+      console.error('QR upload error:', err);
+      toast.error(`QR upload error: ${err.message || 'Failed to process QR image'}`, { id: uploadToastId });
+    } finally {
+      setIsUploadingQr(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveQr = () => {
+    if (window.confirm('Are you sure you want to remove the QR Code image?')) {
+      setQrCodeUrl('');
+      toast.success('QR Code removed! Click "Save Payment & QR Settings" to apply.');
     }
   };
 
@@ -110,9 +215,9 @@ export const UpiSettings = () => {
     .filter(val => val !== '' && !isNaN(val));
 
   const handleAddUpi = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!newUpiId.trim() || !newUpiId.includes('@')) {
-      toast.error('Please enter a valid UPI ID (e.g. name@upi)');
+      toast.error('Please enter a valid UPI ID (e.g. name@bank)');
       return;
     }
     if (!newDisplayName.trim()) {
@@ -120,39 +225,67 @@ export const UpiSettings = () => {
       return;
     }
 
+    const trimmedUpi = newUpiId.trim();
+    const trimmedName = newDisplayName.trim();
+
+    const exists = upiList.some(u => u.upiId.toLowerCase() === trimmedUpi.toLowerCase());
+    if (exists) {
+      toast.error(`UPI ID "${trimmedUpi}" is already present in your list!`);
+      return;
+    }
+
     const newUpi = {
-      id: Date.now(),
-      upiId: newUpiId.trim(),
-      displayName: newDisplayName.trim(),
+      id: String(Date.now()),
+      upiId: trimmedUpi,
+      displayName: trimmedName,
       isActive: newIsActive
     };
 
+    let updatedList = [];
     if (newIsActive) {
-      setUpiList(prev => prev.map(u => ({ ...u, isActive: false })).concat(newUpi));
+      updatedList = upiList.map(u => ({ ...u, isActive: false })).concat(newUpi);
     } else {
-      setUpiList(prev => [...prev, newUpi]);
+      updatedList = [...upiList, newUpi];
     }
 
-    toast.success('UPI ID added successfully!');
+    setUpiList(updatedList);
+    toast.success(`UPI ID "${trimmedUpi}" added to list!`);
     setNewUpiId('');
     setNewDisplayName('');
     setNewIsActive(false);
+
+    // Persist immediately
+    handleSaveAllSettings(updatedList);
   };
 
   const handleToggleUpiActive = (id) => {
-    setUpiList(prev => prev.map(u => {
+    const updatedList = upiList.map(u => {
       if (u.id === id) {
         return { ...u, isActive: !u.isActive };
       }
       return { ...u, isActive: false };
-    }));
-    toast.success('UPI active state updated');
+    });
+    setUpiList(updatedList);
+    
+    const target = updatedList.find(u => u.id === id);
+    if (target?.isActive) {
+      toast.success(`Active UPI changed to: ${target.upiId}`);
+    } else {
+      toast.success('UPI deactivated');
+    }
+    handleSaveAllSettings(updatedList);
   };
 
   const handleDeleteUpi = (id) => {
-    if (window.confirm('Are you sure you want to delete this UPI ID?')) {
-      setUpiList(prev => prev.filter(u => u.id !== id));
-      toast.success('UPI ID deleted');
+    const target = upiList.find(u => u.id === id);
+    if (window.confirm(`Are you sure you want to delete UPI "${target?.upiId || ''}"?`)) {
+      let updatedList = upiList.filter(u => u.id !== id);
+      if (target?.isActive && updatedList.length > 0) {
+        updatedList[0].isActive = true;
+      }
+      setUpiList(updatedList);
+      toast.success('UPI ID removed from list');
+      handleSaveAllSettings(updatedList);
     }
   };
 
@@ -168,7 +301,7 @@ export const UpiSettings = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">UPI Settings Management</h1>
-            <p className="text-gray-500 font-medium text-xs mt-1">Configure and manage UPI payment options for your application</p>
+            <p className="text-gray-500 font-medium text-xs mt-1">Configure and manage UPI payment options & QR Scanner for your application</p>
           </div>
         </div>
 
@@ -180,7 +313,7 @@ export const UpiSettings = () => {
             <div>
               <div className="flex items-center gap-2 mb-6">
                 <span className="text-green-600 text-xl font-bold">+</span>
-                <span className="font-bold text-gray-800 uppercase text-xs tracking-wider">Add New UPI</span>
+                <span className="font-bold text-gray-800 uppercase text-xs tracking-wider">Add New UPI & QR Code</span>
               </div>
 
               <form onSubmit={handleAddUpi} className="space-y-4">
@@ -199,7 +332,7 @@ export const UpiSettings = () => {
                       className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-semibold"
                     />
                   </div>
-                  <span className="text-[9px] text-gray-400 font-semibold block">Enter a valid UPI ID in the format username@provider</span>
+                  <span className="text-[9px] text-gray-400 font-semibold block">Enter a valid UPI ID (format: username@bank)</span>
                 </div>
 
                 {/* Display Name */}
@@ -211,34 +344,77 @@ export const UpiSettings = () => {
                     </span>
                     <input 
                       type="text" 
-                      placeholder="LocalMart"
+                      placeholder="Sanwariya Boss"
                       value={newDisplayName}
                       onChange={(e) => setNewDisplayName(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-semibold"
                     />
                   </div>
-                  <span className="text-[9px] text-gray-400 font-semibold block">This name will be displayed to users during payment</span>
+                  <span className="text-[9px] text-gray-400 font-semibold block">This name will be displayed to users during manual payment</span>
                 </div>
 
+                {/* Switch Active for New UPI */}
+                <div className="flex items-center justify-between py-2 border-t border-gray-100">
+                  <div>
+                    <span className="text-xs font-bold text-gray-700">Set as active UPI</span>
+                    <span className="text-[9px] text-gray-400 font-semibold block mt-0.5">Only active UPI receives user payments</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNewIsActive(!newIsActive)}
+                    className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-1 cursor-pointer ${
+                      newIsActive ? 'bg-[#22c55e]' : 'bg-gray-300'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${newIsActive ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+
+                {/* Add to List Button */}
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all text-xs shadow-2xs cursor-pointer"
+                >
+                  <Plus size={14} />
+                  <span>Add UPI ID to List</span>
+                </button>
+
                 {/* QR Code Scanner Upload */}
-                <div className="space-y-1.5 pt-3 border-t border-gray-100">
+                <div className="space-y-2 pt-3 border-t border-gray-100">
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                    <QrCode size={12} className="text-orange-500" />
+                    <QrCode size={13} className="text-orange-500" />
                     <span>UPI QR Code Scanner Image</span>
                   </label>
                   <div className="flex items-center gap-3">
                     {qrCodeUrl ? (
-                      <img src={qrCodeUrl} alt="QR Scanner" className="w-20 h-20 object-contain rounded-xl border border-gray-200 shadow-2xs bg-white" />
+                      <div className="relative group">
+                        <img src={qrCodeUrl} alt="QR Scanner" className="w-20 h-20 object-contain rounded-xl border border-gray-200 shadow-2xs bg-white p-1" />
+                        <button
+                          type="button"
+                          onClick={handleRemoveQr}
+                          className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full shadow-md transition-all cursor-pointer"
+                          title="Remove QR Code"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
                     ) : (
-                      <div className="w-20 h-20 rounded-xl border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-gray-400 text-xs font-semibold">
+                      <div className="w-20 h-20 rounded-xl border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-gray-400 text-xs font-semibold text-center p-2">
                         No QR Image
                       </div>
                     )}
                     <div className="flex-1 space-y-2">
                       <label className="bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 text-xs font-bold px-3 py-2 rounded-lg cursor-pointer inline-flex items-center gap-1.5 transition-all shadow-2xs">
-                        <Upload size={14} />
-                        <span>Upload Scanner Image</span>
-                        <input type="file" accept="image/*" onChange={handleQrUpload} className="hidden" />
+                        {isUploadingQr ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                        <span>{isUploadingQr ? 'Processing...' : 'Upload QR Image'}</span>
+                        <input 
+                          ref={fileInputRef}
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleQrUpload} 
+                          disabled={isUploadingQr}
+                          className="hidden" 
+                        />
                       </label>
                       <input 
                         type="text" 
@@ -251,32 +427,17 @@ export const UpiSettings = () => {
                   </div>
                 </div>
 
-                {/* Switch Active */}
-                <div className="flex items-center justify-between py-2 border-t border-gray-100 mt-2">
-                  <div>
-                    <span className="text-xs font-bold text-gray-700">Set as active UPI</span>
-                    <span className="text-[9px] text-gray-400 font-semibold block mt-0.5">Only active UPIs can receive payments</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setNewIsActive(!newIsActive)}
-                    className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-1 cursor-pointer ${
-                      newIsActive ? 'bg-[#22c55e]' : 'bg-gray-250'
-                    }`}
-                  >
-                    <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${newIsActive ? 'translate-x-5' : 'translate-x-0'}`} />
-                  </button>
-                </div>
               </form>
             </div>
 
             <button 
               type="button"
-              onClick={handleSaveAllSettings}
-              className="w-full bg-[#ef4444] hover:bg-red-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm uppercase tracking-wider text-xs mt-4 cursor-pointer"
+              onClick={() => handleSaveAllSettings()}
+              disabled={isSaving}
+              className="w-full bg-[#ef4444] hover:bg-red-600 disabled:opacity-60 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm uppercase tracking-wider text-xs mt-5 cursor-pointer"
             >
-              <Save size={14} />
-              <span>Save Payment & QR Settings</span>
+              {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+              <span>{isSaving ? 'Saving Settings...' : 'Save Payment & QR Settings'}</span>
             </button>
           </div>
 
@@ -285,41 +446,55 @@ export const UpiSettings = () => {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <span className="text-blue-600 text-xl font-bold">::</span>
-                <span className="font-bold text-gray-800 uppercase text-xs tracking-wider">Manage UPI Settings</span>
+                <span className="font-bold text-gray-800 uppercase text-xs tracking-wider">Manage UPI Settings ({upiList.length})</span>
               </div>
               <button 
-                onClick={() => toast.success('List updated')}
+                onClick={handleRefresh}
+                disabled={isRefreshing}
                 className="flex items-center gap-1.5 border border-gray-200 hover:bg-gray-50 text-gray-600 font-bold px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer"
               >
-                <RefreshCw size={12} />
-                <span>Refresh</span>
+                <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
+                <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
               </button>
             </div>
 
             {upiList.length > 0 ? (
-              <div className="space-y-3 flex-1">
+              <div className="space-y-3 flex-1 overflow-y-auto max-h-[460px] pr-1">
                 {upiList.map((upi) => (
-                  <div key={upi.id} className="p-4 rounded-xl border border-gray-150 flex items-center justify-between bg-white shadow-2xs">
+                  <div key={upi.id} className={`p-4 rounded-xl border flex items-center justify-between bg-white shadow-2xs transition-all ${
+                    upi.isActive ? 'border-emerald-300 bg-emerald-50/20' : 'border-gray-200'
+                  }`}>
                     <div>
-                      <span className="text-xs font-bold text-gray-900 block">{upi.upiId}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-gray-900 block">{upi.upiId}</span>
+                        {upi.isActive && (
+                          <span className="bg-emerald-100 text-emerald-700 text-[9px] font-extrabold px-2 py-0.5 rounded-md border border-emerald-300">
+                            DEFAULT
+                          </span>
+                        )}
+                      </div>
                       <span className="text-[10px] text-gray-500 font-semibold block mt-0.5">Name: {upi.displayName}</span>
                     </div>
 
                     <div className="flex items-center gap-3">
                       <button
+                        type="button"
                         onClick={() => handleToggleUpiActive(upi.id)}
                         className={`text-[10px] font-bold px-3 py-1 rounded-full border transition-all cursor-pointer ${
                           upi.isActive 
-                            ? 'bg-green-50 text-[#22c55e] border-green-200' 
-                            : 'bg-gray-50 text-gray-400 border-gray-200'
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-300 shadow-2xs font-extrabold' 
+                            : 'bg-gray-50 text-gray-500 border-gray-250 hover:bg-gray-100'
                         }`}
+                        title={upi.isActive ? 'Active UPI for user deposits' : 'Click to make this the active UPI'}
                       >
-                        {upi.isActive ? '● Active' : '○ Inactive'}
+                        {upi.isActive ? '● Active' : '○ Make Active'}
                       </button>
 
                       <button
+                        type="button"
                         onClick={() => handleDeleteUpi(upi.id)}
-                        className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 border border-red-150 transition-all cursor-pointer"
+                        className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 border border-red-200 transition-all cursor-pointer"
+                        title="Delete UPI"
                       >
                         <Trash2 size={12} />
                       </button>
@@ -331,10 +506,10 @@ export const UpiSettings = () => {
               <div className="border border-dashed border-gray-200 rounded-xl p-10 flex flex-col items-center justify-center text-center flex-1">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400 mb-2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><rect width="6" height="6" x="7" y="7"/><rect width="6" height="6" x="7" y="15"/><rect width="6" height="6" x="15" y="7"/><rect width="2" height="2" x="15" y="15"/><rect width="2" height="2" x="17" y="17"/></svg>
                 <span className="text-xs font-bold text-gray-700 block">No UPI settings found</span>
-                <span className="text-[10px] text-gray-400 font-semibold mt-1">Add your first UPI setting using the form</span>
+                <span className="text-[10px] text-gray-400 font-semibold mt-1">Add your first UPI setting using the form on the left</span>
               </div>
             )}
-          </div>
+        </div>
 
         </div>
 
