@@ -37,15 +37,28 @@ export const UserHome = () => {
       try {
         const res = await fetchGame();
         if (Array.isArray(res)) {
-          const sorted = [...res].sort((a, b) => parseTimeToMinutes(a.open_time) - parseTimeToMinutes(b.open_time));
-          setGames(sorted);
+          setGames(res);
         }
       } catch (err) {
         console.warn('Error loading markets:', err);
       }
     };
     loadAllMarkets();
+    const interval = setInterval(loadAllMarkets, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  // Sort markets: Running (Open) markets at the TOP, Closed markets at the BOTTOM
+  const sortedGames = [...games].sort((a, b) => {
+    const aClosed = getMarketSessionStatus(a).isMarketClosed ? 1 : 0;
+    const bClosed = getMarketSessionStatus(b).isMarketClosed ? 1 : 0;
+
+    if (aClosed !== bClosed) {
+      return aClosed - bClosed; // 0 (Running) comes before 1 (Closed)
+    }
+
+    return parseTimeToMinutes(a.open_time) - parseTimeToMinutes(b.open_time);
+  });
 
   const themePlayBtn = currentTheme?.playBtnBg || currentTheme?.headerBgColor || '#f97316';
 
@@ -101,7 +114,7 @@ export const UserHome = () => {
 
       {/* 3. Market Cards List */}
       <div className="space-y-3">
-        {games.map((game) => {
+        {sortedGames.map((game) => {
           const sessionStatus = getMarketSessionStatus(game);
           // Time-based session determines market closure; after 12:00 AM midnight, bidding opens for new date
           const isClosed = sessionStatus.isMarketClosed;
