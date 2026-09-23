@@ -41,7 +41,7 @@ export const AdminSideBar = ({ closeSidebar }) => {
         if (isFullAccessAdmin) return true;
         if (heading === "Main Menu") return true;
 
-        if (heading === "Game Management" || heading === "Jackpot Gali" || heading === "Casino") {
+        if (heading === "Game Management" || heading === "Starline Games" || heading === "Jackpot Gali" || heading === "Casino") {
             return adminPermissions.includes("Game Management") || adminPermissions.includes("Starline") || adminPermissions.includes("Jackpot");
         }
         if (heading === "Financial Management") {
@@ -88,30 +88,22 @@ export const AdminSideBar = ({ closeSidebar }) => {
                 { icons: GiDiceSixFacesThree, itemsDetails: "Casino Management", link: "casino" },
             ]
         },
-        // {
-        //     heading: "Starline Games",
-        //     items: [
-        //         { icons: FaStar, itemsDetails: "Starline Game", link: "starline-game" },
-        //         { icons: MdScoreboard, itemsDetails: "Starline Results", link: "starline-results" },
-        //         { icons: GiDiceSixFacesThree, itemsDetails: "Starline Bids", link: "starline-bids" },
-        //     ]
-        // },
-        // {
-        //     heading: "Jackpot Games",
-        //     items: [
-        //         { icons: FaDice, itemsDetails: "Jackpot Game", link: "jackpot-game" },
-        //         { icons: FaCrown, itemsDetails: "Jackpot Results", link: "jackpot-results" },
-        //         { icons: GiCardPick, itemsDetails: "Jackpot Bids", link: "jackpot-bids" },
-        //     ]
-        // },
         {
-            heading: "Jackpot Gali",
+            heading: "Starline Games",
             items: [
-                { icons: GiFireGem, itemsDetails: "Jackpot Gali", link: "jackpot-gali" },
-                { icons: MdScoreboard, itemsDetails: "Jackpot Gali Results", link: "jackpot-gali-results" },
-                { icons: RiCoupon3Line, itemsDetails: "Jackpot Gali Bids", link: "jackpot-gali-bids" },
+                { icons: FaStar, itemsDetails: "Starline Game", link: "starline" },
+                { icons: MdScoreboard, itemsDetails: "Starline Results", link: "starline-results" },
+                { icons: GiDiceSixFacesThree, itemsDetails: "Starline Bids", link: "starline-bids" },
             ]
         },
+        // {
+        //     heading: "Jackpot Gali",
+        //     items: [
+        //         { icons: GiFireGem, itemsDetails: "Jackpot Gali", link: "jackpot-gali" },
+        //         { icons: MdScoreboard, itemsDetails: "Jackpot Gali Results", link: "jackpot-gali-results" },
+        //         { icons: RiCoupon3Line, itemsDetails: "Jackpot Gali Bids", link: "jackpot-gali-bids" },
+        //     ]
+        // },
         {
             heading: "Financial Management",
             items: [

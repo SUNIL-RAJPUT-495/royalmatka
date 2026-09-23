@@ -21,12 +21,69 @@ export const getStarlineMarkets = async (req, res) => {
   try {
     const { category = "Starline" } = req.query;
     if (mongoose.connection.readyState === 1) {
-      const markets = await StarlineMarket.find({ category }).sort({ createdAt: 1 });
+      let markets = await StarlineMarket.find({ category }).sort({ createdAt: 1 });
+      if (!markets || markets.length === 0) {
+        await StarlineMarket.insertMany(DEFAULT_STARLINE);
+        markets = await StarlineMarket.find({ category }).sort({ createdAt: 1 });
+      }
       return res.status(200).json({ success: true, data: markets || [] });
     }
-    return res.status(200).json({ success: true, data: [] });
+    return res.status(200).json({ success: true, data: DEFAULT_STARLINE });
   } catch (error) {
-    return res.status(200).json({ success: true, data: [] });
+    return res.status(200).json({ success: true, data: DEFAULT_STARLINE });
+  }
+};
+
+export const addStarlineMarket = async (req, res) => {
+  try {
+    const { time, category = "Starline" } = req.body;
+    if (!time) {
+      return res.status(400).json({ success: false, message: "Time is required" });
+    }
+    const newMarket = new StarlineMarket({
+      time: String(time).trim(),
+      category,
+      pana_result: "***",
+      digit_result: "*",
+      display_result: "***-*",
+      is_closed: false
+    });
+    await newMarket.save();
+    return res.status(201).json({ success: true, message: "Starline market added successfully!", data: newMarket });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateStarlineMarket = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { time, is_closed, pana_result, digit_result } = req.body;
+    const updateData = {};
+    if (time !== undefined) updateData.time = time;
+    if (is_closed !== undefined) updateData.is_closed = is_closed;
+    if (pana_result !== undefined) updateData.pana_result = pana_result;
+    if (digit_result !== undefined) updateData.digit_result = digit_result;
+    if (pana_result !== undefined || digit_result !== undefined) {
+      const p = pana_result || "***";
+      const d = digit_result || "*";
+      updateData.display_result = `${p}-${d}`;
+    }
+
+    const updated = await StarlineMarket.findByIdAndUpdate(id, updateData, { new: true });
+    return res.status(200).json({ success: true, message: "Starline market updated!", data: updated });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteStarlineMarket = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await StarlineMarket.findByIdAndDelete(id);
+    return res.status(200).json({ success: true, message: "Starline market deleted successfully!" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 

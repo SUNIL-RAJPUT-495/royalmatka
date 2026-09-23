@@ -13,7 +13,10 @@ import {
 
 import {
   getStarlineMarkets,
-  declareStarlineResult
+  declareStarlineResult,
+  addStarlineMarket,
+  updateStarlineMarket,
+  deleteStarlineMarket
 } from "../controllers/starline.controller.js";
 import {
   getGaliMarkets,
@@ -49,6 +52,9 @@ router.post("/toggle-auto-master", verifyAdmin, toggleAutoMaster);
 // Starline & Jackpot Endpoints (Time-slot based)
 router.get("/get-starline-markets", getStarlineMarkets);
 router.post("/declare-starline-result", verifyAdmin, declareStarlineResult);
+router.post("/add-starline-market", verifyAdmin, addStarlineMarket);
+router.put("/update-starline-market/:id", verifyAdmin, updateStarlineMarket);
+router.delete("/delete-starline-market/:id", verifyAdmin, deleteStarlineMarket);
 
 // Gali Bazar Endpoints (Name + 2-digit Jodi based)
 router.get("/get-gali-markets", getGaliMarkets);

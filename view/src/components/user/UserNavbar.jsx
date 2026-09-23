@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { FaBars, FaBell, FaTelegramPlane, FaArrowLeft } from 'react-icons/fa';
-import { IoFlashSharp, IoWalletOutline, IoChatbubbleEllipsesOutline, IoRefreshOutline } from 'react-icons/io5';
+import { IoFlashSharp, IoWalletOutline, IoChatbubbleEllipsesOutline, IoRefreshOutline, IoStarOutline } from 'react-icons/io5';
 import { HiOutlineSparkles } from 'react-icons/hi';
 import { useNavigate, useLocation } from 'react-router-dom';
 import UserChatModal from './UserChatModal';
@@ -203,16 +203,16 @@ export const UserNavbar = ({ onOpenSidebar, walletBalance = '9' }) => {
         /* Home Page: 4 Quick Action White Buttons */
         <div className="px-4 pb-4 pt-2">
           <div className="grid grid-cols-2 gap-2.5">
-            {/* 1. GALI BAZAR */}
+            {/* 1. STARLINE */}
             <button
               type="button"
-              onClick={() => navigate('/gali-bazar')}
+              onClick={() => navigate('/starline')}
               className="bg-white hover:bg-gray-50 active:scale-95 text-gray-900 py-2 px-3 rounded-2xl font-bold text-xs shadow-sm flex items-center gap-2.5 transition-all cursor-pointer border border-white/80"
             >
-              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0 shadow-2xs">
-                <IoFlashSharp size={15} />
+              <div className="w-8 h-8 rounded-xl bg-purple-50 text-[#9333ea] flex items-center justify-center shrink-0 shadow-2xs">
+                <IoStarOutline size={16} />
               </div>
-              <span className="uppercase tracking-wide text-[11px] font-bold truncate">Gali Bazar</span>
+              <span className="uppercase tracking-wide text-[11px] font-bold truncate">StarLine</span>
             </button>
 
             {/* 2. DEPOSIT */}

@@ -132,13 +132,13 @@ function App() {
               <Route path="/share" element={<UserShare />} />
               <Route path="/referral" element={<UserShare />} />
               <Route path="/refer-and-earn" element={<UserShare />} />
-              <Route path="/JackpotGali" element={<UserJackpotGali />} />
-              <Route path="/jackpot-gali" element={<UserJackpotGali />} />
-              <Route path="/gali-bazar" element={<UserJackpotGali />} />
+              <Route path="/JackpotGali" element={<UserStarline />} />
+              <Route path="/jackpot-gali" element={<UserStarline />} />
+              <Route path="/gali-bazar" element={<UserStarline />} />
               <Route path="/starline" element={<UserStarline />} />
               <Route path="/starline-markets" element={<UserStarline />} />
-              <Route path="/Jackpot" element={<UserJackpot />} />
-              <Route path="/jackpot" element={<UserJackpot />} />
+              <Route path="/Jackpot" element={<UserStarline />} />
+              <Route path="/jackpot" element={<UserStarline />} />
             </Route>
 
             {/* 2. STANDALONE FULLSCREEN AVIATOR GAME ROUTE */}
@@ -216,9 +216,12 @@ function App() {
               <Route path="withdrawal-requests" element={<WithdrawalRequestsPage />} />
               <Route path="jackpot-gali-bids" element={<JackpotGaliBids />} />
               <Route path="jackpotgali-bids" element={<JackpotGaliBids />} />
+              <Route path="starline-bids" element={<JackpotGaliBids />} />
               <Route path="jackpot-gali-results" element={<JackpotGaliResults />} />
               <Route path="jackpotgaliResult" element={<JackpotGaliResults />} />
+              <Route path="starline-results" element={<JackpotGaliResults />} />
               <Route path="starline" element={<StarLineAdmin />} />
+              <Route path="starline-game" element={<StarLineAdmin />} />
               <Route path="jackpotgali" element={<StarLineAdmin />} />
               <Route path="jackpot-gali" element={<StarLineAdmin />} />
               <Route path="GameRatesAdmin" element={<GameRatesAdmin />} />

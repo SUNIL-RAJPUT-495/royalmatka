@@ -5,7 +5,21 @@ import { FaArrowLeft, FaPlay, FaChartLine } from 'react-icons/fa';
 import { IoNotificationsOutline, IoStarOutline, IoTimeOutline, IoGridOutline, IoFlashSharp } from 'react-icons/io5';
 import Axios from '../../utils/axios';
 
-const DEFAULT_STARLINE_MARKETS = [];
+const DEFAULT_STARLINE_MARKETS = [
+  { id: 'sl-1', name: '10:30 AM', result: '***-*', time: '10:30 AM', status: 'closed', is_closed: true },
+  { id: 'sl-2', name: '11:30 AM', result: '***-*', time: '11:30 AM', status: 'closed', is_closed: true },
+  { id: 'sl-3', name: '12:30 PM', result: '***-*', time: '12:30 PM', status: 'closed', is_closed: true },
+  { id: 'sl-4', name: '1:30 PM', result: '***-*', time: '1:30 PM', status: 'closed', is_closed: true },
+  { id: 'sl-5', name: '2:30 PM', result: '***-*', time: '2:30 PM', status: 'closed', is_closed: true },
+  { id: 'sl-6', name: '3:30 PM', result: '***-*', time: '3:30 PM', status: 'running', is_closed: false },
+  { id: 'sl-7', name: '4:30 PM', result: '***-*', time: '4:30 PM', status: 'running', is_closed: false },
+  { id: 'sl-8', name: '5:30 PM', result: '***-*', time: '5:30 PM', status: 'running', is_closed: false },
+  { id: 'sl-9', name: '6:30 PM', result: '***-*', time: '6:30 PM', status: 'running', is_closed: false },
+  { id: 'sl-10', name: '7:30 PM', result: '***-*', time: '7:30 PM', status: 'running', is_closed: false },
+  { id: 'sl-11', name: '8:30 PM', result: '***-*', time: '8:30 PM', status: 'running', is_closed: false },
+  { id: 'sl-12', name: '9:30 PM', result: '***-*', time: '9:30 PM', status: 'running', is_closed: false },
+  { id: 'sl-13', name: '10:30 PM', result: '***-*', time: '10:30 PM', status: 'running', is_closed: false }
+];
 
 export const UserStarline = () => {
   const { currentTheme } = useTheme();
@@ -15,13 +29,20 @@ export const UserStarline = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
     Axios.get('/api/market/get-starline-markets').then(res => {
-      if (res.data?.success && Array.isArray(res.data.data)) {
-        setMarkets(res.data.data);
-      } else {
-        setMarkets([]);
+      if (res.data?.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
+        setMarkets(
+          res.data.data.map(s => ({
+            id: s._id || s.id,
+            name: s.name || s.time,
+            result: s.display_result || (s.pana_result && s.digit_result ? `${s.pana_result}-${s.digit_result}` : '***-*'),
+            time: s.time || s.name,
+            status: s.is_closed ? 'closed' : 'running',
+            is_closed: !!s.is_closed
+          }))
+        );
       }
     }).catch(() => {
-      setMarkets([]);
+      // Retain default markets on error
     });
   }, []);
 
@@ -48,8 +69,8 @@ export const UserStarline = () => {
         className="w-full text-white shadow-xs transition-colors duration-300 shrink-0 sticky top-0 z-30"
         style={{ backgroundColor: themeHeaderBg }}
       >
-        {/* Top Action Bar (Back Arrow + Notification Bell) */}
-        <div className="px-4 pt-4 pb-3 flex items-center justify-between">
+        {/* Top Action Bar (Back Arrow + Title + Notification Bell) */}
+        <div className="px-4 pt-4 pb-4 flex items-center justify-between">
           <button
             type="button"
             onClick={() => navigate('/')}
@@ -58,6 +79,10 @@ export const UserStarline = () => {
           >
             <FaArrowLeft size={15} />
           </button>
+
+          <h2 className="text-base font-bold text-white tracking-wide uppercase">
+            StarLine
+          </h2>
 
           <button
             type="button"
@@ -69,10 +94,9 @@ export const UserStarline = () => {
           </button>
         </div>
 
-        {/* 3 Horizontal Nav Tabs */}
+        {/* Extra Navigation Tabs (Commented out: Gali and Jackpot disabled)
         <div className="px-4 pb-5">
           <div className="grid grid-cols-3 gap-2.5">
-            {/* TAB 1: Main (Navigates to Home) */}
             <div
               onClick={() => navigate('/')}
               className="bg-white/95 hover:bg-white active:scale-95 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center gap-1 shadow-sm cursor-pointer transition-all border border-white/60"
@@ -85,7 +109,6 @@ export const UserStarline = () => {
               </span>
             </div>
 
-            {/* TAB 2: Jackpot (Navigates to /Jackpot) */}
             <div
               onClick={() => navigate('/Jackpot')}
               className="bg-white/95 hover:bg-white active:scale-95 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center gap-1 shadow-sm cursor-pointer transition-all border border-white/60"
@@ -98,7 +121,6 @@ export const UserStarline = () => {
               </span>
             </div>
 
-            {/* TAB 3: Gali (Navigates to /JackpotGali) */}
             <div
               onClick={() => navigate('/JackpotGali')}
               className="bg-white/95 hover:bg-white active:scale-95 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center gap-1 shadow-sm cursor-pointer transition-all border border-white/60"
@@ -112,6 +134,7 @@ export const UserStarline = () => {
             </div>
           </div>
         </div>
+        */}
       </div>
 
       {/* 2. BODY CONTENT */}

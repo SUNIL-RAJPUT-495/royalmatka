@@ -156,16 +156,16 @@ export const SideBar = ({
               <FaUserAlt size={11} />
               <span>Profile</span>
             </button>
-            {/* <button
+            <button
               onClick={() => {
                 closeSidebar();
-                navigate('/settings');
+                navigate('/profile');
               }}
               className="py-1.5 px-3 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-xs text-white font-semibold text-xs flex items-center justify-center gap-2 border border-white/25 transition-all cursor-pointer"
             >
               <FaCog size={12} />
               <span>Settings</span>
-            </button> */}
+            </button>
           </div>
         </div>
 
