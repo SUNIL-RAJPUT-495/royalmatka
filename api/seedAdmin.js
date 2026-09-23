@@ -19,10 +19,12 @@ export const seedAdmin = async () => {
 
     if (existingAdmin) {
       existingAdmin.email = adminEmail;
-      existingAdmin.password = hashedPassword;
+      if (!existingAdmin.password) {
+        existingAdmin.password = hashedPassword;
+      }
       existingAdmin.role = "Admin";
       await existingAdmin.save();
-      console.log(`👑 Admin Account Verified & Updated in DB: ${adminEmail} / ${adminPass}`);
+      console.log(`👑 Admin Account Verified in DB: ${adminEmail}`);
     } else {
       await User.create({
         name: "Super Admin",

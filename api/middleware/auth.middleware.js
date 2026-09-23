@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../services/auth/models/User.js";
+import Admin from "../services/auth/models/Admin.js";
 
 // JWT Secret Key
 const JWT_SECRET = process.env.JWT_SECRET || "royal_matka_super_secret_jwt_key_1008";
@@ -24,15 +25,11 @@ export const verifyToken = async (req, res, next) => {
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
       req.user = decoded;
-      next();
+      return next();
     } catch (err) {
-      if (token && (token.startsWith("tara_") || token.startsWith("user_") || token.includes("token") || token.length > 5)) {
-        req.user = { id: "user_session", role: "User" };
-        return next();
-      }
-      return res.status(403).json({
+      return res.status(401).json({
         success: false,
-        message: "Invalid or expired token. Please log in again."
+        message: "Invalid or expired session. Please log in again."
       });
     }
   } catch (error) {
@@ -63,13 +60,34 @@ export const verifyAdmin = async (req, res, next) => {
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
       const userRole = String(decoded.role || "").toLowerCase();
-      if (userRole === "admin" || decoded.isAdmin === true) {
+      const isAdminRole = userRole === "admin" || userRole === "super admin" || userRole === "sub admin" || userRole === "operator" || decoded.isAdmin === true;
+
+      if (isAdminRole) {
         req.user = decoded;
         return next();
       }
 
-      // Check DB if user is an Admin
+      // Check DB if admin exists
       if (decoded.id || decoded._id || decoded.mobile) {
+        const dbAdmin = await Admin.findOne({
+          $or: [
+            { _id: decoded.id || decoded._id },
+            { mobile: decoded.mobile }
+          ]
+        });
+        if (dbAdmin && dbAdmin.status !== "Blocked") {
+          req.user = {
+            id: dbAdmin._id,
+            _id: dbAdmin._id,
+            name: dbAdmin.name,
+            role: dbAdmin.role || "Admin",
+            isAdmin: true,
+            email: dbAdmin.email,
+            mobile: dbAdmin.mobile
+          };
+          return next();
+        }
+
         const dbUser = await User.findOne({
           $or: [
             { _id: decoded.id || decoded._id },
@@ -77,22 +95,27 @@ export const verifyAdmin = async (req, res, next) => {
           ]
         });
         if (dbUser && (String(dbUser.role).toLowerCase() === "admin" || dbUser.isAdmin === true)) {
-          req.user = dbUser;
+          req.user = {
+            id: dbUser._id,
+            _id: dbUser._id,
+            name: dbUser.name,
+            role: dbUser.role || "Admin",
+            isAdmin: true,
+            email: dbUser.email,
+            mobile: dbUser.mobile
+          };
           return next();
         }
       }
 
-      // Allow admin operations for authenticated admin requests
-      req.user = decoded;
-      return next();
-    } catch (err) {
-      if (token && (token.startsWith("tara_") || token.startsWith("admin_") || token.includes("token") || token.length > 5)) {
-        req.user = { id: "admin_session", role: "Admin", isAdmin: true };
-        return next();
-      }
       return res.status(403).json({
         success: false,
-        message: "Invalid or expired admin token. Please log in as Admin."
+        message: "Access Denied. Admin privileges required."
+      });
+    } catch (err) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or expired admin session token. Please log in again."
       });
     }
   } catch (error) {

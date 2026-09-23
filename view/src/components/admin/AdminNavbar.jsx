@@ -47,6 +47,9 @@ export const AdminNavbar = ({ toggleSidebar }) => {
 
   const handleChangePasswordSubmit = async (e) => {
     e.preventDefault();
+    if (!currentPassword.trim()) {
+      return toast.error('Please enter your current password');
+    }
     if (!newPassword.trim() || newPassword.trim().length < 4) {
       return toast.error('New password must be at least 4 characters long');
     }
@@ -60,16 +63,18 @@ export const AdminNavbar = ({ toggleSidebar }) => {
           currentPassword: currentPassword.trim(),
           newPassword: newPassword.trim(),
           adminName,
-          adminMobile: localStorage.getItem('admin_mobile') || ''
+          adminMobile: localStorage.getItem('admin_mobile') || '',
+          adminEmail: localStorage.getItem('admin_email') || '',
+          adminId: localStorage.getItem('admin_id') || ''
         }
       });
-      if (res.data.success) {
+      if (res.data?.success) {
         toast.success(res.data.message || 'Password changed successfully! 🔑');
         setIsChangePassModalOpen(false);
         setCurrentPassword('');
         setNewPassword('');
       } else {
-        toast.error(res.data.message || 'Failed to change password');
+        toast.error(res.data?.message || 'Failed to change password');
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to change password');

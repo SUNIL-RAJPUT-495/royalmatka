@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Lock, User, Eye, EyeOff, KeyRound, Loader2, Crown } from 'lucide-react';
+import { ShieldCheck, Lock, User, Eye, EyeOff, KeyRound, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SummaryApi from '../../common/SummerAPI';
 import Axios from '../../utils/axios';
@@ -41,10 +41,13 @@ export const AdminLogin = () => {
 
       if (response?.data?.success) {
         const { token, admin } = response.data;
-        localStorage.setItem('royal_user_admin', token || 'master_token_1008');
-        localStorage.setItem('admin_token', token || 'master_token_1008');
+        localStorage.setItem('royal_user_admin', token);
+        localStorage.setItem('admin_token', token);
         localStorage.setItem('admin_name', admin?.name || 'Super Admin');
         localStorage.setItem('admin_role', admin?.role || 'Administrator');
+        localStorage.setItem('admin_mobile', admin?.mobile || admin?.username || '');
+        localStorage.setItem('admin_email', admin?.email || '');
+        localStorage.setItem('admin_id', admin?.id || admin?._id || '');
         localStorage.setItem('admin_permissions', JSON.stringify(admin?.permissions || []));
         localStorage.setItem('is_admin_logged_in', 'true');
 
@@ -57,21 +60,7 @@ export const AdminLogin = () => {
         toast.error(response?.data?.message || 'Login failed. Invalid credentials.');
       }
     } catch (err) {
-      // Fallback for immediate access if network or backend issue
-      if (
-        (formData.username === 'admin' || formData.username === '9999999999') &&
-        (formData.password === 'admin123' || formData.password === '123456')
-      ) {
-        localStorage.setItem('royal_user_admin', 'master_token_1008');
-        localStorage.setItem('admin_token', 'master_token_1008');
-        localStorage.setItem('admin_name', 'Super Admin');
-        localStorage.setItem('admin_role', 'Administrator');
-        localStorage.setItem('is_admin_logged_in', 'true');
-        toast.success('Admin Login Successful! 🔐');
-        navigate('/systum/dashboard');
-      } else {
-        toast.error(err?.response?.data?.message || 'Authentication error. Please check your credentials.');
-      }
+      toast.error(err?.response?.data?.message || 'Authentication error. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -180,27 +169,6 @@ export const AdminLogin = () => {
             )}
           </button>
         </form>
-
-        {/* Quick Fill Master Credentials Box */}
-        <div className="mt-6 pt-4 border-t border-white/10 text-center space-y-2">
-          <p className="text-[11px] font-semibold text-gray-400">Click to Auto-Fill Admin Credentials:</p>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => setFormData({ username: 'admin@gmail.com', password: 'admin123' })}
-              className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl text-xs font-mono text-gray-200 transition-all cursor-pointer shadow-sm"
-            >
-              <span className="text-amber-400 font-bold">admin@gmail.com</span> / <span className="text-emerald-400 font-bold">admin123</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setFormData({ username: 'admin', password: 'admin123' })}
-              className="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[11px] font-mono text-gray-300 transition-colors cursor-pointer"
-            >
-              <span className="text-amber-400 font-bold">admin</span> / <span className="text-emerald-400 font-bold">admin123</span>
-            </button>
-          </div>
-        </div>
 
       </div>
     </div>

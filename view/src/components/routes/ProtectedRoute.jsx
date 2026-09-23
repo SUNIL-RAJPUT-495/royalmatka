@@ -10,12 +10,7 @@ export const AdminProtectedRoute = () => {
   const adminToken = localStorage.getItem('royal_user_admin') || localStorage.getItem('admin_token');
   const isAdminLoggedIn = localStorage.getItem('is_admin_logged_in') === 'true';
 
-  // Persist session if token exists in localStorage
-  if (adminToken && !isAdminLoggedIn) {
-    localStorage.setItem('is_admin_logged_in', 'true');
-  }
-
-  const isAuth = Boolean(adminToken || isAdminLoggedIn);
+  const isAuth = Boolean(adminToken && adminToken !== 'master_token_1008' && isAdminLoggedIn);
 
   if (!isAuth) {
     return <Navigate to="/systum/login" replace />;

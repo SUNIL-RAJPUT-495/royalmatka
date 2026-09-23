@@ -19,20 +19,29 @@ import { sendBlackSmsOtp, sendBlackBulkSms } from "../../smsService.js";
 const ensureAdminUserInDB = async () => {
   if (mongoose.connection.readyState !== 1) return;
   try {
-    const existingAdmin = await User.findOne({
+    const existingAdminInAdmin = await Admin.findOne({
       $or: [{ email: "admin@gmail.com" }, { mobile: "admin@gmail.com" }, { mobile: "9999999999" }]
     });
-    if (!existingAdmin) {
+    const existingAdminInUser = await User.findOne({
+      $or: [
+        { email: "admin@gmail.com" },
+        { mobile: "admin@gmail.com" },
+        { mobile: "9999999999" },
+        { role: { $in: ["Admin", "Super Admin"] } }
+      ]
+    });
+    if (!existingAdminInAdmin && !existingAdminInUser) {
       const hashedPassword = await bcrypt.hash("admin123", 10);
-      await User.create({
+      await Admin.create({
         name: "Super Admin",
         mobile: "admin@gmail.com",
         email: "admin@gmail.com",
         password: hashedPassword,
-        balance: 1000000,
-        role: "Admin"
+        rawPassword: "admin123",
+        role: "Super Admin",
+        permissions: ["All"]
       });
-      console.log("✅ Admin user seeded in MongoDB: admin@gmail.com / admin123");
+      console.log("✅ Initial Admin user created in MongoDB: admin@gmail.com / admin123");
     }
   } catch (err) {
     // Ignore seeding errors
@@ -311,7 +320,7 @@ export const loginUser = async (req, res) => {
       }
 
       const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch && password !== "123456" && password !== "admin123") {
+      if (!isMatch) {
         return res.status(400).json({
           success: false,
           message: "Incorrect password. Please try again."
@@ -324,10 +333,16 @@ export const loginUser = async (req, res) => {
       user.isForceLoggedOut = false;
       await user.save();
 
+      const userToken = jwt.sign(
+        { id: user._id, _id: user._id, mobile: user.mobile, role: user.role || "User" },
+        process.env.JWT_SECRET || "royal_matka_super_secret_jwt_key_1008",
+        { expiresIn: "30d" }
+      );
+
       return res.status(200).json({
         success: true,
         message: "Login Successful! Welcome back 🎉",
-        token: "jwt_user_token_" + Date.now(),
+        token: userToken,
         user: {
           id: user._id,
           name: user.name,
@@ -477,116 +492,150 @@ export const adminLogin = async (req, res) => {
       });
     }
 
-    // Try DB seed if connected
+    // Ensure initial admin is seeded if DB is fresh
     await ensureAdminUserInDB();
 
-    const u = username.toLowerCase().trim();
-    const p = password.trim();
+    const u = String(username).toLowerCase().trim();
+    const rawUsername = String(username).trim();
+    const p = String(password).trim();
+    const JWT_SECRET = process.env.JWT_SECRET || "royal_matka_super_secret_jwt_key_1008";
 
-    // 1. Hardcoded Check for admin@gmail.com and default credentials
-    const validAdmins = [
-      "admin@gmail.com",
-      "admin",
-      "9999999999",
-      "1234567890",
-      "royaladmin"
-    ];
-
-    const validPasswords = [
-      "admin123",
-      "admin 123",
-      "123456",
-      "admin",
-      "royal1008"
-    ];
-
-    if (validAdmins.includes(u) && validPasswords.includes(p)) {
-      return res.status(200).json({
-        success: true,
-        message: "Admin Login Successful! 🔐",
-        token: "jwt_admin_token_" + Date.now(),
-        admin: {
-          name: "Super Admin",
-          role: "Administrator",
-          email: "admin@gmail.com",
-          username: u
-        }
-      });
-    }
-
-    // 2. Database Lookup in Admin Collection first, then User collection
     if (mongoose.connection.readyState === 1) {
-      const dbAdmin = await Admin.findOne({
-        $or: [{ email: u }, { mobile: username }, { name: username }]
+      // 1. Search in dedicated Admin Collection
+      let dbAdmin = await Admin.findOne({
+        $or: [
+          { email: u },
+          { email: rawUsername },
+          { mobile: u },
+          { mobile: rawUsername },
+          { name: rawUsername },
+          { name: { $regex: new RegExp(`^${rawUsername}$`, "i") } }
+        ]
       });
+
       if (dbAdmin) {
         if (dbAdmin.status === "Blocked") {
-          return res.status(403).json({ success: false, message: "Your admin account is blocked. Contact Super Admin." });
+          return res.status(403).json({
+            success: false,
+            message: "Your admin account is blocked. Contact Super Admin."
+          });
         }
+
         const isMatch = await bcrypt.compare(p, dbAdmin.password);
-        if (isMatch || validPasswords.includes(p)) {
-          dbAdmin.lastLoginIp = getClientIp(req);
-          dbAdmin.lastLoginDate = new Date();
-          await dbAdmin.save();
-
-          return res.status(200).json({
-            success: true,
-            message: "Admin Login Successful! 🔐",
-            token: "jwt_admin_token_" + Date.now(),
-            admin: {
-              id: dbAdmin._id,
-              name: dbAdmin.name || "Admin User",
-              role: dbAdmin.role || "Admin",
-              email: dbAdmin.email || u,
-              username: dbAdmin.mobile || u,
-              permissions: dbAdmin.permissions
-            }
+        if (!isMatch) {
+          return res.status(401).json({
+            success: false,
+            message: "Invalid admin password. Please try again."
           });
         }
+
+        dbAdmin.lastLoginIp = getClientIp(req);
+        dbAdmin.lastLoginDate = new Date();
+        await dbAdmin.save();
+
+        const token = jwt.sign(
+          {
+            id: dbAdmin._id,
+            _id: dbAdmin._id,
+            name: dbAdmin.name,
+            role: dbAdmin.role || "Super Admin",
+            isAdmin: true,
+            email: dbAdmin.email,
+            mobile: dbAdmin.mobile,
+            permissions: dbAdmin.permissions || []
+          },
+          JWT_SECRET,
+          { expiresIn: "7d" }
+        );
+
+        return res.status(200).json({
+          success: true,
+          message: "Admin Login Successful! 🔐",
+          token,
+          admin: {
+            id: dbAdmin._id,
+            name: dbAdmin.name || "Super Admin",
+            role: dbAdmin.role || "Super Admin",
+            email: dbAdmin.email || u,
+            mobile: dbAdmin.mobile || u,
+            username: dbAdmin.mobile || dbAdmin.name || u,
+            permissions: dbAdmin.permissions || []
+          }
+        });
       }
 
-      const user = await User.findOne({
-        $or: [{ email: u }, { mobile: username }, { name: username }]
+      // 2. Search in User collection ONLY for Administrator roles
+      const userAdmin = await User.findOne({
+        $or: [
+          { email: u },
+          { email: rawUsername },
+          { mobile: u },
+          { mobile: rawUsername },
+          { name: rawUsername },
+          { name: { $regex: new RegExp(`^${rawUsername}$`, "i") } }
+        ],
+        role: { $in: ["Admin", "Super Admin", "Sub Admin", "Operator"] }
       });
-      if (user) {
-        const isMatch = await bcrypt.compare(p, user.password);
-        if (isMatch || validPasswords.includes(p)) {
-          return res.status(200).json({
-            success: true,
-            message: "Admin Login Successful! 🔐",
-            token: "jwt_admin_token_" + Date.now(),
-            admin: {
-              name: user.name || "Admin User",
-              role: user.role === "Admin" ? "Admin" : "Super Admin",
-              email: user.email || u,
-              username: user.mobile || u
-            }
+
+      if (userAdmin) {
+        if (userAdmin.status === "Blocked") {
+          return res.status(403).json({
+            success: false,
+            message: "Your admin account is blocked. Contact Super Admin."
           });
         }
-      }
-    }
 
-    // 3. Fallback Master Password Check for any username input
-    if (validPasswords.includes(p)) {
-      return res.status(200).json({
-        success: true,
-        message: "Admin Login Successful! 🔐",
-        token: "jwt_admin_token_" + Date.now(),
-        admin: {
-          name: "Super Admin",
-          role: "Administrator",
-          email: "admin@gmail.com",
-          username: u
+        const isMatch = await bcrypt.compare(p, userAdmin.password);
+        if (!isMatch) {
+          return res.status(401).json({
+            success: false,
+            message: "Invalid admin password. Please try again."
+          });
         }
-      });
+
+        userAdmin.lastLoginIp = getClientIp(req);
+        userAdmin.lastLoginDate = new Date();
+        await userAdmin.save();
+
+        const token = jwt.sign(
+          {
+            id: userAdmin._id,
+            _id: userAdmin._id,
+            name: userAdmin.name,
+            role: userAdmin.role || "Admin",
+            isAdmin: true,
+            email: userAdmin.email,
+            mobile: userAdmin.mobile,
+            permissions: userAdmin.permissions || []
+          },
+          JWT_SECRET,
+          { expiresIn: "7d" }
+        );
+
+        return res.status(200).json({
+          success: true,
+          message: "Admin Login Successful! 🔐",
+          token,
+          admin: {
+            id: userAdmin._id,
+            name: userAdmin.name || "Admin User",
+            role: userAdmin.role || "Admin",
+            email: userAdmin.email || u,
+            mobile: userAdmin.mobile || u,
+            username: userAdmin.mobile || userAdmin.name || u,
+            permissions: userAdmin.permissions || []
+          }
+        });
+      }
     }
 
     return res.status(401).json({
       success: false,
-      message: "Invalid credentials. Please enter valid Admin email/username and password."
+      message: "Invalid admin credentials. Account not found or unauthorized."
     });
 
   } catch (error) {
+    console.error("🔴 Admin Login Error:", error);
     return res.status(500).json({
       success: false,
       message: error.message
@@ -1096,7 +1145,7 @@ export const changeUserPassword = async (req, res) => {
 
       if (oldPassword && user.password) {
         const isMatch = await bcrypt.compare(oldPassword.trim(), user.password);
-        if (!isMatch && oldPassword.trim() !== "123456" && oldPassword.trim() !== "admin123") {
+        if (!isMatch) {
           return res.status(400).json({ success: false, message: "Old password is incorrect." });
         }
       }
@@ -1163,52 +1212,102 @@ export const deleteAdmin = async (req, res) => {
 
 export const adminSelfChangePassword = async (req, res) => {
   try {
-    const { currentPassword, newPassword, adminMobile, adminName } = req.body;
+    const { currentPassword, newPassword, adminMobile, adminName, adminEmail } = req.body;
+
+    if (!currentPassword || !currentPassword.trim()) {
+      return res.status(400).json({ success: false, message: "Current password is required." });
+    }
 
     if (!newPassword || newPassword.trim().length < 4) {
       return res.status(400).json({ success: false, message: "New password must be at least 4 characters long." });
     }
 
     if (mongoose.connection.readyState === 1) {
+      const requesterId = req.user?.id || req.user?._id;
       let adminObj = null;
-      if (adminMobile) {
-        adminObj = await Admin.findOne({ mobile: adminMobile });
+
+      if (requesterId && requesterId !== "admin_session") {
+        adminObj = await Admin.findById(requesterId);
+        if (!adminObj) {
+          adminObj = await User.findOne({
+            _id: requesterId,
+            role: { $in: ["Admin", "Super Admin", "Sub Admin", "Operator"] }
+          });
+        }
       }
-      if (!adminObj && adminName) {
-        adminObj = await Admin.findOne({ name: adminName });
+
+      // If not resolved by token id, search by token details or request body
+      if (!adminObj) {
+        const searchMobile = req.user?.mobile || adminMobile;
+        const searchEmail = req.user?.email || adminEmail;
+        const searchName = req.user?.name || adminName;
+
+        const queries = [];
+        if (searchMobile) queries.push({ mobile: searchMobile });
+        if (searchEmail) queries.push({ email: searchEmail });
+        if (searchName) queries.push({ name: searchName });
+
+        if (queries.length > 0) {
+          adminObj = await Admin.findOne({ $or: queries });
+          if (!adminObj) {
+            adminObj = await User.findOne({
+              $or: queries,
+              role: { $in: ["Admin", "Super Admin", "Sub Admin", "Operator"] }
+            });
+          }
+        }
       }
+
+      // Fallback if only 1 admin account exists
       if (!adminObj) {
         adminObj = await Admin.findOne();
       }
+      if (!adminObj) {
+        adminObj = await User.findOne({ role: { $in: ["Admin", "Super Admin"] } });
+      }
 
-      if (adminObj) {
-        if (currentPassword) {
-          const isMatch = await bcrypt.compare(currentPassword.trim(), adminObj.password);
-          if (!isMatch && currentPassword !== "admin123" && currentPassword !== "123456") {
-            return res.status(400).json({ success: false, message: "Current password is incorrect." });
-          }
+      if (!adminObj) {
+        return res.status(404).json({ success: false, message: "Admin account not found in database." });
+      }
+
+      // Strict current password verification
+      const isMatch = await bcrypt.compare(currentPassword.trim(), adminObj.password);
+      if (!isMatch) {
+        return res.status(400).json({ success: false, message: "Current password is incorrect. Please check and try again." });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword.trim(), 10);
+      adminObj.password = hashedPassword;
+      adminObj.rawPassword = newPassword.trim();
+      await adminObj.save();
+
+      // If admin exists in both collections, keep password in sync
+      try {
+        const syncUser = await User.findOne({
+          $or: [
+            { mobile: adminObj.mobile },
+            { email: adminObj.email }
+          ],
+          role: { $in: ["Admin", "Super Admin", "Sub Admin", "Operator"] }
+        });
+        if (syncUser && String(syncUser._id) !== String(adminObj._id)) {
+          syncUser.password = hashedPassword;
+          syncUser.rawPassword = newPassword.trim();
+          await syncUser.save();
         }
-
-        const hashedPassword = await bcrypt.hash(newPassword.trim(), 10);
-        adminObj.password = hashedPassword;
-        adminObj.rawPassword = newPassword.trim();
-        await adminObj.save();
-
-        return res.status(200).json({ success: true, message: "Admin password updated successfully! 🔑" });
+      } catch (e) {
+        // ignore sync warning
       }
 
-      let userObj = await User.findOne({ role: { $in: ["Admin", "Super Admin"] } });
-      if (userObj) {
-        const hashedPassword = await bcrypt.hash(newPassword.trim(), 10);
-        userObj.password = hashedPassword;
-        userObj.rawPassword = newPassword.trim();
-        await userObj.save();
-        return res.status(200).json({ success: true, message: "Admin password updated successfully! 🔑" });
-      }
+      return res.status(200).json({
+        success: true,
+        message: "Admin password changed successfully! 🔑"
+      });
     }
 
     return res.status(200).json({ success: true, message: "Password updated successfully!" });
   } catch (error) {
+    console.error("🔴 adminSelfChangePassword Error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };

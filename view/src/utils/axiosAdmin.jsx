@@ -9,9 +9,9 @@ const AxiosAdmin = axios.create({
 
 AxiosAdmin.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("royal_user_admin") || localStorage.getItem("admin_token") || localStorage.getItem("token") || "jwt_admin_token_master";
+        const token = localStorage.getItem("royal_user_admin") || localStorage.getItem("admin_token");
 
-        if (token) {
+        if (token && token !== "master_token_1008") {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
