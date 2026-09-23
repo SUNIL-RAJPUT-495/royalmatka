@@ -4,7 +4,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { fetchGame } from '../../utils/api';
 import { getMarketSessionStatus } from '../../utils/marketTiming';
 import { IoFlashSharp, IoTimeOutline } from 'react-icons/io5';
-import { FaPlay } from 'react-icons/fa';
+import { FaPlay, FaChartLine } from 'react-icons/fa';
 import aviatorImg from '../../assets/aviator.jpg';
 
 
@@ -168,25 +168,41 @@ export const UserHome = () => {
                   </div>
                 </div>
 
-                {/* Right Top Action */}
-                {isClosed ? (
-                  <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-red-500 border border-gray-100 shadow-2xs">
-                    <IoTimeOutline size={15} />
-                  </div>
-                ) : (
+                {/* Right Top Action: Chart Button (on Left) + Play/Clock Button */}
+                <div className="flex items-center gap-2">
+                  {/* Chart Button */}
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/play-game/${encodeURIComponent(marketTitle)}`);
+                      navigate(`/charts?market=${encodeURIComponent(marketTitle)}&mode=jodi`);
                     }}
-                    style={{ backgroundColor: themePlayBtn }}
-                    className="w-8 h-8 rounded-full text-white flex items-center justify-center shadow-xs cursor-pointer active:scale-95 transition-transform"
-                    title="Play Game"
+                    className="w-8 h-8 rounded-full bg-blue-50 hover:bg-blue-100 active:scale-95 text-blue-600 border border-blue-100/80 flex items-center justify-center shadow-2xs cursor-pointer transition-all"
+                    title="View Market Chart"
                   >
-                    <FaPlay size={9} className="ml-0.5" />
+                    <FaChartLine size={12} />
                   </button>
-                )}
+
+                  {/* Play Button or Closed Clock */}
+                  {isClosed ? (
+                    <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-red-500 border border-gray-100 shadow-2xs">
+                      <IoTimeOutline size={15} />
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/play-game/${encodeURIComponent(marketTitle)}`);
+                      }}
+                      style={{ backgroundColor: themePlayBtn }}
+                      className="w-8 h-8 rounded-full text-white flex items-center justify-center shadow-xs cursor-pointer active:scale-95 transition-transform"
+                      title="Play Game"
+                    >
+                      <FaPlay size={9} className="ml-0.5" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Bottom Row: OPEN Time, Status Pill, CLOSE Time */}

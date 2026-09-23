@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { fetchGame } from '../../utils/api';
 import Axios from '../../utils/axios';
@@ -132,6 +132,7 @@ const generateDynamicPanaData = (marketName, marketDoc, dbHistory = []) => {
 export const UserCharts = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Mode: 'list' | 'jodi' | 'pana'
   const [viewMode, setViewMode] = useState('list');
@@ -140,6 +141,17 @@ export const UserCharts = () => {
   const [marketsList, setMarketsList] = useState(SAMPLE_MARKETS);
   const [rawMarketsData, setRawMarketsData] = useState([]);
   const [dbHistoryData, setDbHistoryData] = useState([]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const mkt = params.get('market') || location.state?.market;
+    const mode = params.get('mode') || location.state?.mode || 'jodi';
+    if (mkt) {
+      setSelectedMarket(mkt.toUpperCase());
+      setViewMode(mode);
+      fetchChartHistory(mkt.toUpperCase());
+    }
+  }, [location.search, location.state]);
 
   useEffect(() => {
     const loadLiveMarkets = async () => {
