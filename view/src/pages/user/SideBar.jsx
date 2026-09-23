@@ -156,7 +156,7 @@ export const SideBar = ({
               <FaUserAlt size={11} />
               <span>Profile</span>
             </button>
-            <button
+            {/* <button
               onClick={() => {
                 closeSidebar();
                 navigate('/settings');
@@ -165,7 +165,7 @@ export const SideBar = ({
             >
               <FaCog size={12} />
               <span>Settings</span>
-            </button>
+            </button> */}
           </div>
         </div>
 
