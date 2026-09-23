@@ -80,24 +80,23 @@ export const UserContactUs = () => {
     setSubmitting(true);
     try {
       const fullText = subject.trim() ? `[${subject.trim()}] ${message.trim()}` : message.trim();
-      const res = await fetch(SummaryApi.sendUserChatMessage.url, {
-        method: SummaryApi.sendUserChatMessage.method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const res = await Axios({
+        url: SummaryApi.sendUserChatMessage.url,
+        method: SummaryApi.sendUserChatMessage.method || 'post',
+        data: {
           userId,
           text: fullText,
           senderName: userData?.name || 'User'
-        })
+        }
       });
 
-      const data = await res.json();
-      if (data.success) {
+      if (res.data?.success) {
         toast.success('Message sent to live support chat!');
         setMessage('');
         setSubject('');
         setIsChatModalOpen(true); // Open live chat modal so user can view response
       } else {
-        toast.error(data.message || 'Failed to send message');
+        toast.error(res.data?.message || 'Failed to send message');
       }
     } catch (err) {
       console.error("Error sending support message:", err);

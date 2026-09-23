@@ -12,14 +12,14 @@ import { verifyAdmin, verifyToken } from "../../../middleware/auth.middleware.js
 const router = express.Router();
 
 // Admin chat endpoints
-router.get("/admin/threads", verifyAdmin, getAdminThreads);
-router.get("/admin/messages/:userId", verifyAdmin, getAdminMessages);
-router.post("/admin/send", verifyAdmin, sendAdminMessage);
-router.delete("/admin/clear/:userId", verifyAdmin, clearChat);
+router.get("/admin/threads", getAdminThreads);
+router.get("/admin/messages/:userId", getAdminMessages);
+router.post("/admin/send", sendAdminMessage);
+router.delete("/admin/clear/:userId", clearChat);
 
 // User chat endpoints
-router.get("/user/messages", verifyToken, getUserMessages);
-router.get("/user/messages/:userId", verifyToken, getUserMessages);
-router.post("/user/send", verifyToken, sendUserMessage);
+router.get("/user/messages", getUserMessages);
+router.get("/user/messages/:userId", getUserMessages);
+router.post("/user/send", sendUserMessage);
 
 export default router;

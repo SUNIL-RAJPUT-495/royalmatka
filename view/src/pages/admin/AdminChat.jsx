@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Search, Send, User, RefreshCw, Trash2, CheckCircle2, ShieldAlert, Sparkles, Clock, Phone, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
+import AxiosAdmin from '../../utils/axiosAdmin';
 import SummaryApi from '../../common/SummerAPI';
 
 export const AdminChat = () => {
@@ -26,10 +27,12 @@ export const AdminChat = () => {
   // Fetch threads list from API
   const fetchThreads = async (showToast = false) => {
     try {
-      const res = await fetch(SummaryApi.getChatThreads.url);
-      const data = await res.json();
-      if (data.success) {
-        setThreads(data.threads || []);
+      const res = await AxiosAdmin({
+        url: SummaryApi.getChatThreads.url,
+        method: SummaryApi.getChatThreads.method || 'get'
+      });
+      if (res.data?.success) {
+        setThreads(res.data.threads || []);
         if (showToast) toast.success("Chat threads updated");
       }
     } catch (err) {
@@ -43,12 +46,14 @@ export const AdminChat = () => {
   const fetchMessages = async (userId) => {
     if (!userId) return;
     try {
-      const res = await fetch(`${SummaryApi.getAdminChatMessages.url}/${userId}`);
-      const data = await res.json();
-      if (data.success) {
-        setMessages(data.messages || []);
-        if (data.user) {
-          setActiveChat(prev => (prev && prev.id === userId ? { ...prev, ...data.user } : prev));
+      const res = await AxiosAdmin({
+        url: `${SummaryApi.getAdminChatMessages.url}/${userId}`,
+        method: SummaryApi.getAdminChatMessages.method || 'get'
+      });
+      if (res.data?.success) {
+        setMessages(res.data.messages || []);
+        if (res.data.user) {
+          setActiveChat(prev => (prev && prev.id === userId ? { ...prev, ...res.data.user } : prev));
         }
       }
     } catch (err) {
@@ -96,22 +101,21 @@ export const AdminChat = () => {
 
     setSending(true);
     try {
-      const res = await fetch(SummaryApi.sendAdminChatMessage.url, {
-        method: SummaryApi.sendAdminChatMessage.method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const res = await AxiosAdmin({
+        url: SummaryApi.sendAdminChatMessage.url,
+        method: SummaryApi.sendAdminChatMessage.method || 'post',
+        data: {
           userId: activeChat.id,
           text: content.trim()
-        })
+        }
       });
-      const data = await res.json();
 
-      if (data.success) {
+      if (res.data?.success) {
         setMessage('');
         fetchMessages(activeChat.id);
         fetchThreads();
       } else {
-        toast.error(data.message || "Failed to send message");
+        toast.error(res.data?.message || "Failed to send message");
       }
     } catch (err) {
       console.error("Send error:", err);
@@ -127,16 +131,16 @@ export const AdminChat = () => {
     if (!window.confirm(`Are you sure you want to clear chat history with ${activeChat.name}?`)) return;
 
     try {
-      const res = await fetch(`${SummaryApi.clearUserChat.url}/${activeChat.id}`, {
-        method: SummaryApi.clearUserChat.method
+      const res = await AxiosAdmin({
+        url: `${SummaryApi.clearUserChat.url}/${activeChat.id}`,
+        method: SummaryApi.clearUserChat.method || 'delete'
       });
-      const data = await res.json();
-      if (data.success) {
+      if (res.data?.success) {
         toast.success("Chat history cleared");
         setMessages([]);
         fetchThreads();
       } else {
-        toast.error(data.message || "Failed to clear chat");
+        toast.error(res.data?.message || "Failed to clear chat");
       }
     } catch (err) {
       console.error("Clear chat error:", err);

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { IoClose, IoSend, IoPersonCircle, IoArrowBack, IoCheckmarkDone } from 'react-icons/io5';
 import { FaHeadset } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import Axios from '../../utils/axios';
 import SummaryApi from '../../common/SummerAPI';
 
 export const UserChatModal = ({ isOpen, onClose }) => {
@@ -28,10 +29,12 @@ export const UserChatModal = ({ isOpen, onClose }) => {
   const fetchMessages = async () => {
     if (!userId) return;
     try {
-      const res = await fetch(`${SummaryApi.getUserChatMessages.url}?userId=${userId}`);
-      const data = await res.json();
-      if (data.success) {
-        setMessages(data.messages || []);
+      const res = await Axios({
+        url: `${SummaryApi.getUserChatMessages.url}?userId=${userId}`,
+        method: SummaryApi.getUserChatMessages.method || 'get'
+      });
+      if (res.data?.success) {
+        setMessages(res.data.messages || []);
       }
     } catch (err) {
       console.error("User fetch chat error:", err);
@@ -75,22 +78,21 @@ export const UserChatModal = ({ isOpen, onClose }) => {
 
     setSending(true);
     try {
-      const res = await fetch(SummaryApi.sendUserChatMessage.url, {
-        method: SummaryApi.sendUserChatMessage.method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const res = await Axios({
+        url: SummaryApi.sendUserChatMessage.url,
+        method: SummaryApi.sendUserChatMessage.method || 'post',
+        data: {
           userId,
           text: messageText.trim(),
           senderName: userData?.name || 'User'
-        })
+        }
       });
 
-      const data = await res.json();
-      if (data.success) {
+      if (res.data?.success) {
         setMessageText('');
         fetchMessages();
       } else {
-        toast.error(data.message || "Failed to send message");
+        toast.error(res.data?.message || "Failed to send message");
       }
     } catch (err) {
       console.error("Send user chat error:", err);
