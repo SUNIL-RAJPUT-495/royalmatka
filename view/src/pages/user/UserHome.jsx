@@ -175,10 +175,10 @@ export const UserHome = () => {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/charts?market=${encodeURIComponent(marketTitle)}&mode=jodi`);
+                      navigate(`/charts?market=${encodeURIComponent(marketTitle)}&mode=pana&from=home`);
                     }}
                     className="w-8 h-8 rounded-full bg-blue-50 hover:bg-blue-100 active:scale-95 text-blue-600 border border-blue-100/80 flex items-center justify-center shadow-2xs cursor-pointer transition-all"
-                    title="View Market Chart"
+                    title="View Market Pana Chart"
                   >
                     <FaChartLine size={12} />
                   </button>

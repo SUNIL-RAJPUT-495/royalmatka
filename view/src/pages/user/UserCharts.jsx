@@ -215,7 +215,11 @@ export const UserCharts = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                if (viewMode !== 'list') {
+                const params = new URLSearchParams(location.search);
+                const isFromHome = params.get('from') === 'home' || params.get('market');
+                if (isFromHome) {
+                  navigate('/');
+                } else if (viewMode !== 'list') {
                   setViewMode('list');
                 } else {
                   navigate(-1);
