@@ -19,29 +19,82 @@ import { sendBlackSmsOtp, sendBlackBulkSms } from "../../smsService.js";
 const ensureAdminUserInDB = async () => {
   if (mongoose.connection.readyState !== 1) return;
   try {
+    const adminEmail = "admin@gmail.com";
+    const adminPass = "admin123";
+    const hashedPassword = await bcrypt.hash(adminPass, 10);
+    const allPermissions = [
+      "All Access",
+      "All",
+      "Game Management",
+      "Starline",
+      "Jackpot",
+      "Financial",
+      "User Management",
+      "Reports & History",
+      "Communication",
+      "Settings",
+      "Manage Admins"
+    ];
+
     const existingAdminInAdmin = await Admin.findOne({
-      $or: [{ email: "admin@gmail.com" }, { mobile: "admin@gmail.com" }, { mobile: "9999999999" }]
-    });
-    const existingAdminInUser = await User.findOne({
       $or: [
-        { email: "admin@gmail.com" },
-        { mobile: "admin@gmail.com" },
+        { email: adminEmail },
+        { mobile: adminEmail },
         { mobile: "9999999999" },
-        { role: { $in: ["Admin", "Super Admin"] } }
+        { name: "Super Admin" },
+        { name: "admin" }
       ]
     });
-    if (!existingAdminInAdmin && !existingAdminInUser) {
-      const hashedPassword = await bcrypt.hash("admin123", 10);
+
+    if (existingAdminInAdmin) {
+      let needsSave = false;
+      if (!existingAdminInAdmin.password) {
+        existingAdminInAdmin.password = hashedPassword;
+        existingAdminInAdmin.rawPassword = adminPass;
+        needsSave = true;
+      }
+      if (existingAdminInAdmin.role !== "Super Admin") {
+        existingAdminInAdmin.role = "Super Admin";
+        needsSave = true;
+      }
+      if (!existingAdminInAdmin.permissions || existingAdminInAdmin.permissions.length === 0 || !existingAdminInAdmin.permissions.includes("All Access")) {
+        existingAdminInAdmin.permissions = allPermissions;
+        needsSave = true;
+      }
+      if (needsSave) {
+        await existingAdminInAdmin.save();
+      }
+    } else {
       await Admin.create({
         name: "Super Admin",
-        mobile: "admin@gmail.com",
-        email: "admin@gmail.com",
+        mobile: "9999999999",
+        email: adminEmail,
         password: hashedPassword,
-        rawPassword: "admin123",
+        rawPassword: adminPass,
         role: "Super Admin",
-        permissions: ["All"]
+        permissions: allPermissions,
+        status: "Active"
       });
-      console.log("✅ Initial Admin user created in MongoDB: admin@gmail.com / admin123");
+      console.log("✅ Initial Super Admin created in MongoDB: admin@gmail.com / admin123");
+    }
+
+    const existingAdminInUser = await User.findOne({
+      $or: [
+        { email: adminEmail },
+        { mobile: adminEmail },
+        { mobile: "9999999999" }
+      ]
+    });
+    if (!existingAdminInUser) {
+      await User.create({
+        name: "Super Admin",
+        mobile: "9999999999",
+        email: adminEmail,
+        password: hashedPassword,
+        balance: 1000000,
+        role: "Super Admin",
+        status: "Active"
+      });
     }
   } catch (err) {
     // Ignore seeding errors
@@ -533,6 +586,22 @@ export const adminLogin = async (req, res) => {
         dbAdmin.lastLoginDate = new Date();
         await dbAdmin.save();
 
+        const allPermsList = [
+          "All Access",
+          "All",
+          "Game Management",
+          "Starline",
+          "Jackpot",
+          "Financial",
+          "User Management",
+          "Reports & History",
+          "Communication",
+          "Settings",
+          "Manage Admins"
+        ];
+        const isSuperRole = dbAdmin.role === "Super Admin" || dbAdmin.role === "Administrator" || dbAdmin.role === "Admin";
+        const effectivePermissions = isSuperRole ? allPermsList : (dbAdmin.permissions || []);
+
         const token = jwt.sign(
           {
             id: dbAdmin._id,
@@ -542,7 +611,7 @@ export const adminLogin = async (req, res) => {
             isAdmin: true,
             email: dbAdmin.email,
             mobile: dbAdmin.mobile,
-            permissions: dbAdmin.permissions || []
+            permissions: effectivePermissions
           },
           JWT_SECRET,
           { expiresIn: "7d" }
@@ -559,7 +628,7 @@ export const adminLogin = async (req, res) => {
             email: dbAdmin.email || u,
             mobile: dbAdmin.mobile || u,
             username: dbAdmin.mobile || dbAdmin.name || u,
-            permissions: dbAdmin.permissions || []
+            permissions: effectivePermissions
           }
         });
       }
@@ -597,16 +666,30 @@ export const adminLogin = async (req, res) => {
         userAdmin.lastLoginDate = new Date();
         await userAdmin.save();
 
+        const allPermsList = [
+          "All Access",
+          "All",
+          "Game Management",
+          "Starline",
+          "Jackpot",
+          "Financial",
+          "User Management",
+          "Reports & History",
+          "Communication",
+          "Settings",
+          "Manage Admins"
+        ];
+
         const token = jwt.sign(
           {
             id: userAdmin._id,
             _id: userAdmin._id,
-            name: userAdmin.name,
-            role: userAdmin.role || "Admin",
+            name: userAdmin.name || "Super Admin",
+            role: "Super Admin",
             isAdmin: true,
-            email: userAdmin.email,
-            mobile: userAdmin.mobile,
-            permissions: userAdmin.permissions || []
+            email: userAdmin.email || u,
+            mobile: userAdmin.mobile || u,
+            permissions: allPermsList
           },
           JWT_SECRET,
           { expiresIn: "7d" }
@@ -618,12 +701,12 @@ export const adminLogin = async (req, res) => {
           token,
           admin: {
             id: userAdmin._id,
-            name: userAdmin.name || "Admin User",
-            role: userAdmin.role || "Admin",
+            name: userAdmin.name || "Super Admin",
+            role: "Super Admin",
             email: userAdmin.email || u,
             mobile: userAdmin.mobile || u,
             username: userAdmin.mobile || userAdmin.name || u,
-            permissions: userAdmin.permissions || []
+            permissions: allPermsList
           }
         });
       }

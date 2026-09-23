@@ -17,10 +17,10 @@ import { TbMoneybag, TbReportAnalytics } from "react-icons/tb";
 import { RiCoupon3Line, RiAdminLine } from "react-icons/ri";
 
 export const AdminSideBar = ({ closeSidebar }) => {
-    // Dynamic Admin Name / Username
-    const adminName = localStorage.getItem("admin_name") || "Admin User";
+    // Dynamic Admin Name / Username from DB Session
+    const adminName = localStorage.getItem("admin_name") || "Admin";
     const adminRole = localStorage.getItem("admin_role") || "Super Admin";
-    const avatarLetter = (adminName || "A").charAt(0).toUpperCase();
+    const avatarLetter = (adminName || "S").charAt(0).toUpperCase();
 
     let adminPermissions = [];
     try {
@@ -29,35 +29,34 @@ export const AdminSideBar = ({ closeSidebar }) => {
         adminPermissions = [];
     }
 
-    // Full access if Super Admin / Administrator role or All Access permission
-    const isFullAccessAdmin = 
+    // Super Admin from Database has 100% unrestricted access to all modules
+    const isSuperAdmin = 
         adminRole === "Super Admin" || 
-        adminRole === "Administrator" || 
-        adminRole === "Pavan" ||
-        adminPermissions.includes("All Access");
+        adminPermissions.includes("All Access") ||
+        adminPermissions.includes("All");
 
-    // Strict Permission Filter Helper
+    // Dynamic Permission Filter Helper based on Database permissions
     const isSectionAllowed = (heading) => {
-        if (isFullAccessAdmin) return true;
+        if (isSuperAdmin) return true;
         if (heading === "Main Menu") return true;
 
         if (heading === "Game Management" || heading === "Starline Games" || heading === "Jackpot Gali" || heading === "Casino") {
-            return adminPermissions.includes("Game Management") || adminPermissions.includes("Starline") || adminPermissions.includes("Jackpot");
+            return adminPermissions.includes("Game Management") || adminPermissions.includes("Starline") || adminPermissions.includes("Jackpot") || adminPermissions.includes("Casino");
         }
         if (heading === "Financial Management") {
-            return adminPermissions.includes("Financial");
+            return adminPermissions.includes("Financial") || adminPermissions.includes("Financial Management");
         }
         if (heading === "User Management" || heading === "Reports & History") {
-            return adminPermissions.includes("User Management");
+            return adminPermissions.includes("User Management") || adminPermissions.includes("Reports");
         }
         if (heading === "Communication") {
             return adminPermissions.includes("Communication");
         }
         if (heading === "Settings & Configuration") {
-            return adminPermissions.includes("Settings");
+            return adminPermissions.includes("Settings") || adminPermissions.includes("Settings & Configuration");
         }
         if (heading === "Access Control") {
-            return adminPermissions.includes("Manage Admins");
+            return adminPermissions.includes("Manage Admins") || adminPermissions.includes("Access Control");
         }
 
         return false;

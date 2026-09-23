@@ -144,8 +144,13 @@ export const AdminAccessManager = () => {
     toast.success('Admin access list updated 🔄');
   };
 
-  const currentRole = localStorage.getItem('admin_role') || 'Super Admin';
-  const isSuperAdmin = currentRole === 'Super Admin' || currentRole === 'Administrator' || currentRole === 'Pavan';
+  let currentPermissions = [];
+  try {
+    currentPermissions = JSON.parse(localStorage.getItem("admin_permissions") || "[]");
+  } catch (e) {
+    currentPermissions = [];
+  }
+  const isSuperAdmin = currentRole === 'Super Admin' || currentPermissions.includes('All Access') || currentPermissions.includes('All') || currentPermissions.includes('Manage Admins');
 
   if (!isSuperAdmin) {
     return (

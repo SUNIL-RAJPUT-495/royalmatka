@@ -9,33 +9,81 @@ export const seedAdmin = async () => {
   try {
     const adminEmail = "admin@gmail.com";
     const adminPass = "admin123";
+    const hashedPassword = await bcrypt.hash(adminPass, 10);
+    const allPermissions = [
+      "All Access",
+      "All",
+      "Game Management",
+      "Starline",
+      "Jackpot",
+      "Financial",
+      "User Management",
+      "Reports & History",
+      "Communication",
+      "Settings",
+      "Manage Admins"
+    ];
 
-    // Check if admin already exists
-    const existingAdmin = await User.findOne({
+    // 1. Seed or Update in Admin collection
+    const AdminModel = mongoose.models.Admin || (await import("./services/auth/models/Admin.js")).Admin;
+    if (AdminModel) {
+      const existingAdminDoc = await AdminModel.findOne({
+        $or: [
+          { email: adminEmail },
+          { mobile: adminEmail },
+          { mobile: "9999999999" },
+          { name: "Super Admin" },
+          { name: "admin" }
+        ]
+      });
+
+      if (existingAdminDoc) {
+        existingAdminDoc.email = adminEmail;
+        existingAdminDoc.password = hashedPassword;
+        existingAdminDoc.rawPassword = adminPass;
+        existingAdminDoc.role = "Super Admin";
+        existingAdminDoc.permissions = allPermissions;
+        existingAdminDoc.status = "Active";
+        await existingAdminDoc.save();
+        console.log(`👑 Super Admin Verified in Admin Collection: ${adminEmail} / ${adminPass}`);
+      } else {
+        await AdminModel.create({
+          name: "Super Admin",
+          mobile: "9999999999",
+          email: adminEmail,
+          password: hashedPassword,
+          rawPassword: adminPass,
+          role: "Super Admin",
+          permissions: allPermissions,
+          status: "Active"
+        });
+        console.log(`👑 New Super Admin Successfully Seeded in Admin Collection: ${adminEmail} / ${adminPass}`);
+      }
+    }
+
+    // 2. Also ensure User collection has Super Admin for backward compatibility
+    const existingUser = await User.findOne({
       $or: [{ email: adminEmail }, { mobile: adminEmail }, { mobile: "9999999999" }]
     });
 
-    const hashedPassword = await bcrypt.hash(adminPass, 10);
-
-    if (existingAdmin) {
-      existingAdmin.email = adminEmail;
-      if (!existingAdmin.password) {
-        existingAdmin.password = hashedPassword;
-      }
-      existingAdmin.role = "Admin";
-      await existingAdmin.save();
-      console.log(`👑 Admin Account Verified in DB: ${adminEmail}`);
+    if (existingUser) {
+      existingUser.email = adminEmail;
+      existingUser.password = hashedPassword;
+      existingUser.role = "Super Admin";
+      existingUser.status = "Active";
+      await existingUser.save();
+      console.log(`👑 Admin Account Verified in User DB: ${adminEmail}`);
     } else {
       await User.create({
         name: "Super Admin",
-        mobile: "admin@gmail.com",
+        mobile: "9999999999",
         email: adminEmail,
         password: hashedPassword,
         balance: 1000000,
-        role: "Admin",
+        role: "Super Admin",
         status: "Active"
       });
-      console.log(`👑 New Admin Account Successfully Seeded in DB: ${adminEmail} / ${adminPass}`);
+      console.log(`👑 New Admin Account Successfully Seeded in User DB: ${adminEmail} / ${adminPass}`);
     }
   } catch (err) {
     console.error("🔴 Admin Seeding Error:", err.message);
